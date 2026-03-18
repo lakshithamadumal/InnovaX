@@ -1132,6 +1132,15 @@ img {
   color: var(--text-muted);
   margin-bottom: 14px;
 }
+.footer-credit-link {
+  color: var(--primary);
+  font-weight: 600;
+  transition: color var(--transition);
+}
+.footer-credit-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
 .social-links {
   display: flex;
   justify-content: center;
