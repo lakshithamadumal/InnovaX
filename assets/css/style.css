@@ -495,7 +495,8 @@ img {
   font-weight: 700;
   flex-shrink: 0;
 }
-#post-input {
+#post-input,
+.create-post-trigger {
   flex: 1;
   border: 1.5px solid var(--border);
   border-radius: 99px;
@@ -509,13 +510,19 @@ img {
     box-shadow var(--transition);
   resize: none;
 }
-#post-input:focus {
+#post-input:focus,
+.create-post-trigger:focus {
   border-color: var(--primary);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.12);
 }
-#post-input::placeholder {
+#post-input::placeholder,
+.create-post-trigger::placeholder {
   color: var(--text-muted);
+}
+
+.create-post-trigger[readonly] {
+  cursor: pointer;
 }
 
 /* Expanded editor */
@@ -548,7 +555,9 @@ img {
   background: #fff;
   box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.12);
 }
-#post-title-input {
+#post-title-input,
+.post-field,
+.post-editor input[data-create-title] {
   width: 100%;
   border: 1.5px solid var(--border);
   border-radius: 12px;
@@ -562,12 +571,16 @@ img {
     border-color var(--transition),
     box-shadow var(--transition);
 }
-#post-title-input:focus {
+#post-title-input:focus,
+.post-field:focus,
+.post-editor input[data-create-title]:focus {
   border-color: var(--primary);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.12);
 }
-#post-title-input::placeholder {
+#post-title-input::placeholder,
+.post-field::placeholder,
+.post-editor input[data-create-title]::placeholder {
   color: var(--text-muted);
   font-weight: 400;
 }

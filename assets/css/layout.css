@@ -307,7 +307,8 @@
 	border-radius: var(--radius-sm);
 	background: var(--bg);
 	padding: 8px;
-	display: grid;
+	display: flex;
+	flex-direction: column;
 	gap: 6px;
 	max-height: 560px;
 	overflow-y: auto;
@@ -317,12 +318,50 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
+	width: 100%;
+	text-align: left;
 	border-radius: var(--radius-sm);
 	border: 1px solid transparent;
 	background: #fff;
-	padding: 8px;
+	padding: 10px 12px;
 	cursor: pointer;
 	transition: all var(--transition);
+}
+
+.chat-user-item .avatar {
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	color: #fff;
+	font-size: 0.76rem;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.chat-user-item .user-info {
+	min-width: 0;
+}
+
+.chat-user-item .user-name {
+	font-size: 0.86rem;
+	font-weight: 700;
+	color: var(--text);
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.chat-user-item .user-role {
+	font-size: 0.74rem;
+	color: var(--text-muted);
+	line-height: 1.25;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .chat-user-item:hover,
