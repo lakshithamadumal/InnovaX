@@ -13,6 +13,11 @@
 }
 
 @media (max-width: 960px) {
+	.landing-illustration {
+		width: 106%;
+		transform: translateY(4px) scale(1.02);
+	}
+
 	.sidebar-left,
 	.sidebar-right {
 		position: static;
@@ -39,6 +44,11 @@
 }
 
 @media (max-width: 640px) {
+	.landing-illustration {
+		width: 100%;
+		transform: none;
+	}
+
 	.hero-card,
 	.section-card,
 	.auth-card {

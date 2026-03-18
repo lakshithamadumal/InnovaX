@@ -156,8 +156,28 @@
 .landing-grid {
 	width: min(900px, 100%);
 	display: grid;
-	grid-template-columns: 1.1fr 0.9fr;
+	grid-template-columns: 1fr 1fr;
 	gap: 16px;
+}
+
+.landing-illustration-shell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	overflow: hidden;
+}
+
+.landing-illustration {
+	width: 140%;
+	height: auto;
+	max-height: none;
+	object-fit: contain;
+	display: block;
+	transform: translate(4px, 8px) scale(1.08);
+	transform-origin: center center;
 }
 
 .mini-card {
