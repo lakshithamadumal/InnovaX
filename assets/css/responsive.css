@@ -44,6 +44,10 @@
 }
 
 @media (max-width: 640px) {
+	.landing-illustration-shell {
+		display: none;
+	}
+
 	.landing-illustration {
 		width: 100%;
 		transform: none;
