@@ -6,7 +6,13 @@
 			<div class="user-role">{{role}}</div>
 		</div>
 		<span class="post-time">{{time}}</span>
-		<button class="post-more-btn" type="button"><i class="fas fa-ellipsis-h"></i></button>
+		<div class="post-more-wrap">
+			<button class="post-more-btn" type="button" data-post-menu-toggle aria-label="Post options"><i class="fas fa-ellipsis-h"></i></button>
+			<div class="post-more-menu" data-post-menu>
+				<button class="post-menu-item" type="button" data-post-menu-action="not-interested">Not Interested</button>
+				<button class="post-menu-item danger" type="button" data-post-menu-action="report">Report</button>
+			</div>
+		</div>
 	</div>
 
 	<a class="post-title-link" href="post-view.html">

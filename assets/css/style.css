@@ -700,6 +700,10 @@ img {
   margin-left: auto;
   white-space: nowrap;
 }
+.post-more-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
 .post-more-btn {
   padding: 6px;
   border-radius: 50%;
@@ -712,6 +716,41 @@ img {
 .post-more-btn:hover {
   background: var(--bg);
   color: var(--primary);
+}
+.post-more-menu {
+  display: none;
+  position: absolute;
+  top: 34px;
+  right: 0;
+  min-width: 152px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  z-index: 15;
+}
+.post-more-menu.open {
+  display: block;
+  animation: fadeIn 0.18s ease;
+}
+.post-menu-item {
+  width: 100%;
+  text-align: left;
+  font-size: 0.78rem;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  transition: background var(--transition), color var(--transition);
+}
+.post-menu-item:hover {
+  background: var(--bg);
+}
+.post-menu-item.danger {
+  color: var(--danger);
+}
+.post-menu-item.danger:hover {
+  background: #fdecea;
 }
 
 .post-title {

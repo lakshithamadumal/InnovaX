@@ -666,8 +666,54 @@
     });
   }
 
+  function closePostMenus(exceptMenu = null) {
+    document.querySelectorAll("[data-post-menu].open").forEach((menu) => {
+      if (menu !== exceptMenu) {
+        menu.classList.remove("open");
+      }
+    });
+  }
+
   function initEventDelegation() {
     document.addEventListener("click", (event) => {
+      const menuToggle = event.target.closest("[data-post-menu-toggle]");
+      if (menuToggle) {
+        const menu = menuToggle.closest(".post-more-wrap")?.querySelector("[data-post-menu]");
+        if (menu) {
+          const shouldOpen = !menu.classList.contains("open");
+          closePostMenus();
+          menu.classList.toggle("open", shouldOpen);
+        }
+        return;
+      }
+
+      const menuAction = event.target.closest("[data-post-menu-action]");
+      if (menuAction) {
+        const action = menuAction.dataset.postMenuAction;
+        const card = menuAction.closest(".post-card");
+        closePostMenus();
+
+        if (action === "not-interested") {
+          if (card) {
+            card.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+            card.style.opacity = "0";
+            card.style.transform = "scale(0.98)";
+            setTimeout(() => card.remove(), 210);
+          }
+          showToast("Post hidden. We will show fewer posts like this.");
+          return;
+        }
+
+        if (action === "report") {
+          showToast("Post reported. Thanks for your feedback.");
+          return;
+        }
+      }
+
+      if (!event.target.closest(".post-more-wrap")) {
+        closePostMenus();
+      }
+
       const likeBtn = event.target.closest("[data-like-btn]");
       if (likeBtn) {
         likeBtn.classList.toggle("liked");
