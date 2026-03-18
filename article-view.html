@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | Article View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="article-view" data-active-nav="feed">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <article class="section-card">
+        <div class="section-head"><div class="section-title">Article</div><span class="badge-chip"><i class="fas fa-book-open"></i> 8 min read</span></div>
+        <h1 class="hero-title">Designing Innovation Teams for Fast Iteration</h1>
+        <p class="hero-subtitle">By Layla Patel · UX Innovator · March 2026</p>
+        <div class="article-body">
+          <h3>1. Align around a clear weekly hypothesis</h3>
+          <p>Teams move faster when each week has one measurable hypothesis. Everyone understands the target outcome and the experiment scope.</p>
+          <h3>2. Reduce handoff friction</h3>
+          <p>Use shared design tokens, component libraries, and short review windows so ideas move from sketch to prototype without heavy coordination overhead.</p>
+          <h3>3. Build learning loops into launch cycles</h3>
+          <p>Capture user feedback quickly, classify by impact, and assign owners before the next sprint starts. This keeps iteration quality high while velocity remains stable.</p>
+        </div>
+      </article>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

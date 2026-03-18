@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | User Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="user-profile" data-active-nav="feed">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <section class="section-card" style="padding:0; overflow:hidden;">
+        <div class="cover-photo" style="background:linear-gradient(135deg,#1cc88a,#17a673 55%,#f6c23e);"></div>
+        <div class="profile-hero">
+          <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#1cc88a,#17a673);">SR</div>
+          <div class="profile-meta">
+            <h1>Sofia Rivera</h1>
+            <p>AI Researcher · MIT Media Lab</p>
+            <div class="pill-row">
+              <span class="badge-chip"><i class="fas fa-circle-check"></i> Verified Professional</span>
+              <span class="status-pill warning">Mentorship Available</span>
+            </div>
+          </div>
+          <div class="inline-actions">
+            <button class="btn-primary follow-btn" type="button" data-follow-btn>Follow</button>
+            <button class="btn-secondary follow-btn" type="button" data-follow-btn data-mode="connect">Connect</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">About</div></div>
+        <p class="profile-summary">Researching multimodal AI systems for healthcare diagnostics and equitable model deployment in low-resource clinical settings.</p>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Skills & Interests</div></div>
+        <div class="tag-list">
+          <span class="tag">#ComputerVision</span><span class="tag">#MedTech</span><span class="tag">#ModelSafety</span><span class="tag">#DataEthics</span>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Projects</div></div>
+        <div class="grid-3">
+          <article class="project-card"><h4>Vision Triage Agent</h4><p>Clinical support system for rapid skin-condition screening.</p></article>
+          <article class="project-card"><h4>RareDx Dataset</h4><p>Curated benchmark for rare-condition image diagnostics.</p></article>
+          <article class="project-card"><h4>Model Trust Lab</h4><p>Evaluation pipeline for explainable health AI outputs.</p></article>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Recent Posts</div></div>
+        <div data-post-stream="user"></div>
+      </section>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

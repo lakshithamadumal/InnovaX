@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | Create Post</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="create-post" data-active-nav="feed">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <section class="section-card">
+        <div class="section-head">
+          <div class="section-title">Create Innovation Article</div>
+          <span class="badge-chip"><i class="fas fa-pen"></i> Draft Mode</span>
+        </div>
+        <p class="section-note">Compose a detailed innovation post with title, description, category, and optional assets.</p>
+      </section>
+
+      <div data-component="create-post"></div>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Upload Guidelines</div></div>
+        <div class="grid-2">
+          <article class="media-drop"><i class="fas fa-file-pdf"></i><p>Attach PDF proposal up to 20MB.</p></article>
+          <article class="media-drop"><i class="fas fa-video"></i><p>Attach demo video up to 120 seconds.</p></article>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Live Preview Stream</div></div>
+        <div data-post-stream="profile"></div>
+      </section>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

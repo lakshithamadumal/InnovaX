@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | Notifications</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="notifications" data-active-nav="notifications">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <section class="section-card">
+        <div class="section-head">
+          <div class="section-title">Notifications</div>
+          <button class="btn-secondary" type="button" data-mark-all-read>Mark all as read</button>
+        </div>
+        <div class="notification-list">
+          <article class="notification-item" data-notification-item><div class="avatar" style="background:linear-gradient(135deg,#1cc88a,#17a673);">SR</div><div><strong>Sofia Rivera</strong><p class="section-note">liked your post about circular labs.</p></div></article>
+          <article class="notification-item" data-notification-item><div class="avatar" style="background:linear-gradient(135deg,#E74A3B,#c0392b);">MK</div><div><strong>Marcus Kim</strong><p class="section-note">commented on your robotics thread.</p></div></article>
+          <article class="notification-item" data-notification-item><div class="avatar" style="background:linear-gradient(135deg,#F6C23E,#e0a800);">LP</div><div><strong>Layla Patel</strong><p class="section-note">sent you a collaboration request.</p></div></article>
+          <article class="notification-item" data-notification-item><div class="avatar">IN</div><div><strong>InnovaX</strong><p class="section-note">Your project has 2 new peer reviews.</p></div></article>
+        </div>
+      </section>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | Project View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="project-view" data-active-nav="feed">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Project: NeuroCraft UX Framework</div></div>
+        <p class="section-note">An adaptive UX layer for neurodivergent users with configurable sensory modes, task-focused surfaces, and accessibility-first defaults.</p>
+        <div class="pill-row" style="margin-top:10px;">
+          <span class="tag">#UXDesign</span>
+          <span class="tag">#Accessibility</span>
+          <span class="tag">#OpenSource</span>
+        </div>
+      </section>
+
+      <section class="section-card" data-rating-group>
+        <div class="section-head"><div class="section-title">Rate this project</div></div>
+        <div class="rating-stars">
+          <i class="fas fa-star rating-star" data-rating-star="1"></i>
+          <i class="fas fa-star rating-star" data-rating-star="2"></i>
+          <i class="fas fa-star rating-star" data-rating-star="3"></i>
+          <i class="fas fa-star rating-star" data-rating-star="4"></i>
+          <i class="fas fa-star rating-star" data-rating-star="5"></i>
+        </div>
+        <p class="section-note" data-rating-text style="margin-top:8px;">Select a rating.</p>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Feedback & Comments</div></div>
+        <div class="stack-list">
+          <article class="stack-item"><h4>Peer Review · Sofia Rivera</h4><p>Strong inclusion strategy and strong testing methodology. Consider additional longitudinal studies.</p></article>
+          <article class="stack-item"><h4>Peer Review · Marcus Kim</h4><p>Excellent product framing. Hardware-adaptive mode could broaden adoption in robotics interfaces.</p></article>
+        </div>
+      </section>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

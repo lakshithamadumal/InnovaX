@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="settings" data-active-nav="feed">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Edit Profile</div></div>
+        <form class="auth-form">
+          <label class="field-wrap"><span>Display Name</span><input type="text" value="Alex Johnson" /></label>
+          <label class="field-wrap"><span>Role</span><input type="text" value="Product Designer" /></label>
+          <label class="field-wrap"><span>Bio</span><textarea>Designing high-impact innovation workflows for student and professional communities.</textarea></label>
+          <button class="btn-primary" type="button">Save Changes</button>
+        </form>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Change Password</div></div>
+        <form class="auth-form">
+          <label class="field-wrap"><span>Current Password</span><input type="password" /></label>
+          <label class="field-wrap"><span>New Password</span><input type="password" /></label>
+          <label class="field-wrap"><span>Confirm Password</span><input type="password" /></label>
+          <button class="btn-primary" type="button">Update Password</button>
+        </form>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Preferences</div></div>
+        <div class="settings-grid">
+          <div class="switch-row"><span>Email notifications</span><span class="switch on"></span></div>
+          <div class="switch-row"><span>Message alerts</span><span class="switch on"></span></div>
+          <div class="switch-row"><span>Profile visibility</span><span class="switch on"></span></div>
+          <div class="switch-row"><span>Weekly summary</span><span class="switch"></span></div>
+        </div>
+      </section>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

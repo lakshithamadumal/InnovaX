@@ -1,0 +1,42 @@
+[
+	{
+		"id": "u-1",
+		"name": "Alex Johnson",
+		"initials": "AJ",
+		"role": "Product Designer",
+		"organization": "InnovaX Labs",
+		"location": "San Francisco, CA",
+		"verified": true,
+		"skills": ["Product Design", "Design Systems", "Innovation Ops"]
+	},
+	{
+		"id": "u-2",
+		"name": "Sofia Rivera",
+		"initials": "SR",
+		"role": "AI Researcher",
+		"organization": "MIT",
+		"location": "Boston, MA",
+		"verified": true,
+		"skills": ["Computer Vision", "Model Evaluation", "MedTech"]
+	},
+	{
+		"id": "u-3",
+		"name": "Marcus Kim",
+		"initials": "MK",
+		"role": "Robotics Engineer",
+		"organization": "Seoul Robotics Lab",
+		"location": "Seoul, KR",
+		"verified": false,
+		"skills": ["Robotics", "Control Systems", "Embedded AI"]
+	},
+	{
+		"id": "u-4",
+		"name": "Layla Patel",
+		"initials": "LP",
+		"role": "UX Innovator",
+		"organization": "Google",
+		"location": "London, UK",
+		"verified": true,
+		"skills": ["Accessibility", "UX Strategy", "Research"]
+	}
+]

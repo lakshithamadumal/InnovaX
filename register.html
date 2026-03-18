@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>InnovaX | Register</title>
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+	<link rel="stylesheet" href="assets/css/style.css" />
+	<link rel="stylesheet" href="assets/css/layout.css" />
+	<link rel="stylesheet" href="assets/css/components.css" />
+	<link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="register" data-active-nav="feed">
+	<div class="toast" id="toast"></div>
+	<div data-component="navbar"></div>
+
+	<main class="auth-shell">
+		<section class="auth-card">
+			<h1>Create Your InnovaX Account</h1>
+			<p>Join the innovation network and publish your first project.</p>
+			<form class="auth-form" action="feed.html">
+				<label class="field-wrap">
+					<span>Full Name</span>
+					<input type="text" placeholder="Alex Johnson" required />
+				</label>
+				<label class="field-wrap">
+					<span>Email</span>
+					<input type="email" placeholder="you@example.com" required />
+				</label>
+				<label class="field-wrap">
+					<span>Role</span>
+					<select>
+						<option>Student</option>
+						<option>Professional</option>
+						<option>Company Recruiter</option>
+					</select>
+				</label>
+				<label class="field-wrap">
+					<span>Password</span>
+					<input type="password" placeholder="Create password" required />
+				</label>
+				<div class="inline-actions" style="justify-content:space-between;">
+					<a href="login.html" class="btn-secondary">Already have an account</a>
+					<button type="submit" class="btn-primary">Register</button>
+				</div>
+			</form>
+		</section>
+	</main>
+
+	<div data-component="footer"></div>
+	<script src="assets/js/app.js"></script>
+</body>
+</html>

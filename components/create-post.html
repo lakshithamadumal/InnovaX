@@ -1,0 +1,42 @@
+<section class="card create-post" data-create-post-card>
+  <div class="create-post-top">
+    <div class="avatar">AJ</div>
+    <input type="text" class="create-post-trigger" placeholder="Share your innovation..." readonly data-open-editor />
+  </div>
+
+  <div class="post-editor" data-post-editor>
+    <input type="text" class="post-field" data-create-title placeholder="Innovation title" />
+    <textarea data-create-desc placeholder="Describe your innovation in detail..."></textarea>
+
+    <div class="create-grid">
+      <label class="field-wrap">
+        <span>Category</span>
+        <select data-create-category>
+          <option value="AI">AI</option>
+          <option value="Web3">Web3</option>
+          <option value="GreenTech">GreenTech</option>
+          <option value="BioTech">BioTech</option>
+          <option value="Design">Design</option>
+        </select>
+      </label>
+      <label class="field-wrap">
+        <span>Tags</span>
+        <input type="text" data-create-tags placeholder="#innovation #prototype" />
+      </label>
+    </div>
+
+    <div class="upload-strip">
+      <button class="upload-btn image" type="button" data-upload-trigger="image"><i class="fas fa-image"></i> Image</button>
+      <button class="upload-btn video" type="button" data-upload-trigger="video"><i class="fas fa-video"></i> Video</button>
+      <button class="upload-btn file" type="button" data-upload-trigger="file"><i class="fas fa-paperclip"></i> File</button>
+      <input type="file" class="hidden-upload" data-upload-input="image" accept="image/*" />
+      <input type="file" class="hidden-upload" data-upload-input="video" accept="video/*" />
+      <input type="file" class="hidden-upload" data-upload-input="file" />
+    </div>
+  </div>
+
+  <div class="create-post-actions">
+    <button class="upload-btn file" type="button" data-save-draft><i class="fas fa-floppy-disk"></i> Save Draft</button>
+    <button class="post-submit-btn" type="button" data-publish-post><i class="fas fa-paper-plane"></i> Publish</button>
+  </div>
+</section>

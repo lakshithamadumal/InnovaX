@@ -1,0 +1,120 @@
+[
+	{
+		"id": 1,
+		"avatar": "SR",
+		"avatarColor": "linear-gradient(135deg,#1CC88A,#17a673)",
+		"name": "Sofia Rivera",
+		"role": "AI Researcher · MIT",
+		"time": "2h ago",
+		"title": "Using Vision Models to Diagnose Rare Conditions",
+		"desc": "We integrated multimodal vision models into a diagnostics workflow and improved triage precision by 12% across a 2,000 sample dataset.",
+		"tags": ["#AIHealth", "#MedTech", "#Innovation"],
+		"media": { "emoji": "🔬", "label": "Clinical AI Pipeline" },
+		"likes": 247,
+		"saved": true,
+		"companyOwned": false,
+		"comments": [
+			{
+				"id": "1-c1",
+				"name": "Alex Johnson",
+				"avatarColor": "linear-gradient(135deg,#4E73DF,#6f8ee8)",
+				"initials": "AJ",
+				"text": "Impressive uplift. Are you publishing your validation protocol?",
+				"time": "1h ago",
+				"replies": [
+					{
+						"name": "Sofia Rivera",
+						"avatarColor": "linear-gradient(135deg,#1CC88A,#17a673)",
+						"initials": "SR",
+						"text": "Yes, sharing the preprint this week.",
+						"time": "45m ago"
+					}
+				]
+			}
+		]
+	},
+	{
+		"id": 2,
+		"avatar": "MK",
+		"avatarColor": "linear-gradient(135deg,#E74A3B,#c0392b)",
+		"name": "Marcus Kim",
+		"role": "Robotics Engineer · Seoul",
+		"time": "5h ago",
+		"title": "Soft Robotics Sensor Stack for Damage Awareness",
+		"desc": "Our latest tactile sensor array helps robots detect early structural stress and reduce failure rates during high-load tasks.",
+		"tags": ["#Robotics", "#Engineering", "#AI"],
+		"media": { "emoji": "🤖", "label": "Soft Robot Prototype" },
+		"likes": 183,
+		"saved": false,
+		"companyOwned": false,
+		"comments": [
+			{
+				"id": "2-c1",
+				"name": "Layla Patel",
+				"avatarColor": "linear-gradient(135deg,#F6C23E,#e0a800)",
+				"initials": "LP",
+				"text": "Great direction. Curious about latency in live response.",
+				"time": "4h ago",
+				"replies": []
+			}
+		]
+	},
+	{
+		"id": 3,
+		"avatar": "LP",
+		"avatarColor": "linear-gradient(135deg,#F6C23E,#e0a800)",
+		"name": "Layla Patel",
+		"role": "UX Innovator · Google",
+		"time": "1d ago",
+		"title": "Designing for Neurodiversity with Adaptive Interfaces",
+		"desc": "We shipped an open framework with adaptive layouts, sensory modes, and progressive complexity controls for diverse user needs.",
+		"tags": ["#UXDesign", "#Accessibility", "#OpenSource"],
+		"media": null,
+		"likes": 312,
+		"saved": true,
+		"companyOwned": false,
+		"comments": []
+	},
+	{
+		"id": 4,
+		"avatar": "JW",
+		"avatarColor": "linear-gradient(135deg,#4E73DF,#6f8ee8)",
+		"name": "James Webb",
+		"role": "CleanTech Founder · Berlin",
+		"time": "2d ago",
+		"title": "Crossed 50% Efficiency with Multi-Junction Perovskite Cells",
+		"desc": "After three years of testing, our team reached 51.2% efficiency and is preparing manufacturing pilots for scalable deployment.",
+		"tags": ["#CleanTech", "#Solar", "#GreenInnovation"],
+		"media": { "emoji": "☀️", "label": "LumenCell Solar Stack" },
+		"likes": 891,
+		"saved": false,
+		"companyOwned": true,
+		"comments": [
+			{
+				"id": "4-c1",
+				"name": "Sofia Rivera",
+				"avatarColor": "linear-gradient(135deg,#1CC88A,#17a673)",
+				"initials": "SR",
+				"text": "Huge milestone. Congratulations to your whole team.",
+				"time": "1d ago",
+				"replies": []
+			}
+		]
+	},
+	{
+		"id": 5,
+		"avatar": "LC",
+		"avatarColor": "linear-gradient(135deg,#3A5BBF,#4E73DF)",
+		"name": "LumenCell Energy",
+		"role": "Company Update",
+		"time": "3d ago",
+		"title": "Hiring Innovation Fellows for Energy Systems",
+		"desc": "We opened a fellowship for applied researchers and product engineers focused on advanced energy systems commercialization.",
+		"tags": ["#Company", "#Hiring", "#Energy"],
+		"media": null,
+		"likes": 122,
+		"saved": false,
+		"companyOwned": true,
+		"comments": []
+	}
+]

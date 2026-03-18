@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | Pitch Upload</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="pitch-upload" data-active-nav="feed">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Upload Pitch Assets</div></div>
+        <div class="grid-3">
+          <article class="media-drop"><i class="fas fa-file-pdf"></i><p>Upload PDF Pitch Deck</p><button class="btn-secondary" type="button">Choose File</button></article>
+          <article class="media-drop"><i class="fas fa-video"></i><p>Upload Demo Video</p><button class="btn-secondary" type="button">Choose File</button></article>
+          <article class="media-drop"><i class="fas fa-slideshare"></i><p>Upload Slides</p><button class="btn-secondary" type="button">Choose File</button></article>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Recent Uploads</div></div>
+        <table class="upload-table">
+          <thead><tr><th>File</th><th>Type</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>prototype-pitch-v3.pdf</td><td>PDF</td><td><span class="status-pill success">Uploaded</span></td></tr>
+            <tr><td>demo-walkthrough.mp4</td><td>Video</td><td><span class="status-pill warning">Processing</span></td></tr>
+            <tr><td>investor-summary.pptx</td><td>Slides</td><td><span class="status-pill success">Uploaded</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

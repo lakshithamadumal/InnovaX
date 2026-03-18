@@ -3,336 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InnovaX – Innovation Feed</title>
-
-  <!-- Google Fonts: Poppins -->
+  <title>InnovaX | Start</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
-<!--  -->
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
 </head>
-
-<body>
-
-  <!-- ============================================================
-       TOAST NOTIFICATION
-  ============================================================ -->
+<body data-page="landing" data-active-nav="feed">
   <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
 
-  <!-- ============================================================
-       NAVBAR
-  ============================================================ -->
-  <header class="navbar" id="navbar">
-    <!-- Logo -->
-    <a href="#" class="nav-logo">
-      <div class="logo-icon"><i class="fas fa-times"></i></div>
-      <span>InnovaX</span>
-    </a>
+  <main class="auth-shell">
+    <div class="landing-grid">
+      <section class="hero-card">
+        <div class="badge-chip"><i class="fas fa-sparkles"></i> Innovator Network</div>
+        <h1 class="hero-title" style="margin-top:12px;">Build, share, and scale ideas with InnovaX.</h1>
+        <p class="hero-subtitle">A modern collaboration platform where students, creators, professionals, and companies co-create impactful innovation.</p>
+        <div class="inline-actions" style="margin-top:14px;">
+          <a class="btn-primary" href="login.html">Sign In</a>
+          <a class="btn-secondary" href="register.html">Create Account</a>
+          <a class="btn-secondary" href="feed.html">Go to Feed</a>
+        </div>
+        <div class="kpi-row" style="margin-top:14px;">
+          <div class="kpi-card"><span class="value">12.4k</span><span class="label">Innovators</span></div>
+          <div class="kpi-card"><span class="value">1.9k</span><span class="label">Projects</span></div>
+          <div class="kpi-card"><span class="value">320</span><span class="label">Companies</span></div>
+          <div class="kpi-card"><span class="value">87</span><span class="label">Universities</span></div>
+        </div>
+      </section>
 
-    <!-- Search -->
-    <div class="nav-search">
-      <input type="text" id="search-input" placeholder="Search innovations, people…" aria-label="Search" />
-      <i class="fas fa-search search-icon"></i>
+      <section class="section-card">
+        <div class="section-head">
+          <h2 class="section-title">Platform Highlights</h2>
+        </div>
+        <div class="stack-list">
+          <article class="stack-item">
+            <h4>Innovation Feed</h4>
+            <p>Discover fast-moving projects, react in real time, and discuss with threaded comments.</p>
+          </article>
+          <article class="stack-item">
+            <h4>Professional Profiles</h4>
+            <p>Present verified credentials, skills, and portfolio projects in one place.</p>
+          </article>
+          <article class="stack-item">
+            <h4>Review + Rating</h4>
+            <p>Collect structured peer feedback and score project readiness with star ratings.</p>
+          </article>
+        </div>
+      </section>
     </div>
-
-    <!-- Nav Links (desktop) -->
-    <nav class="nav-links" id="nav-links-desktop">
-      <a class="nav-link active" data-label="Home" href="#">
-        <i class="fas fa-home"></i>
-        <span>Home</span>
-      </a>
-      <a class="nav-link" data-label="Network" href="#">
-        <i class="fas fa-users"></i>
-        <span>Network</span>
-      </a>
-      <a class="nav-link" data-label="Messages" href="#">
-        <i class="fas fa-comment-dots"></i>
-        <span>Messages</span>
-      </a>
-      <a class="nav-link" data-label="Notifications" href="#" id="notif-link">
-        <i class="fas fa-bell"></i>
-        <span>Alerts</span>
-        <span class="badge" id="notif-badge">4</span>
-      </a>
-    </nav>
-
-    <!-- Profile avatar -->
-    <div class="nav-avatar" title="Alex Johnson" onclick="showToast('Navigating to your profile…')">AJ</div>
-
-    <!-- Hamburger (mobile) -->
-    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
-      <span></span><span></span><span></span>
-    </button>
-  </header>
-
-  <!-- Mobile menu -->
-  <nav class="mobile-menu" id="mobile-menu">
-    <a class="nav-link active" href="#"><i class="fas fa-home"></i> Home</a>
-    <a class="nav-link" href="#"><i class="fas fa-users"></i> My Network</a>
-    <a class="nav-link" href="#"><i class="fas fa-comment-dots"></i> Messages</a>
-    <a class="nav-link" href="#"><i class="fas fa-bell"></i> Notifications</a>
-    <div class="divider"></div>
-    <a class="nav-link" href="#"><i class="fas fa-user-circle"></i> Profile</a>
-    <a class="nav-link" href="#"><i class="fas fa-cog"></i> Settings</a>
-  </nav>
-
-  <!-- ============================================================
-       MAIN CONTAINER
-  ============================================================ -->
-  <main class="container">
-
-    <!-- ====================================================
-         LEFT SIDEBAR
-    ==================================================== -->
-    <aside class="sidebar-left">
-
-      <!-- Profile Card -->
-      <div class="card profile-card">
-        <div class="cover"></div>
-        <div class="profile-body">
-          <div class="avatar-wrap">
-            <div class="avatar">AJ</div>
-          </div>
-          <div class="name">Alex Johnson</div>
-          <div class="role">Product Designer · San Francisco, CA</div>
-        </div>
-        <div class="profile-stats">
-          <div class="stat">
-            <span class="value">128</span>
-            <span class="label">Connections</span>
-          </div>
-          <div class="stat">
-            <span class="value">47</span>
-            <span class="label">Posts</span>
-          </div>
-          <div class="stat">
-            <span class="value">3.2k</span>
-            <span class="label">Views</span>
-          </div>
-        </div>
-        <div class="profile-body" style="padding-top:4px;">
-          <nav class="quick-links">
-            <div class="quick-links-title">Quick Links</div>
-            <div class="quick-link" onclick="showToast('Opening My Profile…')">
-              <i class="fas fa-user-circle"></i> My Profile
-            </div>
-            <div class="quick-link" onclick="showToast('Opening Saved Posts…')">
-              <i class="fas fa-bookmark"></i> Saved Posts
-            </div>
-            <div class="quick-link" onclick="showToast('Opening Analytics…')">
-              <i class="fas fa-chart-line"></i> Analytics
-            </div>
-            <div class="quick-link" onclick="showToast('Opening Settings…')">
-              <i class="fas fa-cog"></i> Settings
-            </div>
-          </nav>
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- ====================================================
-         CENTER FEED
-    ==================================================== -->
-    <section class="feed" id="feed">
-
-      <!-- Create Post Card -->
-      <div class="card create-post">
-        <div class="create-post-top">
-          <div class="avatar">AJ</div>
-          <input
-            type="text"
-            id="post-input"
-            placeholder="Share your innovation…"
-            onfocus="expandPostEditor()"
-            readonly
-          />
-        </div>
-
-        <!-- Expanded editor (shown on click) -->
-        <div class="post-editor" id="post-editor">
-          <input type="text" id="post-title-input" placeholder="Add a title for your innovation…" />
-          <textarea id="post-desc-input" placeholder="Describe your idea in detail…"></textarea>
-          <input type="text" id="post-tags-input" placeholder="Add tags (e.g. #AI #Design #Web3)" />
-        </div>
-
-        <div class="create-post-actions">
-          <button class="upload-btn image" onclick="showToast('📷 Image upload coming soon!')">
-            <i class="fas fa-image"></i> Photo
-          </button>
-          <button class="upload-btn video" onclick="showToast('🎬 Video upload coming soon!')">
-            <i class="fas fa-video"></i> Video
-          </button>
-          <button class="upload-btn file" onclick="showToast('📎 File upload coming soon!')">
-            <i class="fas fa-paperclip"></i> File
-          </button>
-          <button class="post-submit-btn" id="post-btn" onclick="createPost()">
-            <i class="fas fa-paper-plane"></i> Post
-          </button>
-        </div>
-      </div>
-
-      <!-- Shimmer loaders (visible briefly on load) -->
-      <div class="card shimmer-card" id="shimmer1">
-        <div class="shimmer-row">
-          <div class="shimmer shimmer-avatar"></div>
-          <div style="flex:1">
-            <div class="shimmer shimmer-line medium"></div>
-            <div class="shimmer shimmer-line short"></div>
-          </div>
-        </div>
-        <div class="shimmer shimmer-line long"></div>
-        <div class="shimmer shimmer-line medium"></div>
-        <div class="shimmer shimmer-box" style="margin-top:12px;"></div>
-      </div>
-      <div class="card shimmer-card" id="shimmer2">
-        <div class="shimmer-row">
-          <div class="shimmer shimmer-avatar"></div>
-          <div style="flex:1">
-            <div class="shimmer shimmer-line medium"></div>
-            <div class="shimmer shimmer-line short"></div>
-          </div>
-        </div>
-        <div class="shimmer shimmer-line long"></div>
-        <div class="shimmer shimmer-line medium"></div>
-      </div>
-
-      <!-- POSTS inserted by JS -->
-      <div id="posts-container"></div>
-
-    </section>
-
-    <!-- ====================================================
-         RIGHT SIDEBAR
-    ==================================================== -->
-    <aside class="sidebar-right">
-
-      <!-- Trending -->
-      <div class="card sidebar-section">
-        <div class="sidebar-title">
-          <i class="fas fa-fire"></i> Trending Innovations
-        </div>
-
-        <div class="trend-item" onclick="showToast('#ArtificialIntelligence is trending!')">
-          <div class="trend-rank">#1</div>
-          <div class="trend-info">
-            <div class="trend-name">#ArtificialIntelligence</div>
-            <div class="trend-count">14.2k posts</div>
-          </div>
-          <span class="trend-badge hot">🔥 Hot</span>
-        </div>
-        <div class="trend-item" onclick="showToast('#GreenTech is trending!')">
-          <div class="trend-rank">#2</div>
-          <div class="trend-info">
-            <div class="trend-name">#GreenTech</div>
-            <div class="trend-count">8.7k posts</div>
-          </div>
-          <span class="trend-badge new">✨ New</span>
-        </div>
-        <div class="trend-item" onclick="showToast('#Web3 is trending!')">
-          <div class="trend-rank">#3</div>
-          <div class="trend-info">
-            <div class="trend-name">#Web3</div>
-            <div class="trend-count">6.1k posts</div>
-          </div>
-          <span class="trend-badge">📈</span>
-        </div>
-        <div class="trend-item" onclick="showToast('#BioTech is trending!')">
-          <div class="trend-rank">#4</div>
-          <div class="trend-info">
-            <div class="trend-name">#BioTech</div>
-            <div class="trend-count">4.9k posts</div>
-          </div>
-          <span class="trend-badge">🧬</span>
-        </div>
-        <div class="trend-item" onclick="showToast('#SpaceTech is trending!')">
-          <div class="trend-rank">#5</div>
-          <div class="trend-info">
-            <div class="trend-name">#SpaceTech</div>
-            <div class="trend-count">3.3k posts</div>
-          </div>
-          <span class="trend-badge new">🚀</span>
-        </div>
-      </div>
-
-      <!-- Suggested Users -->
-      <div class="card sidebar-section">
-        <div class="sidebar-title">
-          <i class="fas fa-user-plus"></i> Suggested for You
-        </div>
-
-        <div class="suggested-user">
-          <div class="avatar" style="background: linear-gradient(135deg,#1CC88A,#17a673);">SR</div>
-          <div class="user-info">
-            <div class="user-name">Sofia Rivera</div>
-            <div class="user-role">AI Researcher · MIT</div>
-          </div>
-          <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
-        </div>
-        <div class="suggested-user">
-          <div class="avatar" style="background: linear-gradient(135deg,#E74A3B,#c0392b);">MK</div>
-          <div class="user-info">
-            <div class="user-name">Marcus Kim</div>
-            <div class="user-role">Robotics Engineer</div>
-          </div>
-          <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
-        </div>
-        <div class="suggested-user">
-          <div class="avatar" style="background: linear-gradient(135deg,#F6C23E,#e0a800); color:#fff;">LP</div>
-          <div class="user-info">
-            <div class="user-name">Layla Patel</div>
-            <div class="user-role">UX Innovator · Google</div>
-          </div>
-          <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
-        </div>
-      </div>
-
-      <!-- Innovation Tip -->
-      <div class="card sidebar-section">
-        <div class="sidebar-title">
-          <i class="fas fa-star"></i> Innovation of the Day
-        </div>
-        <div class="tip-card">
-          <span class="tip-emoji">💡</span>
-          <div class="tip-label">Daily Spark</div>
-          <div class="tip-text">
-            "The best way to predict the future is to create it." — The smallest idea, shared boldly, can spark the next big revolution.
-          </div>
-        </div>
-      </div>
-
-    </aside>
-
   </main>
 
-  <!-- ============================================================
-       FOOTER
-  ============================================================ -->
-  <footer class="footer">
-    <p class="footer-text">© 2026 InnovaX. All rights reserved. · Built for innovators worldwide 🌍</p>
-    <div class="social-links">
-      <a class="social-link" href="#" title="Twitter/X" onclick="showToast('Opening Twitter/X…'); return false;">
-        <i class="fab fa-x-twitter"></i>
-      </a>
-      <a class="social-link" href="#" title="LinkedIn" onclick="showToast('Opening LinkedIn…'); return false;">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-      <a class="social-link" href="#" title="GitHub" onclick="showToast('Opening GitHub…'); return false;">
-        <i class="fab fa-github"></i>
-      </a>
-      <a class="social-link" href="#" title="Instagram" onclick="showToast('Opening Instagram…'); return false;">
-        <i class="fab fa-instagram"></i>
-      </a>
-    </div>
-  </footer>
-
-
-  <!-- ============================================================
-       JAVASCRIPT
-  ============================================================ -->
-  <script src="assets/js/main.js"></script>
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
 </body>
 </html>

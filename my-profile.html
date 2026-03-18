@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | My Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="my-profile" data-active-nav="feed">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <section class="section-card" style="padding:0; overflow:hidden;">
+        <div class="cover-photo"></div>
+        <div class="profile-hero">
+          <div class="profile-avatar-lg">AJ</div>
+          <div class="profile-meta">
+            <h1>Alex Johnson</h1>
+            <p>Product Designer · InnovaX Labs · Stanford Alumni</p>
+            <div class="pill-row">
+              <span class="badge-chip"><i class="fas fa-check-circle"></i> Verified Professional</span>
+              <span class="status-pill success">Open to Collaborate</span>
+            </div>
+          </div>
+          <div class="inline-actions">
+            <a class="btn-primary" href="settings.html">Edit Profile</a>
+            <a class="btn-secondary" href="saved-posts.html">Saved Posts</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Bio</div></div>
+        <p class="profile-summary">Designing human-centered systems that move research ideas into usable products. Focused on sustainability workflows, creator tooling, and community-first product loops.</p>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Skills & Interests</div></div>
+        <div class="tag-list">
+          <span class="tag">#ProductDesign</span><span class="tag">#AI</span><span class="tag">#DesignSystems</span><span class="tag">#InnovationOps</span><span class="tag">#UserResearch</span>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Portfolio Projects</div></div>
+        <div class="grid-3">
+          <article class="project-card"><h4>Campus Prototype Lab</h4><p>Built a design-led experimentation system for student teams.</p></article>
+          <article class="project-card"><h4>Sustainability Tracker</h4><p>Created multi-campus dashboard for material recovery outcomes.</p></article>
+          <article class="project-card"><h4>Innovation Mentor Hub</h4><p>Matched founders with domain mentors through peer signals.</p></article>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">My Posts</div></div>
+        <div data-post-stream="profile"></div>
+      </section>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+@media (max-width: 1100px) {
+	.kpi-row {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.grid-3 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.messages-layout {
+		grid-template-columns: 240px 1fr;
+	}
+}
+
+@media (max-width: 960px) {
+	.sidebar-left,
+	.sidebar-right {
+		position: static;
+		max-height: none;
+	}
+
+	.landing-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.settings-grid,
+	.grid-2,
+	.create-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.messages-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.chat-list {
+		max-height: 220px;
+	}
+}
+
+@media (max-width: 640px) {
+	.hero-card,
+	.section-card,
+	.auth-card {
+		padding: 14px;
+	}
+
+	.profile-hero {
+		margin-top: -24px;
+		padding: 0 12px 14px;
+		align-items: center;
+	}
+
+	.profile-avatar-lg {
+		width: 72px;
+		height: 72px;
+		font-size: 1.1rem;
+	}
+
+	.grid-3,
+	.kpi-row {
+		grid-template-columns: 1fr;
+	}
+
+	.chat-bubble {
+		max-width: 86%;
+	}
+
+	.notification-item,
+	.request-item {
+		flex-wrap: wrap;
+	}
+}

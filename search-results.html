@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX | Search Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body data-page="search-results" data-active-nav="feed">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="container">
+    <div data-component="sidebar-left"></div>
+    <section class="content-column">
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Search</div></div>
+        <form class="search-bar-form" data-search-form>
+          <input type="text" placeholder="Search people, projects, tags..." />
+          <button class="btn-primary" type="submit">Search</button>
+        </form>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">Results for: <span data-search-query>innovation</span></div></div>
+        <div class="stack-list">
+          <article class="article-card"><h3>Post: AI Lab Circularity Model</h3><p>Matched in title, description, and #Sustainability tag.</p></article>
+          <article class="article-card"><h3>User: Sofia Rivera</h3><p>Matched in profile skills and recent innovation posts.</p></article>
+          <article class="article-card"><h3>Company: LumenCell</h3><p>Matched in clean energy innovation portfolio.</p></article>
+        </div>
+      </section>
+    </section>
+    <div data-component="sidebar-right"></div>
+  </main>
+
+  <div data-component="footer"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
