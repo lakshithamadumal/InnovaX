@@ -5,6 +5,14 @@
     posts: [],
     postTemplate: "",
     commentSectionTemplate: "",
+    followStats: {
+      me: { followers: 3200, following: 128 },
+      sofia: { followers: 18400, following: 612 },
+      marcus: { followers: 5400, following: 410 },
+      layla: { followers: 9100, following: 380 },
+      james: { followers: 7600, following: 290 }
+    },
+    followingUsers: new Set(["layla", "james"]),
     chatUser: "sofia",
     chats: {
       sofia: [
@@ -260,6 +268,41 @@
   function changeNotification(delta) {
     state.notificationCount = Math.max(0, state.notificationCount + delta);
     updateNotificationBadge();
+  }
+
+  function formatCompact(value) {
+    return new Intl.NumberFormat("en", {
+      notation: "compact",
+      maximumFractionDigits: 1
+    }).format(value);
+  }
+
+  function renderFollowCounts() {
+    const nodes = Array.from(document.querySelectorAll("[data-follow-count]"));
+    nodes.forEach((node) => {
+      const user = node.dataset.user;
+      const type = node.dataset.type;
+      const userStats = state.followStats[user];
+      if (!userStats || !(type in userStats)) {
+        return;
+      }
+
+      node.textContent = formatCompact(userStats[type]);
+    });
+  }
+
+  function syncFollowButtons() {
+    const followButtons = Array.from(document.querySelectorAll("[data-follow-btn][data-target-user]"));
+
+    followButtons.forEach((button) => {
+      const targetUser = button.dataset.targetUser;
+      const isFollowing = state.followingUsers.has(targetUser);
+      const label = button.dataset.label || "Follow";
+      const activeLabel = button.dataset.activeLabel || "Following";
+
+      button.classList.toggle("following", isFollowing);
+      button.textContent = isFollowing ? activeLabel : label;
+    });
   }
 
   function setActiveNav() {
@@ -709,11 +752,41 @@
 
       const followBtn = event.target.closest("[data-follow-btn], .follow-btn");
       if (followBtn) {
+        const targetUser = followBtn.dataset.targetUser;
+
+        if (targetUser) {
+          const isFollowing = state.followingUsers.has(targetUser);
+
+          if (isFollowing) {
+            state.followingUsers.delete(targetUser);
+            if (state.followStats.me) {
+              state.followStats.me.following = Math.max(0, state.followStats.me.following - 1);
+            }
+            if (state.followStats[targetUser]) {
+              state.followStats[targetUser].followers = Math.max(0, state.followStats[targetUser].followers - 1);
+            }
+            showToast("Unfollowed.");
+          } else {
+            state.followingUsers.add(targetUser);
+            if (state.followStats.me) {
+              state.followStats.me.following += 1;
+            }
+            if (state.followStats[targetUser]) {
+              state.followStats[targetUser].followers += 1;
+            }
+            showToast(followBtn.dataset.label === "Follow Back" ? "Followed back." : "Following now.");
+          }
+
+          syncFollowButtons();
+          renderFollowCounts();
+          return;
+        }
+
         followBtn.classList.toggle("following");
-        const connectLabel = followBtn.dataset.mode === "connect" ? "Connect" : "Follow";
-        const activeLabel = followBtn.dataset.mode === "connect" ? "Connected" : "Following";
-        followBtn.textContent = followBtn.classList.contains("following") ? activeLabel : connectLabel;
-        showToast(followBtn.classList.contains("following") ? `${activeLabel} enabled.` : `${connectLabel} removed.`);
+        const label = followBtn.dataset.label || "Follow";
+        const activeLabel = followBtn.dataset.activeLabel || "Following";
+        followBtn.textContent = followBtn.classList.contains("following") ? activeLabel : label;
+        showToast(followBtn.classList.contains("following") ? `${activeLabel} enabled.` : `${label} removed.`);
         return;
       }
 
@@ -776,6 +849,8 @@
 
   async function init() {
     await mountComponents();
+    syncFollowButtons();
+    renderFollowCounts();
     initNavbar();
     setActiveNav();
     updateNotificationBadge();

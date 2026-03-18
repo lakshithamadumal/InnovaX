@@ -171,6 +171,27 @@
 	margin-bottom: 8px;
 }
 
+.profile-follow-stats {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 8px;
+}
+
+.profile-follow-stats span {
+	font-size: 0.78rem;
+	color: var(--text-muted);
+	background: var(--bg);
+	border: 1px solid var(--border);
+	padding: 4px 10px;
+	border-radius: 99px;
+}
+
+.profile-follow-stats strong {
+	color: var(--text);
+	font-weight: 700;
+}
+
 .profile-summary {
 	font-size: 0.84rem;
 	line-height: 1.7;

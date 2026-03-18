@@ -20,29 +20,35 @@
     <section class="content-column">
       <section class="section-card">
         <div class="section-head">
-          <div class="section-title">Connection Requests</div>
+          <div class="section-title">People Who Followed You</div>
         </div>
         <div class="stack-list">
           <div class="request-item">
             <div class="avatar" style="background:linear-gradient(135deg,#1cc88a,#17a673);">SR</div>
             <div class="user-info"><div class="user-name">Sofia Rivera</div><div class="user-role">AI Researcher · MIT</div></div>
-            <button class="btn-primary" type="button" data-request-action="accept">Accept</button>
-            <button class="btn-secondary" type="button" data-request-action="reject">Reject</button>
+            <button class="btn-primary follow-btn" type="button" data-follow-btn data-target-user="sofia" data-label="Follow Back" data-active-label="Following">Follow Back</button>
           </div>
           <div class="request-item">
             <div class="avatar" style="background:linear-gradient(135deg,#E74A3B,#c0392b);">MK</div>
             <div class="user-info"><div class="user-name">Marcus Kim</div><div class="user-role">Robotics Engineer</div></div>
-            <button class="btn-primary" type="button" data-request-action="accept">Accept</button>
-            <button class="btn-secondary" type="button" data-request-action="reject">Reject</button>
+            <button class="btn-primary follow-btn" type="button" data-follow-btn data-target-user="marcus" data-label="Follow Back" data-active-label="Following">Follow Back</button>
           </div>
         </div>
       </section>
 
       <section class="section-card">
-        <div class="section-head"><div class="section-title">Your Connections</div></div>
+        <div class="section-head"><div class="section-title">Your Followers</div></div>
         <div class="stack-list">
-          <div class="request-item"><div class="avatar">LP</div><div class="user-info"><div class="user-name">Layla Patel</div><div class="user-role">UX Innovator · Google</div></div><button class="follow-btn" type="button" data-follow-btn data-mode="connect">Connected</button></div>
-          <div class="request-item"><div class="avatar">JW</div><div class="user-info"><div class="user-name">James Webb</div><div class="user-role">CleanTech Founder</div></div><button class="follow-btn" type="button" data-follow-btn data-mode="connect">Connected</button></div>
+          <div class="request-item"><div class="avatar">LP</div><div class="user-info"><div class="user-name">Layla Patel</div><div class="user-role">UX Innovator · Google</div></div><button class="follow-btn following" type="button" data-follow-btn data-target-user="layla" data-label="Follow" data-active-label="Following">Following</button></div>
+          <div class="request-item"><div class="avatar">JW</div><div class="user-info"><div class="user-name">James Webb</div><div class="user-role">CleanTech Founder</div></div><button class="follow-btn following" type="button" data-follow-btn data-target-user="james" data-label="Follow" data-active-label="Following">Following</button></div>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-head"><div class="section-title">You Are Following</div></div>
+        <div class="data-list">
+          <div class="data-item"><strong data-follow-count data-user="me" data-type="following">128</strong><span>Total Following</span></div>
+          <div class="data-item"><strong data-follow-count data-user="me" data-type="followers">3.2k</strong><span>Total Followers</span></div>
         </div>
       </section>
     </section>
