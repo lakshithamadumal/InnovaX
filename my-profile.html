@@ -19,11 +19,21 @@
     <div data-component="sidebar-left"></div>
     <section class="content-column">
       <section class="section-card" style="padding:0; overflow:hidden;">
-        <div class="cover-photo"></div>
+        <div class="cover-photo" data-profile-cover>
+          <button type="button" class="profile-media-edit-btn cover-edit" data-edit-cover-btn aria-label="Change cover image">
+            <i class="fas fa-pencil-alt"></i>
+          </button>
+        </div>
         <div class="profile-hero">
-          <div class="profile-avatar-lg">AJ</div>
+          <div class="profile-avatar-lg" data-profile-avatar>
+            <span data-profile-avatar-initials>AJ</span>
+            <button type="button" class="profile-media-edit-btn avatar-edit" data-edit-avatar-btn aria-label="Change profile image">
+              <i class="fas fa-pencil-alt"></i>
+            </button>
+          </div>
           <div class="profile-meta">
-            <h1>Alex Johnson</h1>
+            <h1 data-profile-name>Alex Johnson</h1>
+            <p data-profile-university>University of Colombo</p>
             <div class="pill-row">
               <span class="badge-chip" data-session-role-badge><i class="fas fa-user-graduate"></i> Student</span>
               <span class="badge-chip" data-profile-likes-wrap><i class="fas fa-heart"></i> <span data-profile-likes-count>0</span> Likes</span>
@@ -35,6 +45,9 @@
           </div>
         </div>
       </section>
+
+      <input type="file" accept="image/*" data-cover-file-input class="profile-file-input" />
+      <input type="file" accept="image/*" data-avatar-file-input class="profile-file-input" />
 
       <section class="section-card">
         <div class="section-head"><div class="section-title">Bio</div></div>

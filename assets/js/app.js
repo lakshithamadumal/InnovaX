@@ -1,5 +1,7 @@
 (() => {
   const templateCache = new Map();
+  const DEFAULT_PROFILE_AVATAR_URL = "assets/images/users/default-avatar.svg";
+  const DEFAULT_PROFILE_COVER_URL = "assets/images/users/default-cover.svg";
 
   const state = {
     isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn") || "false"),
@@ -10,6 +12,12 @@
     notificationCount: 2,
     feedSort: "recent"
   };
+
+  if (state.currentUser) {
+    state.currentUser.profileImageUrl = state.currentUser.profileImageUrl || DEFAULT_PROFILE_AVATAR_URL;
+    state.currentUser.coverImageUrl = state.currentUser.coverImageUrl || DEFAULT_PROFILE_COVER_URL;
+    localStorage.setItem("currentUser", JSON.stringify(state.currentUser));
+  }
 
   const studentProfiles = [
     {
@@ -58,10 +66,21 @@
   function setLoggedInUser(user, role) {
     state.isLoggedIn = true;
     state.userRole = role;
-    state.currentUser = user;
+    state.currentUser = {
+      ...user,
+      profileImageUrl: user?.profileImageUrl || DEFAULT_PROFILE_AVATAR_URL,
+      coverImageUrl: user?.coverImageUrl || DEFAULT_PROFILE_COVER_URL
+    };
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("userRole", role);
-    localStorage.setItem("currentUser", JSON.stringify(user));
+    localStorage.setItem("currentUser", JSON.stringify(state.currentUser));
+  }
+
+  function saveCurrentUserState() {
+    if (!state.currentUser) {
+      return;
+    }
+    localStorage.setItem("currentUser", JSON.stringify(state.currentUser));
   }
 
   function logout() {
@@ -439,6 +458,148 @@
     badges.forEach((badge) => {
       badge.innerHTML = `<i class="fas ${icon}"></i> ${label}`;
     });
+  }
+
+  function updateProfileIdentity() {
+    const page = document.body.dataset.page;
+    if (page !== "my-profile" && page !== "user-profile") {
+      return;
+    }
+
+    const nameNodes = Array.from(document.querySelectorAll("[data-profile-name]"));
+    const uniNodes = Array.from(document.querySelectorAll("[data-profile-university]"));
+    const avatarNodes = Array.from(document.querySelectorAll("[data-profile-avatar]"));
+    const coverNodes = Array.from(document.querySelectorAll("[data-profile-cover]"));
+
+    let name = "InnovaX Member";
+    let role = "student";
+    let university = "";
+    let avatarUrl = "";
+    let coverUrl = "";
+
+    if (page === "my-profile") {
+      if (state.currentUser?.name) {
+        name = state.currentUser.name;
+      }
+      role = state.userRole || "student";
+      university = role === "student" ? String(state.currentUser?.university || "").trim() : "";
+      avatarUrl = state.currentUser?.profileImageUrl || DEFAULT_PROFILE_AVATAR_URL;
+      coverUrl = state.currentUser?.coverImageUrl || DEFAULT_PROFILE_COVER_URL;
+    } else {
+      name = document.body.dataset.profileUserName || name;
+      role = (document.body.dataset.profileUserRole || "student").toLowerCase();
+      university = role === "student"
+        ? String(document.body.dataset.profileUserUniversity || "").trim()
+        : "";
+
+      if (document.body.dataset.profileUserAvatar) {
+        avatarUrl = document.body.dataset.profileUserAvatar;
+      }
+      if (document.body.dataset.profileUserCover) {
+        coverUrl = document.body.dataset.profileUserCover;
+      }
+    }
+
+    nameNodes.forEach((node) => {
+      node.textContent = name;
+    });
+
+    avatarNodes.forEach((node) => {
+      const initials = getInitials(name);
+      const initialsNode = node.querySelector("[data-profile-avatar-initials]");
+      if (initialsNode) {
+        initialsNode.textContent = avatarUrl ? "" : initials;
+      } else {
+        node.textContent = avatarUrl ? "" : initials;
+      }
+      node.style.backgroundImage = avatarUrl ? `url('${escapeHtml(avatarUrl)}')` : "";
+      node.setAttribute("aria-label", name);
+    });
+
+    coverNodes.forEach((node) => {
+      if (coverUrl) {
+        node.style.backgroundImage = `url('${escapeHtml(coverUrl)}')`;
+      }
+    });
+
+    uniNodes.forEach((node) => {
+      if (university) {
+        node.textContent = university;
+        node.style.display = "block";
+      } else {
+        node.style.display = "none";
+      }
+    });
+  }
+
+  function initMyProfileMediaEditor() {
+    if (document.body.dataset.page !== "my-profile") {
+      return;
+    }
+    if (!state.isLoggedIn || !state.currentUser) {
+      return;
+    }
+
+    const avatarBtn = document.querySelector("[data-edit-avatar-btn]");
+    const coverBtn = document.querySelector("[data-edit-cover-btn]");
+    const avatarInput = document.querySelector("[data-avatar-file-input]");
+    const coverInput = document.querySelector("[data-cover-file-input]");
+
+    const openPicker = (input) => {
+      if (!input) {
+        return;
+      }
+      input.value = "";
+      input.click();
+    };
+
+    const applyImage = (file, target) => {
+      if (!file) {
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        showToast("Please select an image file.");
+        return;
+      }
+      if (file.size > 4 * 1024 * 1024) {
+        showToast("Image must be under 4MB.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        if (!result) {
+          showToast("Unable to read selected image.");
+          return;
+        }
+
+        if (target === "avatar") {
+          state.currentUser.profileImageUrl = result;
+        } else {
+          state.currentUser.coverImageUrl = result;
+        }
+
+        saveCurrentUserState();
+        updateProfileIdentity();
+        showToast(target === "avatar" ? "Profile image updated." : "Cover image updated.");
+      };
+      reader.readAsDataURL(file);
+    };
+
+    if (avatarBtn && avatarInput) {
+      avatarBtn.addEventListener("click", () => openPicker(avatarInput));
+      avatarInput.addEventListener("change", () => {
+        applyImage(avatarInput.files?.[0], "avatar");
+      });
+    }
+
+    if (coverBtn && coverInput) {
+      coverBtn.addEventListener("click", () => openPicker(coverInput));
+      coverInput.addEventListener("change", () => {
+        applyImage(coverInput.files?.[0], "cover");
+      });
+    }
   }
 
   function getLikesForIdentity(userId, userName) {
@@ -937,7 +1098,7 @@
         }
 
         const user = role === "student"
-          ? { id: "student1", name: "Alex Johnson", email, role }
+          ? { id: "student1", name: "Alex Johnson", email, role, university: "University of Colombo" }
           : { id: "expert1", name: "Dr. Sarah Smith", email, role };
 
         setLoggedInUser(user, role);
@@ -957,8 +1118,10 @@
         const password = studentForm.querySelector("input[type='password']")?.value;
         const studentId = studentForm.querySelector("input[placeholder*='Student']")?.value?.trim();
         const university = studentForm.querySelector(".university-search")?.value?.trim();
+        const faculty = studentForm.querySelector(".faculty-search")?.value?.trim();
+        const department = studentForm.querySelector(".department-search")?.value?.trim();
 
-        if (!name || !email || !password || !studentId || !university) {
+        if (!name || !email || !password || !studentId || !university || !faculty || !department) {
           showToast("Please fill all fields.");
           return;
         }
@@ -969,7 +1132,9 @@
           email,
           role: "student",
           studentId,
-          university
+          university,
+          faculty,
+          department
         };
 
         setLoggedInUser(user, "student");
@@ -1025,11 +1190,13 @@
     await loadPostsData();
     updateSidebarAndNav();
     applyRoleBasedProfileLayout();
+    updateProfileIdentity();
     updateProfileLikes();
     renderPostStreams();
     renderMostLikelyPosts();
     initFeedSort();
     renderSearchResults();
+    initMyProfileMediaEditor();
 
     initCreatePostComposer();
     initEventDelegation();

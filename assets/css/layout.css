@@ -128,6 +128,9 @@
 	border-radius: var(--radius);
 	background: linear-gradient(135deg, var(--primary), #6f8ee8 62%, var(--accent));
 	border: 1px solid var(--border);
+	position: relative;
+	background-size: cover;
+	background-position: center;
 }
 
 .profile-hero {
@@ -152,6 +155,44 @@
 	font-size: 1.3rem;
 	font-weight: 700;
 	box-shadow: var(--shadow-sm);
+	position: relative;
+	background-size: cover;
+	background-position: center;
+}
+
+.profile-media-edit-btn {
+	position: absolute;
+	width: 32px;
+	height: 32px;
+	border: 1px solid rgba(255, 255, 255, 0.65);
+	background: rgba(20, 28, 44, 0.66);
+	color: #fff;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: transform 0.2s ease, background 0.2s ease;
+	z-index: 2;
+}
+
+.profile-media-edit-btn:hover {
+	transform: translateY(-1px);
+	background: rgba(20, 28, 44, 0.86);
+}
+
+.profile-media-edit-btn.cover-edit {
+	right: 12px;
+	top: 12px;
+}
+
+.profile-media-edit-btn.avatar-edit {
+	right: -2px;
+	bottom: -2px;
+}
+
+.profile-file-input {
+	display: none;
 }
 
 .profile-meta {

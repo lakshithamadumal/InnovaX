@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="assets/css/components.css" />
   <link rel="stylesheet" href="assets/css/responsive.css" />
 </head>
-<body data-page="user-profile" data-active-nav="feed" data-profile-user-role="student" data-profile-user-id="student2" data-profile-user-name="Nadeesha Perera">
+<body data-page="user-profile" data-active-nav="feed" data-profile-user-role="student" data-profile-user-id="student2" data-profile-user-name="Nadeesha Perera" data-profile-user-university="University of Moratuwa">
   <div class="toast" id="toast"></div>
   <div data-component="navbar"></div>
 
@@ -21,9 +21,10 @@
       <section class="section-card" style="padding:0; overflow:hidden;">
         <div class="cover-photo" style="background:linear-gradient(135deg,#1cc88a,#17a673 55%,#f6c23e);"></div>
         <div class="profile-hero">
-          <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#1cc88a,#17a673);">SR</div>
+          <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#1cc88a,#17a673);" data-profile-avatar>SR</div>
           <div class="profile-meta">
-            <h1>Nadeesha Perera</h1>
+            <h1 data-profile-name>Nadeesha Perera</h1>
+            <p data-profile-university>University of Moratuwa</p>
             <div class="pill-row">
               <span class="badge-chip" data-public-role-badge><i class="fas fa-user-graduate"></i> Student</span>
               <span class="badge-chip" data-profile-likes-wrap><i class="fas fa-heart"></i> <span data-profile-likes-count>0</span> Likes</span>

@@ -137,13 +137,37 @@
 			z-index: 10;
 			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 		}
+		.faculty-dropdown,
+		.department-dropdown {
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			background: white;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			max-height: 200px;
+			overflow-y: auto;
+			z-index: 10;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		}
 		.university-dropdown-item {
 			padding: 0.75rem 1rem;
 			cursor: pointer;
 			border-bottom: 1px solid var(--border);
 		}
+		.faculty-dropdown-item,
+		.department-dropdown-item {
+			padding: 0.75rem 1rem;
+			cursor: pointer;
+			border-bottom: 1px solid var(--border);
+		}
 		.university-dropdown-item:hover,
-		.university-dropdown-item.highlighted {
+		.university-dropdown-item.highlighted,
+		.faculty-dropdown-item:hover,
+		.faculty-dropdown-item.highlighted,
+		.department-dropdown-item:hover,
+		.department-dropdown-item.highlighted {
 			background: rgba(78, 115, 223, 0.1);
 		}
 		.selected-role-display {
@@ -201,6 +225,20 @@
 					<div style="position: relative;">
 						<input type="text" placeholder="Search university..." class="university-search" required />
 						<div class="university-dropdown" style="display:none;"></div>
+					</div>
+				</label>
+				<label class="field-wrap">
+					<span>Faculty</span>
+					<div style="position: relative;">
+						<input type="text" placeholder="Search faculty..." class="faculty-search" required />
+						<div class="faculty-dropdown" style="display:none;"></div>
+					</div>
+				</label>
+				<label class="field-wrap">
+					<span>Department</span>
+					<div style="position: relative;">
+						<input type="text" placeholder="Search department..." class="department-search" required />
+						<div class="department-dropdown" style="display:none;"></div>
 					</div>
 				</label>
 				<label class="field-wrap">
@@ -292,13 +330,50 @@
 			}
 		}
 
+		// Load faculties data
+		async function loadFaculties() {
+			try {
+				const response = await fetch('data/faculties.json');
+				return await response.json();
+			} catch (error) {
+				console.error('Error loading faculties:', error);
+				return [];
+			}
+		}
+
+		// Load departments data
+		async function loadDepartments() {
+			try {
+				const response = await fetch('data/departments.json');
+				return await response.json();
+			} catch (error) {
+				console.error('Error loading departments:', error);
+				return [];
+			}
+		}
+
 		// University autocomplete
 		const universitySearch = document.querySelector('.university-search');
 		const universityDropdown = document.querySelector('.university-dropdown');
+		const facultySearch = document.querySelector('.faculty-search');
+		const facultyDropdown = document.querySelector('.faculty-dropdown');
+		const departmentSearch = document.querySelector('.department-search');
+		const departmentDropdown = document.querySelector('.department-dropdown');
 		let universities = [];
+		let faculties = [];
+		let departments = [];
+		let selectedFacultyId = null;
 
 		loadUniversities().then(data => {
 			universities = data;
+		});
+
+		loadFaculties().then(data => {
+			faculties = data;
+		});
+
+		loadDepartments().then(data => {
+			departments = data;
 		});
 
 		universitySearch?.addEventListener('input', (e) => {
@@ -317,6 +392,61 @@
 				item.addEventListener('click', () => {
 					universitySearch.value = item.textContent;
 					universityDropdown.style.display = 'none';
+				});
+			});
+		});
+
+		facultySearch?.addEventListener('input', (e) => {
+			const query = e.target.value.toLowerCase();
+			selectedFacultyId = null;
+			if (departmentSearch) {
+				departmentSearch.value = '';
+			}
+			if (query.length < 1) {
+				facultyDropdown.style.display = 'none';
+				return;
+			}
+
+			const filtered = faculties.filter(f => f.name.toLowerCase().includes(query));
+			facultyDropdown.innerHTML = filtered.map(f => `
+				<div class="faculty-dropdown-item" data-id="${f.id}">${f.name}</div>
+			`).join('');
+			facultyDropdown.style.display = 'block';
+
+			facultyDropdown.querySelectorAll('.faculty-dropdown-item').forEach(item => {
+				item.addEventListener('click', () => {
+					facultySearch.value = item.textContent;
+					selectedFacultyId = Number(item.dataset.id);
+					facultyDropdown.style.display = 'none';
+					if (departmentSearch) {
+						departmentSearch.value = '';
+					}
+				});
+			});
+		});
+
+		departmentSearch?.addEventListener('input', (e) => {
+			const query = e.target.value.toLowerCase();
+			if (query.length < 1) {
+				departmentDropdown.style.display = 'none';
+				return;
+			}
+
+			let source = departments;
+			if (selectedFacultyId) {
+				source = departments.filter(d => Number(d.facultyId) === selectedFacultyId);
+			}
+
+			const filtered = source.filter(d => d.name.toLowerCase().includes(query));
+			departmentDropdown.innerHTML = filtered.map(d => `
+				<div class="department-dropdown-item" data-id="${d.id}">${d.name}</div>
+			`).join('');
+			departmentDropdown.style.display = 'block';
+
+			departmentDropdown.querySelectorAll('.department-dropdown-item').forEach(item => {
+				item.addEventListener('click', () => {
+					departmentSearch.value = item.textContent;
+					departmentDropdown.style.display = 'none';
 				});
 			});
 		});

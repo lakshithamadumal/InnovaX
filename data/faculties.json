@@ -1,0 +1,12 @@
+[
+  { "id": 1, "name": "Faculty of Computing" },
+  { "id": 2, "name": "Faculty of Engineering" },
+  { "id": 3, "name": "Faculty of Science" },
+  { "id": 4, "name": "Faculty of Business" },
+  { "id": 5, "name": "Faculty of Medicine" },
+  { "id": 6, "name": "Faculty of Architecture" },
+  { "id": 7, "name": "Faculty of Law" },
+  { "id": 8, "name": "Faculty of Arts" },
+  { "id": 9, "name": "Faculty of Education" },
+  { "id": 10, "name": "Faculty of Information Technology" }
+]
