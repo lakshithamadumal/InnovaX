@@ -1,5 +1,6 @@
 (() => {
   const templateCache = new Map();
+  const EXPERT_RATINGS_STORAGE_KEY = "expertPostRatings";
   const DEFAULT_PROFILE_AVATAR_URL = "assets/images/users/default-avatar.svg";
   const DEFAULT_PROFILE_COVER_URL = "assets/images/users/default-cover.svg";
 
@@ -47,6 +48,69 @@
       .replace(/>/g, "&gt;")
       .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function formatDateTime(isoDate) {
+    if (!isoDate) {
+      return "Just now";
+    }
+
+    const parsed = new Date(isoDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return "Just now";
+    }
+
+    return parsed.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
+  function getExpertRatingsStore() {
+    try {
+      const raw = localStorage.getItem(EXPERT_RATINGS_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveExpertRatingsStore(store) {
+    localStorage.setItem(EXPERT_RATINGS_STORAGE_KEY, JSON.stringify(store));
+  }
+
+  function getCurrentExpertRatings() {
+    if (!state.currentUser?.id) {
+      return [];
+    }
+
+    const store = getExpertRatingsStore();
+    const ratings = Array.isArray(store[state.currentUser.id]) ? store[state.currentUser.id] : [];
+    return ratings
+      .filter((rating) => rating && rating.postId)
+      .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+  }
+
+  function setCurrentExpertRatings(ratings) {
+    if (!state.currentUser?.id) {
+      return;
+    }
+
+    const store = getExpertRatingsStore();
+    store[state.currentUser.id] = ratings;
+    saveExpertRatingsStore(store);
+  }
+
+  function findPostById(postId) {
+    return state.posts.find((post) => String(post.id) === String(postId)) || null;
+  }
+
+  function buildPostViewUrl(postId) {
+    return `post-view.html?postId=${encodeURIComponent(String(postId || ""))}`;
   }
 
   function showToast(message) {
@@ -323,7 +387,7 @@
       .slice(0, 3)
       .map((post, index) => {
         return `
-          <a class="trend-item" href="post-view.html">
+          <a class="trend-item" href="${buildPostViewUrl(post.id)}">
             <div class="trend-rank">#${index + 1}</div>
             <div class="trend-info">
               <div class="trend-name">${escapeHtml(post.title || "Untitled post")}</div>
@@ -365,7 +429,10 @@
 
     menuItems.forEach((item) => {
       const authScope = item.dataset.mobileAuth;
-      const show = authScope === "both" || (authScope === "user" && state.isLoggedIn) || (authScope === "guest" && !state.isLoggedIn);
+      const roleScope = item.dataset.mobileRole;
+      const authVisible = authScope === "both" || (authScope === "user" && state.isLoggedIn) || (authScope === "guest" && !state.isLoggedIn);
+      const roleVisible = !roleScope || (state.isLoggedIn && state.userRole === roleScope);
+      const show = authVisible && roleVisible;
       item.style.display = show ? "" : "none";
     });
   }
@@ -389,6 +456,13 @@
     });
 
     updateMobileMenuVisibility();
+
+    const roleScopedLinks = Array.from(document.querySelectorAll("[data-role-scope]"));
+    roleScopedLinks.forEach((link) => {
+      const requiredRole = link.dataset.roleScope;
+      const allowed = state.isLoggedIn && state.userRole === requiredRole;
+      link.style.display = allowed ? "" : "none";
+    });
 
     const sidebarName = document.getElementById("sidebar-user-name");
     const sidebarRole = document.getElementById("sidebar-user-role");
@@ -1001,6 +1075,209 @@
     });
   }
 
+  function renderPostViewPage() {
+    if (document.body.dataset.page !== "post-view") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const requestedPostId = params.get("postId");
+    const post = (requestedPostId && findPostById(requestedPostId)) || state.posts[0] || null;
+    if (!post) {
+      return;
+    }
+
+    const titleNode = document.querySelector("[data-post-title]");
+    const descNode = document.querySelector("[data-post-desc]");
+    const timeNode = document.querySelector("[data-post-time]");
+    const tagsNode = document.querySelector("[data-post-tags]");
+    const mediaWrap = document.querySelector("[data-post-media]");
+    const mediaEmojiNode = document.querySelector("[data-post-media-emoji]");
+    const mediaLabelNode = document.querySelector("[data-post-media-label]");
+    const detailCard = document.getElementById("post-detail-card");
+    const likeBtn = document.querySelector("[data-like-btn]");
+    const likeCount = document.querySelector("[data-like-count]");
+
+    if (titleNode) titleNode.textContent = post.title || "Untitled post";
+    if (descNode) descNode.textContent = post.desc || "No description added for this post.";
+    if (timeNode) {
+      timeNode.innerHTML = `<i class="fas fa-clock"></i> ${escapeHtml(post.time || "Now")}`;
+    }
+
+    if (tagsNode) {
+      const tags = Array.isArray(post.tags) ? post.tags : [];
+      tagsNode.innerHTML = tags.length
+        ? tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")
+        : "<span class=\"tag\">#Innovation</span>";
+    }
+
+    if (mediaWrap && mediaEmojiNode && mediaLabelNode) {
+      if (post.media) {
+        mediaWrap.style.display = "block";
+        mediaEmojiNode.textContent = post.media.emoji || "💡";
+        mediaLabelNode.textContent = post.media.label || "Post media";
+      } else {
+        mediaWrap.style.display = "none";
+      }
+    }
+
+    if (detailCard) {
+      detailCard.dataset.postId = String(post.id);
+    }
+    if (likeBtn) {
+      likeBtn.dataset.postId = String(post.id);
+    }
+    if (likeCount) {
+      likeCount.textContent = String(Number(post.likes || 0));
+    }
+
+    const relatedStream = document.querySelector("[data-post-stream='post-view-related']");
+    if (relatedStream) {
+      const related = state.posts.filter((item) => String(item.id) !== String(post.id)).slice(0, 3);
+      relatedStream.innerHTML = related.length
+        ? related.map((item) => buildPostCard(item)).join("")
+        : `<div class="card empty-state"><i class="fas fa-folder-open"></i><p>No related posts found.</p></div>`;
+    }
+
+    const noteNode = document.querySelector("[data-expert-rating-note]");
+    const form = document.querySelector("[data-expert-rating-form]");
+    const result = document.querySelector("[data-expert-rating-result]");
+    const rateInput = document.getElementById("expert-rate-value");
+    const noteInput = document.getElementById("expert-rate-note");
+
+    if (!noteNode || !form || !result) {
+      return;
+    }
+
+    const isExpert = state.isLoggedIn && state.userRole === "expert";
+
+    if (!state.isLoggedIn) {
+      noteNode.textContent = "Login as an expert to submit a rating for this post.";
+      form.style.display = "none";
+      result.style.display = "none";
+      return;
+    }
+
+    if (!isExpert) {
+      noteNode.textContent = "Only experts can submit ratings for posts.";
+      form.style.display = "none";
+      result.style.display = "none";
+      return;
+    }
+
+    const currentRatings = getCurrentExpertRatings();
+    const existing = currentRatings.find((entry) => String(entry.postId) === String(post.id));
+
+    if (existing) {
+      noteNode.textContent = "You have already submitted your private rating for this post.";
+      form.style.display = "none";
+      result.style.display = "block";
+      result.innerHTML = `
+        <h4><i class="fas fa-circle-check"></i> Your Submitted Rating</h4>
+        <p><strong>Score:</strong> ${escapeHtml(existing.score)} / 10</p>
+        <p><strong>Note:</strong> ${escapeHtml(existing.note)}</p>
+        <p><strong>Submitted:</strong> ${escapeHtml(formatDateTime(existing.submittedAt))}</p>
+      `;
+      return;
+    }
+
+    noteNode.textContent = "Submit once per post. Only you can view your rating and note.";
+    form.style.display = "grid";
+    result.style.display = "none";
+
+    if (rateInput) {
+      rateInput.value = "";
+    }
+    if (noteInput) {
+      noteInput.value = "";
+    }
+
+    form.onsubmit = (event) => {
+      event.preventDefault();
+
+      const score = Number.parseFloat(String(rateInput?.value || ""));
+      const expertNote = String(noteInput?.value || "").trim();
+
+      if (!Number.isFinite(score) || score < 0 || score > 10) {
+        showToast("Please enter a rating between 0 and 10.");
+        rateInput?.focus();
+        return;
+      }
+
+      if (!expertNote) {
+        showToast("Please add a short note.");
+        noteInput?.focus();
+        return;
+      }
+
+      const updatedRatings = [
+        ...currentRatings,
+        {
+          postId: String(post.id),
+          postTitle: post.title || "Untitled post",
+          score: Number(score.toFixed(1)),
+          note: expertNote,
+          submittedAt: new Date().toISOString()
+        }
+      ];
+
+      setCurrentExpertRatings(updatedRatings);
+      showToast("Rating submitted.");
+      renderPostViewPage();
+    };
+  }
+
+  function renderExpertRatingsPage() {
+    if (document.body.dataset.page !== "expert-ratings") {
+      return;
+    }
+
+    const list = document.querySelector("[data-expert-ratings-list]");
+    if (!list) {
+      return;
+    }
+
+    if (!state.isLoggedIn) {
+      list.innerHTML = `
+        <section class="auth-card auth-modern-card" style="max-width:100%;">
+          <h1>Login Required</h1>
+          <p>Login as an expert to view your private rating history.</p>
+          <div class="inline-actions" style="margin-top:14px;">
+            <a class="btn-primary" href="login.html">Login</a>
+            <a class="btn-secondary" href="register.html">Register</a>
+          </div>
+        </section>
+      `;
+      return;
+    }
+
+    if (state.userRole !== "expert") {
+      list.innerHTML = `<div class="card empty-state"><i class="fas fa-lock"></i><p>This section is available only for expert accounts.</p></div>`;
+      return;
+    }
+
+    const ratings = getCurrentExpertRatings();
+    if (!ratings.length) {
+      list.innerHTML = `<div class="card empty-state"><i class="fas fa-star"></i><p>You have not submitted any ratings yet.</p></div>`;
+      return;
+    }
+
+    list.innerHTML = ratings.map((entry) => {
+      const linkedPost = findPostById(entry.postId);
+      const title = linkedPost?.title || entry.postTitle || "Untitled post";
+      return `
+        <article class="expert-rating-item">
+          <div class="expert-rating-item-head">
+            <a href="${buildPostViewUrl(entry.postId)}" class="expert-rating-title">${escapeHtml(title)}</a>
+            <span class="badge-chip"><i class="fas fa-star"></i> ${escapeHtml(entry.score)} / 10</span>
+          </div>
+          <p class="expert-rating-item-note">${escapeHtml(entry.note)}</p>
+          <p class="section-note">Submitted: ${escapeHtml(formatDateTime(entry.submittedAt))}</p>
+        </article>
+      `;
+    }).join("");
+  }
+
   function renderSearchResults() {
     if (document.body.dataset.page !== "search-results") {
       return;
@@ -1194,6 +1471,8 @@
     updateProfileLikes();
     renderPostStreams();
     renderMostLikelyPosts();
+    renderPostViewPage();
+    renderExpertRatingsPage();
     initFeedSort();
     renderSearchResults();
     initMyProfileMediaEditor();

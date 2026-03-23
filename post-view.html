@@ -21,19 +21,17 @@
       <article class="section-card">
         <div class="section-head">
           <div class="section-title">Post Detail</div>
-          <span class="badge-chip"><i class="fas fa-clock"></i> 2h ago</span>
+          <span class="badge-chip" data-post-time><i class="fas fa-clock"></i> Now</span>
         </div>
-        <h1 class="hero-title">AI-Driven Circular Supply Chain for University Labs</h1>
-        <p class="hero-subtitle">A practical framework to reduce lab equipment waste by 38% through prediction-driven redistribution and material recapture.</p>
-        <div class="pill-row" style="margin-top:10px;">
-          <span class="tag">#AI</span>
-          <span class="tag">#Sustainability</span>
-          <span class="tag">#Operations</span>
+        <h1 class="hero-title" data-post-title>Loading post...</h1>
+        <p class="hero-subtitle" data-post-desc>Please wait while we load the post details.</p>
+        <div class="pill-row" data-post-tags style="margin-top:10px;">
+          <span class="tag">#InnovaX</span>
         </div>
-        <div class="post-media" style="margin-top:12px;">
-          <div class="post-media-inner">
-            <span style="font-size:3.5rem;">♻️</span>
-            <p>Circular Lab Distribution Prototype</p>
+        <div class="post-media" data-post-media style="margin-top:12px; display:none;">
+          <div class="post-media-inner" data-post-media-inner>
+            <span style="font-size:3.5rem;" data-post-media-emoji>💡</span>
+            <p data-post-media-label>Post media</p>
           </div>
         </div>
         <div class="post-actions">
@@ -43,14 +41,36 @@
         </div>
       </article>
 
-      <article class="card post-card" id="post-detail-1" data-post-id="detail-1">
+      <article class="card post-card" id="post-detail-card" data-post-id="detail-1">
         <div class="post-stats">
           <div class="likes-count">
             <div class="like-icon-small"><i class="fas fa-heart"></i></div>
-            <span class="likes-num" data-like-count>142</span>
+            <span class="likes-num" data-like-count>0</span>
           </div>
         </div>
       </article>
+
+      <section class="section-card expert-rating-card" data-expert-rating-wrap>
+        <div class="section-head">
+          <div class="section-title">Expert Rating</div>
+          <span class="badge-chip"><i class="fas fa-lock"></i> Private</span>
+        </div>
+        <p class="section-note" data-expert-rating-note>Login as an expert to submit a rating for this post.</p>
+
+        <form data-expert-rating-form class="expert-rating-form" style="display:none;">
+          <div class="field-group">
+            <label for="expert-rate-value">Rate This Post (0 to 10)</label>
+            <input id="expert-rate-value" type="number" min="0" max="10" step="0.1" placeholder="e.g. 8.5" required />
+          </div>
+          <div class="field-group">
+            <label for="expert-rate-note">Note</label>
+            <textarea id="expert-rate-note" rows="4" maxlength="600" placeholder="Add a short private note about this post." required></textarea>
+          </div>
+          <button type="submit" class="btn-primary" data-expert-submit-btn>Submit Rating</button>
+        </form>
+
+        <article class="expert-rating-result" data-expert-rating-result style="display:none;"></article>
+      </section>
 
       <section class="section-card">
         <div class="section-head">
