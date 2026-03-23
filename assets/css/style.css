@@ -477,12 +477,47 @@ img {
 }
 
 .post-sort-select {
-  border: 1px solid var(--border);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: 1.5px solid var(--border);
   border-radius: 10px;
-  padding: 6px 10px;
+  padding: 8px 36px 8px 12px;
   color: var(--text);
-  background: #fff;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 20 20'%3E%3Cpath fill='%234e73df' d='M5.8 7.5 10 11.7l4.2-4.2 1.4 1.4-5.6 5.6-5.6-5.6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 14px;
   font-size: 0.8rem;
+  outline: none;
+  box-shadow: 0 1px 8px rgba(78, 115, 223, 0.08);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition),
+    background var(--transition);
+}
+
+.post-sort-select::-ms-expand {
+  display: none;
+}
+
+.post-sort-select:hover {
+  border-color: rgba(78, 115, 223, 0.45);
+  box-shadow: 0 4px 14px rgba(78, 115, 223, 0.12);
+}
+
+.post-sort-select:focus,
+.post-sort-select:focus-visible {
+  outline: none !important;
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+}
+
+.post-sort-select option {
+  background: #fff;
+  color: var(--text);
 }
 
 /* Create Post */

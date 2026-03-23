@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="assets/css/components.css" />
   <link rel="stylesheet" href="assets/css/responsive.css" />
 </head>
-<body data-page="user-profile" data-active-nav="feed">
+<body data-page="user-profile" data-active-nav="feed" data-profile-user-role="student" data-profile-user-id="student2" data-profile-user-name="Nadeesha Perera">
   <div class="toast" id="toast"></div>
   <div data-component="navbar"></div>
 
@@ -24,10 +24,9 @@
           <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#1cc88a,#17a673);">SR</div>
           <div class="profile-meta">
             <h1>Nadeesha Perera</h1>
-            <p>Computer Science Student · AI Builder</p>
             <div class="pill-row">
-              <span class="badge-chip"><i class="fas fa-user-graduate"></i> Student</span>
-              <span class="status-pill warning">Open for Teamups</span>
+              <span class="badge-chip" data-public-role-badge><i class="fas fa-user-graduate"></i> Student</span>
+              <span class="badge-chip" data-profile-likes-wrap><i class="fas fa-heart"></i> <span data-profile-likes-count>0</span> Likes</span>
             </div>
           </div>
           <div class="inline-actions"></div>
@@ -43,15 +42,6 @@
         <div class="section-head"><div class="section-title">Skills & Interests</div></div>
         <div class="tag-list">
           <span class="tag">#ComputerVision</span><span class="tag">#PromptEngineering</span><span class="tag">#Python</span><span class="tag">#CommunityTech</span>
-        </div>
-      </section>
-
-      <section class="section-card" data-profile-section="portfolio">
-        <div class="section-head"><div class="section-title">Portfolio Projects</div></div>
-        <div class="grid-3">
-          <article class="project-card"><h4>Campus HelpBot</h4><p>Student assistant bot for timetable, labs, and assignment reminders.</p></article>
-          <article class="project-card"><h4>EcoTracker</h4><p>IoT-based waste and energy usage tracker for student hostels.</p></article>
-          <article class="project-card"><h4>Study Sprint</h4><p>Peer accountability and micro-goal tracking app for exam weeks.</p></article>
         </div>
       </section>
 

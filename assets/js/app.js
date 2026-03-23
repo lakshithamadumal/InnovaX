@@ -338,6 +338,19 @@
     });
   }
 
+  function updateMobileMenuVisibility() {
+    const menuItems = Array.from(document.querySelectorAll("#mobile-menu [data-mobile-auth]"));
+    if (!menuItems.length) {
+      return;
+    }
+
+    menuItems.forEach((item) => {
+      const authScope = item.dataset.mobileAuth;
+      const show = authScope === "both" || (authScope === "user" && state.isLoggedIn) || (authScope === "guest" && !state.isLoggedIn);
+      item.style.display = show ? "" : "none";
+    });
+  }
+
   function updateSidebarAndNav() {
     const guestCard = document.getElementById("sidebar-guest-card");
     const userCard = document.getElementById("sidebar-user-card");
@@ -355,6 +368,8 @@
         link.setAttribute("aria-disabled", "true");
       }
     });
+
+    updateMobileMenuVisibility();
 
     const sidebarName = document.getElementById("sidebar-user-name");
     const sidebarRole = document.getElementById("sidebar-user-role");
@@ -410,24 +425,92 @@
     });
   }
 
+  function updatePublicRoleBadges() {
+    const badges = Array.from(document.querySelectorAll("[data-public-role-badge]"));
+    if (!badges.length) {
+      return;
+    }
+
+    const publicRole = (document.body.dataset.profileUserRole || "student").toLowerCase();
+    const isExpert = publicRole === "expert";
+    const icon = isExpert ? "fa-chalkboard-user" : "fa-user-graduate";
+    const label = isExpert ? "Expert" : "Student";
+
+    badges.forEach((badge) => {
+      badge.innerHTML = `<i class="fas ${icon}"></i> ${label}`;
+    });
+  }
+
+  function getLikesForIdentity(userId, userName) {
+    return state.posts
+      .filter((post) => {
+        const byId = userId && String(post.authorId || "") === String(userId);
+        const byName = userName && String(post.name || "").toLowerCase() === String(userName).toLowerCase();
+        return byId || byName;
+      })
+      .reduce((sum, post) => sum + Number(post.likes || 0), 0);
+  }
+
+  function updateProfileLikes() {
+    const wraps = Array.from(document.querySelectorAll("[data-profile-likes-wrap]"));
+    const counters = Array.from(document.querySelectorAll("[data-profile-likes-count]"));
+    if (!wraps.length || !counters.length) {
+      return;
+    }
+
+    const page = document.body.dataset.page;
+
+    if (page === "my-profile") {
+      const show = state.isLoggedIn && state.userRole === "student";
+      const count = show && state.currentUser
+        ? getLikesForIdentity(state.currentUser.id, state.currentUser.name)
+        : 0;
+
+      wraps.forEach((wrap) => {
+        wrap.style.display = show ? "inline-flex" : "none";
+      });
+      counters.forEach((counter) => {
+        counter.textContent = String(count);
+      });
+      return;
+    }
+
+    if (page === "user-profile") {
+      const isExpertProfile = (document.body.dataset.profileUserRole || "student").toLowerCase() === "expert";
+      const show = !isExpertProfile;
+      const count = show
+        ? getLikesForIdentity(document.body.dataset.profileUserId, document.body.dataset.profileUserName)
+        : 0;
+
+      wraps.forEach((wrap) => {
+        wrap.style.display = show ? "inline-flex" : "none";
+      });
+      counters.forEach((counter) => {
+        counter.textContent = String(count);
+      });
+    }
+  }
+
   function applyRoleBasedProfileLayout() {
     const page = document.body.dataset.page;
     if (page !== "my-profile" && page !== "user-profile") {
       return;
     }
 
-    const isExpert = state.isLoggedIn && state.userRole === "expert";
+    const isMyProfileExpert = page === "my-profile" && state.isLoggedIn && state.userRole === "expert";
+    const isViewedExpertProfile = page === "user-profile" && (document.body.dataset.profileUserRole || "student").toLowerCase() === "expert";
+    const shouldUseExpertLayout = isMyProfileExpert || isViewedExpertProfile;
     const sections = Array.from(document.querySelectorAll("[data-profile-section]"));
     const savedLinkCards = Array.from(document.querySelectorAll("[data-expert-saved-link]"));
 
     sections.forEach((section) => {
       const key = section.dataset.profileSection;
-      const shouldHide = isExpert && ["skills", "portfolio", "my-posts"].includes(key);
+      const shouldHide = shouldUseExpertLayout && ["skills", "portfolio", "my-posts"].includes(key);
       section.style.display = shouldHide ? "none" : "block";
     });
 
     savedLinkCards.forEach((card) => {
-      card.style.display = isExpert ? "block" : "none";
+      card.style.display = shouldUseExpertLayout ? "block" : "none";
     });
   }
 
@@ -478,6 +561,14 @@
       hamburger.addEventListener("click", () => {
         hamburger.classList.toggle("open");
         menu.classList.toggle("open");
+      });
+
+      menu.addEventListener("click", (event) => {
+        if (!event.target.closest(".nav-link")) {
+          return;
+        }
+        hamburger.classList.remove("open");
+        menu.classList.remove("open");
       });
     }
 
@@ -924,6 +1015,7 @@
     setActiveNav();
     updateSidebarAndNav();
     updateSessionRoleBadges();
+    updatePublicRoleBadges();
     updateNotificationBadge();
     enforceProfileRestrictions();
     gateMyProfileForGuests();
@@ -933,6 +1025,7 @@
     await loadPostsData();
     updateSidebarAndNav();
     applyRoleBasedProfileLayout();
+    updateProfileLikes();
     renderPostStreams();
     renderMostLikelyPosts();
     initFeedSort();

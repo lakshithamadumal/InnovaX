@@ -33,10 +33,15 @@
 </header>
 
 <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
-	<a class="nav-link" data-nav="feed" href="index.html"><i class="fas fa-home"></i> Home</a>
-	<a class="nav-link" href="search-results.html"><i class="fas fa-magnifying-glass"></i> Search</a>
-	<a class="nav-link" data-nav="notifications" href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
-	<div class="divider"></div>
-	<a class="nav-link" href="my-profile.html" data-requires-login><i class="fas fa-user-circle"></i> My Profile</a>
-	<a class="nav-link" href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+	<a class="nav-link" data-mobile-auth="user" data-nav="feed" href="index.html"><i class="fas fa-home"></i> Home</a>
+	<a class="nav-link" data-mobile-auth="both" href="search-results.html"><i class="fas fa-magnifying-glass"></i> Search</a>
+	<a class="nav-link" data-mobile-auth="user" data-nav="notifications" href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
+	<div class="divider" data-mobile-auth="user"></div>
+	<a class="nav-link" data-mobile-auth="user" href="my-profile.html" data-requires-login><i class="fas fa-user-circle"></i> My Profile</a>
+	<a class="nav-link" data-mobile-auth="user" href="saved-posts.html"><i class="fas fa-bookmark"></i> Saved Posts</a>
+	<a class="nav-link" data-mobile-auth="user" href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+	<button class="nav-link" type="button" data-mobile-auth="user" onclick="window.logout()" style="width:100%;text-align:left;border:none;background:none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+	<div class="divider" data-mobile-auth="guest"></div>
+	<a class="nav-link" data-mobile-auth="guest" href="login.html"><i class="fas fa-right-to-bracket"></i> Login</a>
+	<a class="nav-link" data-mobile-auth="guest" href="register.html"><i class="fas fa-user-plus"></i> Register</a>
 </nav>
