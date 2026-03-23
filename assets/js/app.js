@@ -9,6 +9,7 @@
     userRole: localStorage.getItem("userRole") || null,
     currentUser: JSON.parse(localStorage.getItem("currentUser") || "null"),
     posts: [],
+    studentProfiles: [],
     postTemplate: "",
     notificationCount: 2,
     feedSort: "recent"
@@ -19,27 +20,6 @@
     state.currentUser.coverImageUrl = state.currentUser.coverImageUrl || DEFAULT_PROFILE_COVER_URL;
     localStorage.setItem("currentUser", JSON.stringify(state.currentUser));
   }
-
-  const studentProfiles = [
-    {
-      id: "student1",
-      name: "Alex Johnson",
-      title: "Final Year Student · Product Design",
-      badge: "Student"
-    },
-    {
-      id: "student2",
-      name: "Nadeesha Perera",
-      title: "Computer Science Student · AI Builder",
-      badge: "Student"
-    },
-    {
-      id: "student3",
-      name: "Kasun Silva",
-      title: "Engineering Student · IoT Creator",
-      badge: "Student"
-    }
-  ];
 
   function escapeHtml(value) {
     return String(value)
@@ -189,6 +169,85 @@
     return false;
   }
 
+  async function getJson(path) {
+    const response = await fetch(path, { cache: "no-store" });
+    let payload = null;
+
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = null;
+    }
+
+    if (!response.ok || !payload || payload.success === false) {
+      const message = payload?.message || `Request failed: ${path}`;
+      throw new Error(message);
+    }
+
+    return payload;
+  }
+
+  async function postJson(path, body) {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = null;
+    }
+
+    if (!response.ok || !payload || payload.success === false) {
+      const message = payload?.message || `Request failed: ${path}`;
+      throw new Error(message);
+    }
+
+    return payload;
+  }
+
+  function normalizeApiError(error, fallbackMessage) {
+    const message = String(error?.message || "").trim();
+    if (!message) {
+      return fallbackMessage;
+    }
+
+    if (message.toLowerCase().includes("failed to fetch")) {
+      return "Cannot reach server API. Open project through localhost (Apache/XAMPP), not file://.";
+    }
+
+    return message;
+  }
+
+  function setSubmitBusy(button, isBusy, busyLabel) {
+    if (!button) {
+      return;
+    }
+
+    if (!button.dataset.defaultHtml) {
+      button.dataset.defaultHtml = button.innerHTML;
+    }
+
+    button.disabled = isBusy;
+    if (isBusy) {
+      button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${escapeHtml(busyLabel)}`;
+      button.classList.add("is-loading");
+      return;
+    }
+
+    button.innerHTML = button.dataset.defaultHtml;
+    button.classList.remove("is-loading");
+  }
+
+  function logAuthEvent(type, payload) {
+    console.log(`[AUTH:${type}]`, payload);
+  }
+
   async function fetchText(path) {
     if (templateCache.has(path)) {
       return templateCache.get(path);
@@ -244,25 +303,46 @@
 
   async function loadPostsData() {
     try {
-      const response = await fetch("data/posts.json", { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error("Post data not found");
-      }
-      const data = await response.json();
+      const payload = await getJson("api/posts/list.php");
+      const data = Array.isArray(payload.data?.posts) ? payload.data.posts : [];
       const normalized = Array.isArray(data) ? data : [];
 
       state.posts = normalized.map((post, index) => {
-        const id = String(post.id || `seed-${index + 1}`);
+        const id = String(post.id || `db-${index + 1}`);
         return {
-          ...post,
           id,
-          authorId: post.authorId || `seed-${id}`,
+          authorId: post.authorId || "",
+          avatar: post.avatar || getInitials(post.name || "InnovaX Member"),
+          avatarColor: post.avatarColor || "linear-gradient(135deg,#4E73DF,#6f8ee8)",
+          name: post.name || "InnovaX Member",
+          role: post.role || "Member",
+          time: post.time || "Now",
+          title: post.title || "Untitled post",
+          desc: post.desc || "",
+          tags: Array.isArray(post.tags) ? post.tags : [],
+          media: post.media || null,
           likes: Number(post.likes || 0),
+          saved: Boolean(post.saved),
           createdOrder: Number(post.id || index + 1)
         };
       });
     } catch (error) {
       state.posts = [];
+    }
+  }
+
+  async function loadStudentProfilesData() {
+    try {
+      const payload = await getJson("api/users/students.php");
+      const list = Array.isArray(payload.data?.students) ? payload.data.students : [];
+      state.studentProfiles = list.map((student) => ({
+        id: student.id,
+        name: student.name,
+        title: student.title,
+        badge: "Student"
+      }));
+    } catch (error) {
+      state.studentProfiles = [];
     }
   }
 
@@ -1297,7 +1377,7 @@
       return;
     }
 
-    const studentHits = studentProfiles.filter((profile) => {
+    const studentHits = state.studentProfiles.filter((profile) => {
       return (
         profile.name.toLowerCase().includes(keyword) ||
         profile.title.toLowerCase().includes(keyword) ||
@@ -1352,101 +1432,158 @@
   function initAuthForms() {
     const loginForm = document.getElementById("loginForm");
     if (loginForm) {
-      loginForm.addEventListener("submit", (event) => {
+      loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const role = document.querySelector(".role-btn.active")?.dataset.role;
+        console.log("[AUTH:LOGIN_SUBMIT_START]");
+        const submitBtn = loginForm.querySelector("button[type='submit']");
         const email = loginForm.querySelector("input[type='email']")?.value?.trim();
         const password = loginForm.querySelector("input[type='password']")?.value;
 
-        if (!role || !email || !password) {
+        if (!email || !password) {
           showToast("Please fill all fields.");
           return;
         }
 
-        const validCredentials = {
-          student: { email: "student@example.com", password: "student123" },
-          expert: { email: "expert@example.com", password: "expert123" }
-        };
+        setSubmitBusy(submitBtn, true, "Signing in...");
+        try {
+          const payload = await postJson("api/auth/login.php", { email, password });
+          const user = payload.data?.user;
+          if (!user || !user.role) {
+            throw new Error("Invalid login response.");
+          }
 
-        const valid = validCredentials[role];
-        if (!valid || valid.email !== email || valid.password !== password) {
-          showToast("Invalid credentials.");
-          return;
+          setLoggedInUser(user, user.role);
+          logAuthEvent("LOGIN_SUCCESS", { role: user.role, user });
+          showToast(`Welcome, ${user.name}`);
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 450);
+        } catch (error) {
+          logAuthEvent("LOGIN_FAILED", { message: String(error?.message || "") });
+          showToast(normalizeApiError(error, "Invalid credentials."));
+        } finally {
+          setSubmitBusy(submitBtn, false, "Signing in...");
         }
-
-        const user = role === "student"
-          ? { id: "student1", name: "Alex Johnson", email, role, university: "University of Colombo" }
-          : { id: "expert1", name: "Dr. Sarah Smith", email, role };
-
-        setLoggedInUser(user, role);
-        showToast(`Welcome, ${user.name}`);
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 450);
       });
     }
 
     const studentForm = document.getElementById("studentForm");
     if (studentForm) {
-      studentForm.addEventListener("submit", (event) => {
+      studentForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const name = studentForm.querySelector("input[type='text']")?.value?.trim();
-        const email = studentForm.querySelector("input[type='email']")?.value?.trim();
-        const password = studentForm.querySelector("input[type='password']")?.value;
-        const studentId = studentForm.querySelector("input[placeholder*='Student']")?.value?.trim();
+        console.log("[AUTH:REGISTER_STUDENT_SUBMIT_START]");
+        const submitBtn = studentForm.querySelector("button[type='submit']");
+        const name = studentForm.querySelector("input[name='full_name']")?.value?.trim();
+        const email = studentForm.querySelector("input[name='email']")?.value?.trim();
+        const password = studentForm.querySelector("input[name='password']")?.value;
+        const studentId = studentForm.querySelector("input[name='student_id']")?.value?.trim();
         const university = studentForm.querySelector(".university-search")?.value?.trim();
         const faculty = studentForm.querySelector(".faculty-search")?.value?.trim();
         const department = studentForm.querySelector(".department-search")?.value?.trim();
+        const universityId = Number(studentForm.querySelector("input[name='university_id']")?.value || 0);
+        const facultyId = Number(studentForm.querySelector("input[name='faculty_id']")?.value || 0);
+        const departmentId = Number(studentForm.querySelector("input[name='department_id']")?.value || 0);
+        const skills = Array.isArray(window.selectedRegisterSkills) ? window.selectedRegisterSkills : [];
 
         if (!name || !email || !password || !studentId || !university || !faculty || !department) {
           showToast("Please fill all fields.");
           return;
         }
 
-        const user = {
-          id: `student_${Date.now()}`,
-          name,
-          email,
-          role: "student",
-          studentId,
-          university,
-          faculty,
-          department
-        };
+        if (!universityId || !facultyId || !departmentId) {
+          showToast("Please select valid university, faculty, and department.");
+          return;
+        }
 
-        setLoggedInUser(user, "student");
-        showToast("Account created.");
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 450);
+        setSubmitBusy(submitBtn, true, "Creating account...");
+        try {
+          const payload = await postJson("api/auth/register.php", {
+            role: "student",
+            full_name: name,
+            email,
+            password,
+            student_id: studentId,
+            university_id: universityId,
+            faculty_id: facultyId,
+            department_id: departmentId,
+            skills
+          });
+
+          const user = payload.data?.user;
+          if (!user || !user.role) {
+            throw new Error("Invalid register response.");
+          }
+
+          logAuthEvent("REGISTER_SUCCESS", {
+            role: user.role,
+            user
+          });
+
+          setLoggedInUser(user, "student");
+          showToast("Account created.");
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 450);
+        } catch (error) {
+          logAuthEvent("REGISTER_FAILED", {
+            role: "student",
+            message: String(error?.message || "")
+          });
+          showToast(normalizeApiError(error, "Unable to create account."));
+        } finally {
+          setSubmitBusy(submitBtn, false, "Creating account...");
+        }
       });
     }
 
     const expertForm = document.getElementById("expertForm");
     if (expertForm) {
-      expertForm.addEventListener("submit", (event) => {
+      expertForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const name = expertForm.querySelector("input[type='text']")?.value?.trim();
-        const email = expertForm.querySelector("input[type='email']")?.value?.trim();
-        const password = expertForm.querySelector("input[type='password']")?.value;
+        console.log("[AUTH:REGISTER_EXPERT_SUBMIT_START]");
+        const submitBtn = expertForm.querySelector("button[type='submit']");
+        const name = expertForm.querySelector("input[name='full_name']")?.value?.trim();
+        const email = expertForm.querySelector("input[name='email']")?.value?.trim();
+        const password = expertForm.querySelector("input[name='password']")?.value;
 
         if (!name || !email || !password) {
           showToast("Please fill all fields.");
           return;
         }
 
-        const user = {
-          id: `expert_${Date.now()}`,
-          name,
-          email,
-          role: "expert"
-        };
+        setSubmitBusy(submitBtn, true, "Creating account...");
+        try {
+          const payload = await postJson("api/auth/register.php", {
+            role: "expert",
+            full_name: name,
+            email,
+            password
+          });
 
-        setLoggedInUser(user, "expert");
-        showToast("Account created.");
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 450);
+          const user = payload.data?.user;
+          if (!user || !user.role) {
+            throw new Error("Invalid register response.");
+          }
+
+          logAuthEvent("REGISTER_SUCCESS", {
+            role: user.role,
+            user
+          });
+
+          setLoggedInUser(user, "expert");
+          showToast("Account created.");
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 450);
+        } catch (error) {
+          logAuthEvent("REGISTER_FAILED", {
+            role: "expert",
+            message: String(error?.message || "")
+          });
+          showToast(normalizeApiError(error, "Unable to create account."));
+        } finally {
+          setSubmitBusy(submitBtn, false, "Creating account...");
+        }
       });
     }
   }
@@ -1465,6 +1602,7 @@
 
     await loadPostTemplate();
     await loadPostsData();
+    await loadStudentProfilesData();
     updateSidebarAndNav();
     applyRoleBasedProfileLayout();
     updateProfileIdentity();

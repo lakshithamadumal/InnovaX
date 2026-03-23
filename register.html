@@ -210,20 +210,21 @@
 				</div>
 				<label class="field-wrap">
 					<span>Full Name</span>
-					<input type="text" placeholder="Alex Johnson" required />
+					<input type="text" name="full_name" placeholder="Alex Johnson" required />
 				</label>
 				<label class="field-wrap">
 					<span>Email</span>
-					<input type="email" placeholder="you@example.com" required />
+					<input type="email" name="email" placeholder="you@example.com" required />
 				</label>
 				<label class="field-wrap">
 					<span>Student ID</span>
-					<input type="text" placeholder="CS20210123" required />
+					<input type="text" name="student_id" placeholder="CS20210123" required />
 				</label>
 				<label class="field-wrap">
 					<span>University</span>
 					<div style="position: relative;">
 						<input type="text" placeholder="Search university..." class="university-search" required />
+						<input type="hidden" name="university_id" />
 						<div class="university-dropdown" style="display:none;"></div>
 					</div>
 				</label>
@@ -231,6 +232,7 @@
 					<span>Faculty</span>
 					<div style="position: relative;">
 						<input type="text" placeholder="Search faculty..." class="faculty-search" required />
+						<input type="hidden" name="faculty_id" />
 						<div class="faculty-dropdown" style="display:none;"></div>
 					</div>
 				</label>
@@ -238,6 +240,7 @@
 					<span>Department</span>
 					<div style="position: relative;">
 						<input type="text" placeholder="Search department..." class="department-search" required />
+						<input type="hidden" name="department_id" />
 						<div class="department-dropdown" style="display:none;"></div>
 					</div>
 				</label>
@@ -254,7 +257,7 @@
 				</label>
 				<label class="field-wrap">
 					<span>Password</span>
-					<input type="password" placeholder="Create password" required />
+					<input type="password" name="password" placeholder="Create password" required />
 				</label>
 				<div class="inline-actions" style="justify-content:space-between;">
 					<a href="login.html" class="btn-secondary">Already have an account</a>
@@ -269,15 +272,15 @@
 				</div>
 				<label class="field-wrap">
 					<span>Full Name</span>
-					<input type="text" placeholder="Dr. Sarah Smith" required />
+					<input type="text" name="full_name" placeholder="Dr. Sarah Smith" required />
 				</label>
 				<label class="field-wrap">
 					<span>Email</span>
-					<input type="email" placeholder="you@example.com" required />
+					<input type="email" name="email" placeholder="you@example.com" required />
 				</label>
 				<label class="field-wrap">
 					<span>Password</span>
-					<input type="password" placeholder="Create password" required />
+					<input type="password" name="password" placeholder="Create password" required />
 				</label>
 				<div class="inline-actions" style="justify-content:space-between;">
 					<a href="login.html" class="btn-secondary">Already have an account</a>
@@ -290,23 +293,38 @@
 	<script src="assets/js/app.js"></script>
 	<script>
 		// Role selection for register
-		const roleButtons = document.querySelectorAll('[data-role]');
+		const roleButtons = document.querySelectorAll('.role-btn[data-role]');
 		const forms = document.querySelectorAll('.role-specific-form');
+
+		function showRoleForm(role) {
+			forms.forEach(form => form.classList.remove('active'));
+			const target = document.getElementById(role + 'Form');
+			if (target) {
+				target.classList.add('active');
+			}
+		}
 
 		roleButtons.forEach(btn => {
 			btn.addEventListener('click', (e) => {
 				e.preventDefault();
 				const role = btn.dataset.role;
+				console.log('[REGISTER:UI_ROLE_CLICK]', { role });
 				
 				// Update button states
 				document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
 				btn.classList.add('active');
 				
 				// Show relevant form
-				forms.forEach(form => form.classList.remove('active'));
-				document.getElementById(role + 'Form').classList.add('active');
+				showRoleForm(role);
 			});
 		});
+
+		// Default state: show student form so submit button is immediately testable.
+		if (roleButtons.length > 0) {
+			const defaultBtn = document.querySelector('.role-btn[data-role="student"]') || roleButtons[0];
+			defaultBtn.classList.add('active');
+			showRoleForm(defaultBtn.dataset.role);
+		}
 
 		// Load universities data
 		async function loadUniversities() {
@@ -355,10 +373,13 @@
 		// University autocomplete
 		const universitySearch = document.querySelector('.university-search');
 		const universityDropdown = document.querySelector('.university-dropdown');
+		const universityIdInput = document.querySelector("input[name='university_id']");
 		const facultySearch = document.querySelector('.faculty-search');
 		const facultyDropdown = document.querySelector('.faculty-dropdown');
+		const facultyIdInput = document.querySelector("input[name='faculty_id']");
 		const departmentSearch = document.querySelector('.department-search');
 		const departmentDropdown = document.querySelector('.department-dropdown');
+		const departmentIdInput = document.querySelector("input[name='department_id']");
 		let universities = [];
 		let faculties = [];
 		let departments = [];
@@ -378,6 +399,9 @@
 
 		universitySearch?.addEventListener('input', (e) => {
 			const query = e.target.value.toLowerCase();
+			if (universityIdInput) {
+				universityIdInput.value = '';
+			}
 			if (query.length < 1) {
 				universityDropdown.style.display = 'none';
 				return;
@@ -391,6 +415,9 @@
 			universityDropdown.querySelectorAll('.university-dropdown-item').forEach(item => {
 				item.addEventListener('click', () => {
 					universitySearch.value = item.textContent;
+					if (universityIdInput) {
+						universityIdInput.value = item.dataset.id;
+					}
 					universityDropdown.style.display = 'none';
 				});
 			});
@@ -399,6 +426,12 @@
 		facultySearch?.addEventListener('input', (e) => {
 			const query = e.target.value.toLowerCase();
 			selectedFacultyId = null;
+			if (facultyIdInput) {
+				facultyIdInput.value = '';
+			}
+			if (departmentIdInput) {
+				departmentIdInput.value = '';
+			}
 			if (departmentSearch) {
 				departmentSearch.value = '';
 			}
@@ -417,9 +450,15 @@
 				item.addEventListener('click', () => {
 					facultySearch.value = item.textContent;
 					selectedFacultyId = Number(item.dataset.id);
+					if (facultyIdInput) {
+						facultyIdInput.value = item.dataset.id;
+					}
 					facultyDropdown.style.display = 'none';
 					if (departmentSearch) {
 						departmentSearch.value = '';
+					}
+					if (departmentIdInput) {
+						departmentIdInput.value = '';
 					}
 				});
 			});
@@ -446,6 +485,9 @@
 			departmentDropdown.querySelectorAll('.department-dropdown-item').forEach(item => {
 				item.addEventListener('click', () => {
 					departmentSearch.value = item.textContent;
+					if (departmentIdInput) {
+						departmentIdInput.value = item.dataset.id;
+					}
 					departmentDropdown.style.display = 'none';
 				});
 			});
@@ -455,6 +497,7 @@
 		const skillsSearch = document.querySelector('.skills-search');
 		const skillsDropdown = document.querySelector('.skills-dropdown');
 		const skillsTags = document.getElementById('selectedSkills');
+		const addSkillButton = document.querySelector('.skills-input-field .btn-secondary');
 		let selectedSkills = new Set();
 		let allSkills = [];
 
@@ -504,10 +547,32 @@
 					<button type="button" onclick="removeSkill('${skill}')">×</button>
 				</span>
 			`).join('');
+			window.selectedRegisterSkills = Array.from(selectedSkills);
 		}
+
+		addSkillButton?.addEventListener('click', () => {
+			const value = (skillsSearch?.value || '').trim();
+			if (!value) {
+				return;
+			}
+			addSkill(value);
+		});
+
+		skillsSearch?.addEventListener('keydown', (event) => {
+			if (event.key !== 'Enter') {
+				return;
+			}
+			event.preventDefault();
+			const value = (skillsSearch.value || '').trim();
+			if (!value) {
+				return;
+			}
+			addSkill(value);
+		});
 
 		// Make removeSkill globally available
 		window.removeSkill = removeSkill;
+		window.selectedRegisterSkills = [];
 	</script>
 </body>
 </html>

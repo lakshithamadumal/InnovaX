@@ -18,25 +18,8 @@
 		<section class="auth-card auth-modern-card">
 			<h1>Welcome Back</h1>
 			<p>Sign in to continue exploring student innovation and expert insights.</p>
-			
-			<div class="role-selector" id="roleSelector">
-				<label class="role-selector-label">Select your role:</label>
-				<div class="role-buttons">
-					<button type="button" class="role-btn" data-role="student">
-						<i class="fas fa-user-graduate"></i>
-						<span>Student</span>
-					</button>
-					<button type="button" class="role-btn" data-role="expert">
-						<i class="fas fa-chalkboard-user"></i>
-						<span>Expert</span>
-					</button>
-				</div>
-			</div>
 
-			<form class="auth-form" id="loginForm" action="index.html" style="display:none;">
-				<div class="selected-role-display">
-					Role: <strong id="selectedRoleDisplay"></strong>
-				</div>
+			<form class="auth-form" id="loginForm" action="index.html">
 				<label class="field-wrap">
 					<span>Email</span>
 					<input type="email" placeholder="you@example.com" required />
@@ -54,29 +37,6 @@
 	</main>
 
 	<script src="assets/js/app.js"></script>
-	<script>
-		// Role selection for login
-		const roleButtons = document.querySelectorAll('[data-role]');
-		const roleSelector = document.getElementById('roleSelector');
-		const loginForm = document.getElementById('loginForm');
-		const selectedRoleDisplay = document.getElementById('selectedRoleDisplay');
-
-		roleButtons.forEach(btn => {
-			btn.addEventListener('click', (e) => {
-				e.preventDefault();
-				const role = btn.dataset.role;
-				
-				// Update button states
-				document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-				btn.classList.add('active');
-				
-				// Show form
-				roleSelector.style.display = 'none';
-				loginForm.style.display = 'block';
-				selectedRoleDisplay.textContent = role.charAt(0).toUpperCase() + role.slice(1);
-			});
-		});
-	</script>
 	<style>
 		.auth-shell {
 			background:
@@ -87,54 +47,6 @@
 		.auth-modern-card {
 			border: 1px solid rgba(78, 115, 223, 0.18);
 			box-shadow: 0 24px 50px rgba(40, 60, 120, 0.12);
-		}
-		.role-selector {
-			margin-bottom: 2rem;
-		}
-		.role-selector-label {
-			display: block;
-			margin-bottom: 1rem;
-			font-weight: 600;
-			color: var(--text);
-		}
-		.role-buttons {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 1rem;
-		}
-		.role-btn {
-			padding: 1.5rem;
-			border: 2px solid var(--border);
-			border-radius: 8px;
-			background: transparent;
-			cursor: pointer;
-			transition: all 0.3s ease;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 0.5rem;
-			font-size: 1rem;
-			color: var(--text);
-		}
-		.role-btn:hover {
-			border-color: var(--primary);
-			background: rgba(78, 115, 223, 0.05);
-		}
-		.role-btn.active {
-			border-color: var(--primary);
-			background: var(--primary);
-			color: white;
-		}
-		.role-btn i {
-			font-size: 1.5rem;
-		}
-		.selected-role-display {
-			margin-bottom: 1rem;
-			padding: 0.75rem;
-			background: rgba(78, 115, 223, 0.1);
-			border-radius: 6px;
-			color: var(--text);
-			font-size: 0.9rem;
 		}
 	</style>
 </body>

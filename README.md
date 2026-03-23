@@ -103,3 +103,24 @@ Additional:
 - Desktop: 3-column layout.
 - Tablet: 2-column layout.
 - Mobile: single-column stacked layout.
+
+## Backend Setup (PHP + MySQL)
+
+This project now includes real login/register and DB-backed feeds.
+
+1. Import schema:
+	- Run [database/innovax_schema.sql](database/innovax_schema.sql)
+2. Seed lookup data (universities, faculties, departments, skills):
+	- Run [database/lookup_seed.sql](database/lookup_seed.sql)
+3. Optional cleanup of temporary seed/test users and posts:
+	- Run [database/cleanup_temp_data.sql](database/cleanup_temp_data.sql)
+4. Serve project with PHP (XAMPP/WAMP/Laragon or PHP built-in server) so [api/auth/login.php](api/auth/login.php) and [api/auth/register.php](api/auth/register.php) are reachable.
+
+Database connection file:
+- [database/connection.php](database/connection.php)
+
+APIs added:
+- [api/auth/login.php](api/auth/login.php)
+- [api/auth/register.php](api/auth/register.php)
+- [api/posts/list.php](api/posts/list.php)
+- [api/users/students.php](api/users/students.php)
