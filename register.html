@@ -10,6 +10,151 @@
 	<link rel="stylesheet" href="assets/css/layout.css" />
 	<link rel="stylesheet" href="assets/css/components.css" />
 	<link rel="stylesheet" href="assets/css/responsive.css" />
+	<style>
+		.auth-shell {
+			background:
+				radial-gradient(circle at 12% 10%, rgba(246, 194, 62, 0.22), transparent 42%),
+				radial-gradient(circle at 88% 88%, rgba(78, 115, 223, 0.24), transparent 44%),
+				linear-gradient(130deg, #fffdf5 0%, #f7faff 60%, #eef7ff 100%);
+		}
+		.auth-card {
+			border: 1px solid rgba(78, 115, 223, 0.18);
+			box-shadow: 0 24px 52px rgba(40, 60, 120, 0.12);
+		}
+		.role-selector {
+			margin-bottom: 2rem;
+		}
+		.role-selector-label {
+			display: block;
+			margin-bottom: 1rem;
+			font-weight: 600;
+			color: var(--text);
+		}
+		.role-buttons {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 1rem;
+		}
+		.role-btn {
+			padding: 1.5rem;
+			border: 2px solid var(--border);
+			border-radius: 8px;
+			background: transparent;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 1rem;
+			color: var(--text);
+		}
+		.role-btn:hover {
+			border-color: var(--primary);
+			background: rgba(78, 115, 223, 0.05);
+		}
+		.role-btn.active {
+			border-color: var(--primary);
+			background: var(--primary);
+			color: white;
+		}
+		.role-btn i {
+			font-size: 1.5rem;
+		}
+		.role-specific-form {
+			display: none;
+		}
+		.role-specific-form.active {
+			display: block;
+		}
+		.skills-input-container {
+			position: relative;
+			margin-bottom: 1rem;
+		}
+		.skills-input-field {
+			display: flex;
+			gap: 0.5rem;
+		}
+		.skills-input-field input {
+			flex: 1;
+		}
+		.skills-dropdown {
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			background: white;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			max-height: 200px;
+			overflow-y: auto;
+			z-index: 10;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		}
+		.skills-dropdown-item {
+			padding: 0.75rem 1rem;
+			cursor: pointer;
+			border-bottom: 1px solid var(--border);
+		}
+		.skills-dropdown-item:hover,
+		.skills-dropdown-item.highlighted {
+			background: rgba(78, 115, 223, 0.1);
+		}
+		.skills-tags {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			margin-top: 0.5rem;
+		}
+		.skill-tag {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: rgba(78, 115, 223, 0.1);
+			color: var(--primary);
+			padding: 0.4rem 0.8rem;
+			border-radius: 20px;
+			font-size: 0.9rem;
+		}
+		.skill-tag button {
+			background: none;
+			border: none;
+			color: var(--primary);
+			cursor: pointer;
+			padding: 0;
+			font-size: 1rem;
+		}
+		.university-dropdown {
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			background: white;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			max-height: 200px;
+			overflow-y: auto;
+			z-index: 10;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		}
+		.university-dropdown-item {
+			padding: 0.75rem 1rem;
+			cursor: pointer;
+			border-bottom: 1px solid var(--border);
+		}
+		.university-dropdown-item:hover,
+		.university-dropdown-item.highlighted {
+			background: rgba(78, 115, 223, 0.1);
+		}
+		.selected-role-display {
+			margin-bottom: 1rem;
+			padding: 0.75rem;
+			background: rgba(78, 115, 223, 0.1);
+			border-radius: 6px;
+			color: var(--text);
+			font-size: 0.9rem;
+		}
+	</style>
 </head>
 <body data-page="register" data-active-nav="feed">
 	<div class="toast" id="toast"></div>
@@ -17,8 +162,28 @@
 	<main class="auth-shell">
 		<section class="auth-card">
 			<h1>Create Your InnovaX Account</h1>
-			<p>Join the innovation network and publish your first project.</p>
-			<form class="auth-form" action="feed.html">
+			<p>Choose your role and join the student-expert innovation network.</p>
+
+			<!-- Role Selection -->
+			<div class="role-selector" id="roleSelector">
+				<label class="role-selector-label">I am a:</label>
+				<div class="role-buttons">
+					<button type="button" class="role-btn" data-role="student">
+						<i class="fas fa-user-graduate"></i>
+						<span>Student</span>
+					</button>
+					<button type="button" class="role-btn" data-role="expert">
+						<i class="fas fa-chalkboard-user"></i>
+						<span>Expert</span>
+					</button>
+				</div>
+			</div>
+
+			<!-- Student Registration Form -->
+			<form class="auth-form role-specific-form" id="studentForm" data-role="student">
+				<div class="selected-role-display">
+					Role: <strong>Student</strong>
+				</div>
 				<label class="field-wrap">
 					<span>Full Name</span>
 					<input type="text" placeholder="Alex Johnson" required />
@@ -28,12 +193,26 @@
 					<input type="email" placeholder="you@example.com" required />
 				</label>
 				<label class="field-wrap">
-					<span>Role</span>
-					<select>
-						<option>Student</option>
-						<option>Professional</option>
-						<option>Company Recruiter</option>
-					</select>
+					<span>Student ID</span>
+					<input type="text" placeholder="CS20210123" required />
+				</label>
+				<label class="field-wrap">
+					<span>University</span>
+					<div style="position: relative;">
+						<input type="text" placeholder="Search university..." class="university-search" required />
+						<div class="university-dropdown" style="display:none;"></div>
+					</div>
+				</label>
+				<label class="field-wrap">
+					<span>Skills & Interests (Max 5)</span>
+					<div class="skills-input-container">
+						<div class="skills-input-field">
+							<input type="text" class="skills-search" placeholder="Search and add skills..." />
+							<button type="button" class="btn-secondary" style="width: auto;">Add</button>
+						</div>
+						<div class="skills-dropdown" style="display:none;"></div>
+						<div class="skills-tags" id="selectedSkills"></div>
+					</div>
 				</label>
 				<label class="field-wrap">
 					<span>Password</span>
@@ -41,12 +220,164 @@
 				</label>
 				<div class="inline-actions" style="justify-content:space-between;">
 					<a href="login.html" class="btn-secondary">Already have an account</a>
-					<button type="submit" class="btn-primary">Register</button>
+					<button type="submit" class="btn-primary">Create Account</button>
+				</div>
+			</form>
+
+			<!-- Expert Registration Form -->
+			<form class="auth-form role-specific-form" id="expertForm" data-role="expert">
+				<div class="selected-role-display">
+					Role: <strong>Expert</strong>
+				</div>
+				<label class="field-wrap">
+					<span>Full Name</span>
+					<input type="text" placeholder="Dr. Sarah Smith" required />
+				</label>
+				<label class="field-wrap">
+					<span>Email</span>
+					<input type="email" placeholder="you@example.com" required />
+				</label>
+				<label class="field-wrap">
+					<span>Password</span>
+					<input type="password" placeholder="Create password" required />
+				</label>
+				<div class="inline-actions" style="justify-content:space-between;">
+					<a href="login.html" class="btn-secondary">Already have an account</a>
+					<button type="submit" class="btn-primary">Create Account</button>
 				</div>
 			</form>
 		</section>
 	</main>
 
 	<script src="assets/js/app.js"></script>
+	<script>
+		// Role selection for register
+		const roleButtons = document.querySelectorAll('[data-role]');
+		const forms = document.querySelectorAll('.role-specific-form');
+
+		roleButtons.forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				e.preventDefault();
+				const role = btn.dataset.role;
+				
+				// Update button states
+				document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+				
+				// Show relevant form
+				forms.forEach(form => form.classList.remove('active'));
+				document.getElementById(role + 'Form').classList.add('active');
+			});
+		});
+
+		// Load universities data
+		async function loadUniversities() {
+			try {
+				const response = await fetch('data/universities.json');
+				return await response.json();
+			} catch (error) {
+				console.error('Error loading universities:', error);
+				return [];
+			}
+		}
+
+		// Load skills data
+		async function loadSkills() {
+			try {
+				const response = await fetch('data/skills.json');
+				return await response.json();
+			} catch (error) {
+				console.error('Error loading skills:', error);
+				return [];
+			}
+		}
+
+		// University autocomplete
+		const universitySearch = document.querySelector('.university-search');
+		const universityDropdown = document.querySelector('.university-dropdown');
+		let universities = [];
+
+		loadUniversities().then(data => {
+			universities = data;
+		});
+
+		universitySearch?.addEventListener('input', (e) => {
+			const query = e.target.value.toLowerCase();
+			if (query.length < 1) {
+				universityDropdown.style.display = 'none';
+				return;
+			}
+			const filtered = universities.filter(u => u.name.toLowerCase().includes(query));
+			universityDropdown.innerHTML = filtered.map(u => `
+				<div class="university-dropdown-item" data-id="${u.id}">${u.name}</div>
+			`).join('');
+			universityDropdown.style.display = 'block';
+
+			universityDropdown.querySelectorAll('.university-dropdown-item').forEach(item => {
+				item.addEventListener('click', () => {
+					universitySearch.value = item.textContent;
+					universityDropdown.style.display = 'none';
+				});
+			});
+		});
+
+		// Skills autocomplete
+		const skillsSearch = document.querySelector('.skills-search');
+		const skillsDropdown = document.querySelector('.skills-dropdown');
+		const skillsTags = document.getElementById('selectedSkills');
+		let selectedSkills = new Set();
+		let allSkills = [];
+
+		loadSkills().then(data => {
+			allSkills = data;
+		});
+
+		skillsSearch?.addEventListener('input', (e) => {
+			const query = e.target.value.toLowerCase();
+			if (query.length < 1) {
+				skillsDropdown.style.display = 'none';
+				return;
+			}
+			const filtered = allSkills.filter(s => !selectedSkills.has(s) && s.toLowerCase().includes(query));
+			skillsDropdown.innerHTML = filtered.slice(0, 8).map(s => `
+				<div class="skills-dropdown-item">${s}</div>
+			`).join('');
+			skillsDropdown.style.display = 'block';
+
+			skillsDropdown.querySelectorAll('.skills-dropdown-item').forEach(item => {
+				item.addEventListener('click', () => {
+					addSkill(item.textContent);
+				});
+			});
+		});
+
+		function addSkill(skill) {
+			if (selectedSkills.size >= 5) {
+				alert('Maximum 5 skills allowed');
+				return;
+			}
+			selectedSkills.add(skill);
+			renderSkillTags();
+			skillsSearch.value = '';
+			skillsDropdown.style.display = 'none';
+		}
+
+		function removeSkill(skill) {
+			selectedSkills.delete(skill);
+			renderSkillTags();
+		}
+
+		function renderSkillTags() {
+			skillsTags.innerHTML = Array.from(selectedSkills).map(skill => `
+				<span class="skill-tag">
+					#${skill}
+					<button type="button" onclick="removeSkill('${skill}')">×</button>
+				</span>
+			`).join('');
+		}
+
+		// Make removeSkill globally available
+		window.removeSkill = removeSkill;
+	</script>
 </body>
 </html>

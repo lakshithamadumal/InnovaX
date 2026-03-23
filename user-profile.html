@@ -23,48 +23,49 @@
         <div class="profile-hero">
           <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#1cc88a,#17a673);">SR</div>
           <div class="profile-meta">
-            <h1>Sofia Rivera</h1>
-            <p>AI Researcher · MIT Media Lab</p>
-            <div class="profile-follow-stats">
-              <span><strong data-follow-count data-user="sofia" data-type="followers">18.4k</strong> Followers</span>
-              <span><strong data-follow-count data-user="sofia" data-type="following">612</strong> Following</span>
-            </div>
+            <h1>Nadeesha Perera</h1>
+            <p>Computer Science Student · AI Builder</p>
             <div class="pill-row">
-              <span class="badge-chip"><i class="fas fa-circle-check"></i> Verified Professional</span>
-              <span class="status-pill warning">Mentorship Available</span>
+              <span class="badge-chip"><i class="fas fa-user-graduate"></i> Student</span>
+              <span class="status-pill warning">Open for Teamups</span>
             </div>
           </div>
-          <div class="inline-actions">
-            <button class="btn-primary follow-btn" type="button" data-follow-btn data-target-user="sofia" data-label="Follow" data-active-label="Following">Follow</button>
-            <a class="btn-secondary" href="messages.html">Message</a>
-          </div>
+          <div class="inline-actions"></div>
         </div>
       </section>
 
       <section class="section-card">
         <div class="section-head"><div class="section-title">About</div></div>
-        <p class="profile-summary">Researching multimodal AI systems for healthcare diagnostics and equitable model deployment in low-resource clinical settings.</p>
+        <p class="profile-summary">Building applied AI projects focused on practical campus and community use cases with low-cost deployment workflows.</p>
       </section>
 
-      <section class="section-card">
+      <section class="section-card" data-profile-section="skills">
         <div class="section-head"><div class="section-title">Skills & Interests</div></div>
         <div class="tag-list">
-          <span class="tag">#ComputerVision</span><span class="tag">#MedTech</span><span class="tag">#ModelSafety</span><span class="tag">#DataEthics</span>
+          <span class="tag">#ComputerVision</span><span class="tag">#PromptEngineering</span><span class="tag">#Python</span><span class="tag">#CommunityTech</span>
         </div>
       </section>
 
-      <section class="section-card">
-        <div class="section-head"><div class="section-title">Projects</div></div>
+      <section class="section-card" data-profile-section="portfolio">
+        <div class="section-head"><div class="section-title">Portfolio Projects</div></div>
         <div class="grid-3">
-          <article class="project-card"><h4>Vision Triage Agent</h4><p>Clinical support system for rapid skin-condition screening.</p></article>
-          <article class="project-card"><h4>RareDx Dataset</h4><p>Curated benchmark for rare-condition image diagnostics.</p></article>
-          <article class="project-card"><h4>Model Trust Lab</h4><p>Evaluation pipeline for explainable health AI outputs.</p></article>
+          <article class="project-card"><h4>Campus HelpBot</h4><p>Student assistant bot for timetable, labs, and assignment reminders.</p></article>
+          <article class="project-card"><h4>EcoTracker</h4><p>IoT-based waste and energy usage tracker for student hostels.</p></article>
+          <article class="project-card"><h4>Study Sprint</h4><p>Peer accountability and micro-goal tracking app for exam weeks.</p></article>
         </div>
       </section>
 
-      <section class="section-card">
-        <div class="section-head"><div class="section-title">Recent Posts</div></div>
+      <section class="section-card" data-profile-section="my-posts">
+        <div class="section-head"><div class="section-title">My Posts</div></div>
         <div data-post-stream="user"></div>
+      </section>
+
+      <section class="section-card" data-expert-saved-link style="display:none;">
+        <div class="section-head"><div class="section-title">Saved Posts</div></div>
+        <p class="section-note">Expert profiles show saved posts only.</p>
+        <div class="inline-actions" style="margin-top:12px;">
+          <a class="btn-primary" href="saved-posts.html">View Saved Posts</a>
+        </div>
       </section>
     </section>
     <div data-component="sidebar-right"></div>

@@ -242,3 +242,9 @@
 .switch.on::after {
 	left: 23px;
 }
+
+.auth-modern-card {
+	border: 1px solid rgba(78, 115, 223, 0.18);
+	box-shadow: 0 24px 52px rgba(40, 60, 120, 0.12);
+	background: linear-gradient(145deg, #ffffff 0%, #f9fbff 100%);
+}

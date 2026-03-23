@@ -1,4 +1,4 @@
-<article class="card post-card fade-in-card" id="post-{{id}}" data-post-id="{{id}}">
+<article class="card post-card fade-in-card" id="post-{{id}}" data-post-id="{{id}}" data-post-author="{{authorId}}" data-post-status="published">
 	<div class="post-header">
 		<div class="avatar" style="background:{{avatarColor}}">{{avatar}}</div>
 		<div class="user-info">
@@ -6,13 +6,7 @@
 			<div class="user-role">{{role}}</div>
 		</div>
 		<span class="post-time">{{time}}</span>
-		<div class="post-more-wrap">
-			<button class="post-more-btn" type="button" data-post-menu-toggle aria-label="Post options"><i class="fas fa-ellipsis-h"></i></button>
-			<div class="post-more-menu" data-post-menu>
-				<button class="post-menu-item" type="button" data-post-menu-action="not-interested">Not Interested</button>
-				<button class="post-menu-item danger" type="button" data-post-menu-action="report">Report</button>
-			</div>
-		</div>
+		{{moreMenu}}
 	</div>
 
 	<a class="post-title-link" href="post-view.html">
@@ -27,23 +21,17 @@
 			<div class="like-icon-small"><i class="fas fa-heart"></i></div>
 			<span class="likes-num" data-like-count>{{likes}}</span>
 		</div>
-		<button class="comments-link" type="button" data-comment-toggle data-post-id="{{id}}">{{commentCountText}}</button>
 	</div>
 
 	<div class="post-actions">
 		<button class="action-btn like-btn" type="button" data-like-btn data-post-id="{{id}}">
 			<i class="fas fa-heart"></i> <span>Like</span>
 		</button>
-		<button class="action-btn comment-btn" type="button" data-comment-toggle data-post-id="{{id}}">
-			<i class="fas fa-comment"></i> <span>Comment</span>
+		<button class="action-btn save-btn" type="button" data-save-btn>
+			<i class="fas fa-bookmark"></i> <span>Save</span>
 		</button>
 		<button class="action-btn share-btn" type="button" data-share-btn>
 			<i class="fas fa-share"></i> <span>Share</span>
 		</button>
-		<button class="action-btn save-btn" type="button" data-save-btn>
-			<i class="fas fa-bookmark"></i> <span>Save</span>
-		</button>
 	</div>
-
-	{{commentSection}}
 </article>

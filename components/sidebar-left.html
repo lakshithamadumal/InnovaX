@@ -1,25 +1,42 @@
 <aside class="sidebar-left">
-  <div class="card profile-card">
+  <div class="card profile-card" id="sidebar-guest-card">
     <div class="cover"></div>
     <div class="profile-body">
       <div class="avatar-wrap">
-        <div class="avatar">AJ</div>
+        <div class="avatar">IN</div>
       </div>
-      <div class="name">Alex Johnson</div>
-      <div class="role">Product Designer · San Francisco, CA</div>
+      <div class="name">Welcome to InnovaX</div>
+      <div class="role">Explore posts and student profiles freely.</div>
     </div>
     <div class="profile-stats">
       <div class="stat">
-        <span class="value" data-follow-count data-user="me" data-type="followers">3.2k</span>
-        <span class="label">Followers</span>
+        <span class="value">Public</span>
+        <span class="label">Guest Mode</span>
       </div>
-      <div class="stat">
-        <span class="value" data-follow-count data-user="me" data-type="following">128</span>
-        <span class="label">Following</span>
+    </div>
+    <div class="profile-body profile-links-body">
+      <nav class="quick-links">
+        <div class="quick-links-title">Get Started</div>
+        <a class="quick-link" href="login.html"><i class="fas fa-right-to-bracket"></i> Login</a>
+        <a class="quick-link" href="register.html"><i class="fas fa-user-plus"></i> Register</a>
+        <a class="quick-link" href="search-results.html"><i class="fas fa-magnifying-glass"></i> Search</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="card profile-card" id="sidebar-user-card" style="display:none;">
+    <div class="cover"></div>
+    <div class="profile-body">
+      <div class="avatar-wrap">
+        <div class="avatar" id="sidebar-user-avatar">AJ</div>
       </div>
+      <div class="name" id="sidebar-user-name">Alex Johnson</div>
+      <div class="role" id="sidebar-user-role">Student</div>
+    </div>
+    <div class="profile-stats" id="sidebar-user-stats">
       <div class="stat">
-        <span class="value">47</span>
-        <span class="label">Posts</span>
+        <span class="value" id="sidebar-user-stat-value">Live</span>
+        <span class="label" id="sidebar-user-stat-label">Account</span>
       </div>
     </div>
     <div class="profile-body profile-links-body">
@@ -27,8 +44,8 @@
         <div class="quick-links-title">Quick Links</div>
         <a class="quick-link" href="my-profile.html"><i class="fas fa-user-circle"></i> My Profile</a>
         <a class="quick-link" href="saved-posts.html"><i class="fas fa-bookmark"></i> Saved Posts</a>
-        <a class="quick-link" href="project-view.html"><i class="fas fa-chart-line"></i> Project Reviews</a>
         <a class="quick-link" href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+        <button class="quick-link" onclick="window.logout()" style="width: 100%; border: none; background: none; text-align: left; cursor: pointer; color: #666;"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </nav>
     </div>
   </div>

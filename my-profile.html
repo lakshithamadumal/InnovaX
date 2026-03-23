@@ -25,13 +25,8 @@
           <div class="profile-meta">
             <h1>Alex Johnson</h1>
             <p>Product Designer · InnovaX Labs · Stanford Alumni</p>
-            <div class="profile-follow-stats">
-              <span><strong data-follow-count data-user="me" data-type="followers">3.2k</strong> Followers</span>
-              <span><strong data-follow-count data-user="me" data-type="following">128</strong> Following</span>
-            </div>
             <div class="pill-row">
-              <span class="badge-chip"><i class="fas fa-check-circle"></i> Verified Professional</span>
-              <span class="status-pill success">Open to Collaborate</span>
+              <span class="badge-chip" data-session-role-badge><i class="fas fa-user-graduate"></i> Student</span>
             </div>
           </div>
           <div class="inline-actions">
@@ -46,25 +41,24 @@
         <p class="profile-summary">Designing human-centered systems that move research ideas into usable products. Focused on sustainability workflows, creator tooling, and community-first product loops.</p>
       </section>
 
-      <section class="section-card">
+      <section class="section-card" data-profile-section="skills">
         <div class="section-head"><div class="section-title">Skills & Interests</div></div>
         <div class="tag-list">
           <span class="tag">#ProductDesign</span><span class="tag">#AI</span><span class="tag">#DesignSystems</span><span class="tag">#InnovationOps</span><span class="tag">#UserResearch</span>
         </div>
       </section>
 
-      <section class="section-card">
-        <div class="section-head"><div class="section-title">Portfolio Projects</div></div>
-        <div class="grid-3">
-          <article class="project-card"><h4>Campus Prototype Lab</h4><p>Built a design-led experimentation system for student teams.</p></article>
-          <article class="project-card"><h4>Sustainability Tracker</h4><p>Created multi-campus dashboard for material recovery outcomes.</p></article>
-          <article class="project-card"><h4>Innovation Mentor Hub</h4><p>Matched founders with domain mentors through peer signals.</p></article>
-        </div>
-      </section>
-
-      <section class="section-card">
+      <section class="section-card" data-profile-section="my-posts">
         <div class="section-head"><div class="section-title">My Posts</div></div>
         <div data-post-stream="profile"></div>
+      </section>
+
+      <section class="section-card" data-expert-saved-link style="display:none;">
+        <div class="section-head"><div class="section-title">Saved Posts</div></div>
+        <p class="section-note">Expert profiles show saved posts only.</p>
+        <div class="inline-actions" style="margin-top:12px;">
+          <a class="btn-primary" href="saved-posts.html">Go to Saved Posts</a>
+        </div>
       </section>
     </section>
     <div data-component="sidebar-right"></div>

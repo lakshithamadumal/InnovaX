@@ -5,22 +5,18 @@
 	</a>
 
 	<div class="nav-search">
-		<input type="text" id="search-input" placeholder="Search innovations, people..." aria-label="Search" />
+		<input type="text" id="search-input" placeholder="Search #hashtags, student names, profile titles..." aria-label="Search" />
 		<i class="fas fa-search search-icon"></i>
 	</div>
 
 	<nav class="nav-links" id="nav-links-desktop" aria-label="Primary navigation">
-		<a class="nav-link" data-nav="feed" data-label="Home" href="feed.html">
+		<a class="nav-link" data-nav="feed" data-label="Home" href="index.html">
 			<i class="fas fa-home"></i>
 			<span>Home</span>
 		</a>
-		<a class="nav-link" data-nav="network" data-label="Network" href="network.html">
-			<i class="fas fa-users"></i>
-			<span>Network</span>
-		</a>
-		<a class="nav-link" data-nav="messages" data-label="Messages" href="messages.html">
-			<i class="fas fa-comment-dots"></i>
-			<span>Messages</span>
+		<a class="nav-link" data-label="Search" href="search-results.html">
+			<i class="fas fa-magnifying-glass"></i>
+			<span>Search</span>
 		</a>
 		<a class="nav-link" data-nav="notifications" data-label="Notifications" href="notifications.html" id="notif-link">
 			<i class="fas fa-bell"></i>
@@ -37,11 +33,10 @@
 </header>
 
 <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
-	<a class="nav-link" data-nav="feed" href="feed.html"><i class="fas fa-home"></i> Home</a>
-	<a class="nav-link" data-nav="network" href="network.html"><i class="fas fa-users"></i> My Network</a>
-	<a class="nav-link" data-nav="messages" href="messages.html"><i class="fas fa-comment-dots"></i> Messages</a>
+	<a class="nav-link" data-nav="feed" href="index.html"><i class="fas fa-home"></i> Home</a>
+	<a class="nav-link" href="search-results.html"><i class="fas fa-magnifying-glass"></i> Search</a>
 	<a class="nav-link" data-nav="notifications" href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
 	<div class="divider"></div>
-	<a class="nav-link" href="my-profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+	<a class="nav-link" href="my-profile.html" data-requires-login><i class="fas fa-user-circle"></i> My Profile</a>
 	<a class="nav-link" href="settings.html"><i class="fas fa-cog"></i> Settings</a>
 </nav>

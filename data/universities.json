@@ -1,0 +1,77 @@
+[
+  {
+    "id": 1,
+    "name": "University of Colombo",
+    "shortName": "UniCol"
+  },
+  {
+    "id": 2,
+    "name": "University of Moratuwa",
+    "shortName": "UOM"
+  },
+  {
+    "id": 3,
+    "name": "University of Peradeniya",
+    "shortName": "UOP"
+  },
+  {
+    "id": 4,
+    "name": "University of Sri Jayewardenepura",
+    "shortName": "USJ"
+  },
+  {
+    "id": 5,
+    "name": "University of Kelaniya",
+    "shortName": "UOK"
+  },
+  {
+    "id": 6,
+    "name": "University of Ruhuna",
+    "shortName": "UOR"
+  },
+  {
+    "id": 7,
+    "name": "University of the Visual and Performing Arts",
+    "shortName": "UVPA"
+  },
+  {
+    "id": 8,
+    "name": "Open University of Sri Lanka",
+    "shortName": "OUSL"
+  },
+  {
+    "id": 9,
+    "name": "Sabaragamuwa University of Sri Lanka",
+    "shortName": "SUSL"
+  },
+  {
+    "id": 10,
+    "name": "Eastern University Sri Lanka",
+    "shortName": "EUSL"
+  },
+  {
+    "id": 11,
+    "name": "South Eastern University of Sri Lanka",
+    "shortName": "SEUSL"
+  },
+  {
+    "id": 12,
+    "name": "Rajarata University of Sri Lanka",
+    "shortName": "RUSL"
+  },
+  {
+    "id": 13,
+    "name": "University of Colombo School of Computing",
+    "shortName": "UCSC"
+  },
+  {
+    "id": 14,
+    "name": "Institute of Information Technology",
+    "shortName": "IIT"
+  },
+  {
+    "id": 15,
+    "name": "Sri Lanka Institute of Information Technology",
+    "shortName": "SLIIT"
+  }
+]
