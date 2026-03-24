@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="assets/css/components.css" />
   <link rel="stylesheet" href="assets/css/responsive.css" />
 </head>
-<body data-page="user-profile" data-active-nav="feed" data-profile-user-role="student" data-profile-user-id="student2" data-profile-user-name="Nadeesha Perera" data-profile-user-university="University of Moratuwa">
+<body data-page="user-profile" data-active-nav="feed" data-profile-user-role="student" data-profile-user-id="" data-profile-user-name="" data-profile-user-university="">
   <div class="toast" id="toast"></div>
   <div data-component="navbar"></div>
 
@@ -19,12 +19,15 @@
     <div data-component="sidebar-left"></div>
     <section class="content-column">
       <section class="section-card" style="padding:0; overflow:hidden;">
-        <div class="cover-photo" style="background:linear-gradient(135deg,#1cc88a,#17a673 55%,#f6c23e);"></div>
+        <div class="cover-photo" data-profile-cover></div>
         <div class="profile-hero">
-          <div class="profile-avatar-lg" style="background:linear-gradient(135deg,#1cc88a,#17a673);" data-profile-avatar>SR</div>
+          <div class="profile-avatar-lg" data-profile-avatar>
+            <span data-profile-avatar-initials>IN</span>
+          </div>
           <div class="profile-meta">
-            <h1 data-profile-name>Nadeesha Perera</h1>
-            <p data-profile-university>University of Moratuwa</p>
+            <h1 data-profile-name>InnovaX Member</h1>
+            <p data-profile-university></p>
+            <p class="section-note" data-profile-role-meta style="margin-top:6px;"></p>
             <div class="pill-row">
               <span class="badge-chip" data-public-role-badge><i class="fas fa-user-graduate"></i> Student</span>
               <span class="badge-chip" data-profile-likes-wrap><i class="fas fa-heart"></i> <span data-profile-likes-count>0</span> Likes</span>
@@ -36,14 +39,12 @@
 
       <section class="section-card">
         <div class="section-head"><div class="section-title">About</div></div>
-        <p class="profile-summary">Building applied AI projects focused on practical campus and community use cases with low-cost deployment workflows.</p>
+        <p class="profile-summary" data-profile-bio>No bio added yet.</p>
       </section>
 
       <section class="section-card" data-profile-section="skills">
         <div class="section-head"><div class="section-title">Skills & Interests</div></div>
-        <div class="tag-list">
-          <span class="tag">#ComputerVision</span><span class="tag">#PromptEngineering</span><span class="tag">#Python</span><span class="tag">#CommunityTech</span>
-        </div>
+        <div class="tag-list" data-profile-skills></div>
       </section>
 
       <section class="section-card" data-profile-section="my-posts">

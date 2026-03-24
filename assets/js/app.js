@@ -3,6 +3,9 @@
   const EXPERT_RATINGS_STORAGE_KEY = "expertPostRatings";
   const DEFAULT_PROFILE_AVATAR_URL = "assets/images/users/default-avatar.svg";
   const DEFAULT_PROFILE_COVER_URL = "assets/images/users/default-cover.svg";
+  const POST_DESC_PREVIEW_LIMIT = 180;
+  const POST_TITLE_MIN_WORDS = 2;
+  const POST_TITLE_MAX_WORDS = 20;
 
   const state = {
     isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn") || "false"),
@@ -10,9 +13,14 @@
     currentUser: JSON.parse(localStorage.getItem("currentUser") || "null"),
     posts: [],
     studentProfiles: [],
+    myProfile: null,
+    viewedUserProfile: null,
     postTemplate: "",
-    notificationCount: 2,
-    feedSort: "recent"
+    notificationCount: 0,
+    notifications: [],
+    trendingInnovations: [],
+    feedSort: "recent",
+    createPostMedia: null
   };
 
   if (state.currentUser) {
@@ -47,6 +55,14 @@
       hour: "numeric",
       minute: "2-digit"
     });
+  }
+
+  function countWords(text) {
+    const cleaned = String(text || "").trim();
+    if (!cleaned) {
+      return 0;
+    }
+    return cleaned.split(/\s+/).filter(Boolean).length;
   }
 
   function getExpertRatingsStore() {
@@ -107,16 +123,26 @@
     }, 2400);
   }
 
+  function clearLocalAuthState() {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("currentUser");
+    state.isLoggedIn = false;
+    state.userRole = null;
+    state.currentUser = null;
+  }
+
   function setLoggedInUser(user, role) {
+    const normalizedRole = role || user?.role || null;
     state.isLoggedIn = true;
-    state.userRole = role;
+    state.userRole = normalizedRole;
     state.currentUser = {
       ...user,
       profileImageUrl: user?.profileImageUrl || DEFAULT_PROFILE_AVATAR_URL,
       coverImageUrl: user?.coverImageUrl || DEFAULT_PROFILE_COVER_URL
     };
     localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("userRole", role);
+    localStorage.setItem("userRole", normalizedRole || "");
     localStorage.setItem("currentUser", JSON.stringify(state.currentUser));
   }
 
@@ -127,14 +153,15 @@
     localStorage.setItem("currentUser", JSON.stringify(state.currentUser));
   }
 
-  function logout() {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("currentUser");
-    state.isLoggedIn = false;
-    state.userRole = null;
-    state.currentUser = null;
-    window.location.href = "index.html";
+  async function logout() {
+    try {
+      await postJson("api/auth/logout.php", {});
+    } catch (error) {
+      // Local cleanup still continues even if API call fails.
+    } finally {
+      clearLocalAuthState();
+      window.location.href = "index.html";
+    }
   }
 
   function showLoginDialog() {
@@ -161,6 +188,59 @@
     document.body.appendChild(dialog);
   }
 
+  function showConfirmDialog(options = {}) {
+    const title = String(options.title || "Confirm Action");
+    const message = String(options.message || "Are you sure?");
+    const confirmLabel = String(options.confirmLabel || "Confirm");
+    const cancelLabel = String(options.cancelLabel || "Cancel");
+
+    return new Promise((resolve) => {
+      const dialog = document.createElement("div");
+      dialog.className = "auth-dialog-overlay";
+      dialog.innerHTML = `
+        <div class="auth-dialog-card" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
+          <h2>${escapeHtml(title)}</h2>
+          <p>${escapeHtml(message)}</p>
+          <div class="auth-dialog-actions">
+            <button type="button" class="btn-secondary" data-dialog-cancel>${escapeHtml(cancelLabel)}</button>
+            <button type="button" class="btn-secondary confirm-delete-btn" data-dialog-confirm>${escapeHtml(confirmLabel)}</button>
+          </div>
+        </div>
+      `;
+
+      const keyHandler = (event) => {
+        if (event.key === "Escape") {
+          finish(false);
+        }
+      };
+
+      let settled = false;
+      const finish = (value) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        document.removeEventListener("keydown", keyHandler);
+        dialog.remove();
+        resolve(value);
+      };
+
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog || event.target.closest("[data-dialog-cancel]")) {
+          finish(false);
+          return;
+        }
+        if (event.target.closest("[data-dialog-confirm]")) {
+          finish(true);
+        }
+      });
+
+      document.addEventListener("keydown", keyHandler);
+
+      document.body.appendChild(dialog);
+    });
+  }
+
   function requireAuthAction() {
     if (state.isLoggedIn) {
       return true;
@@ -170,7 +250,10 @@
   }
 
   async function getJson(path) {
-    const response = await fetch(path, { cache: "no-store" });
+    const response = await fetch(path, {
+      cache: "no-store",
+      credentials: "same-origin"
+    });
     let payload = null;
 
     try {
@@ -190,6 +273,7 @@
   async function postJson(path, body) {
     const response = await fetch(path, {
       method: "POST",
+      credentials: "same-origin",
       headers: {
         "Content-Type": "application/json"
       },
@@ -246,6 +330,20 @@
 
   function logAuthEvent(type, payload) {
     console.log(`[AUTH:${type}]`, payload);
+  }
+
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("No file selected."));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Failed to read file."));
+      reader.readAsDataURL(file);
+    });
   }
 
   async function fetchText(path) {
@@ -309,12 +407,15 @@
 
       state.posts = normalized.map((post, index) => {
         const id = String(post.id || `db-${index + 1}`);
+        const parsedOrder = Date.parse(post.time || "");
         return {
           id,
           authorId: post.authorId || "",
           avatar: post.avatar || getInitials(post.name || "InnovaX Member"),
+          avatarImageUrl: post.avatarImageUrl || "",
           avatarColor: post.avatarColor || "linear-gradient(135deg,#4E73DF,#6f8ee8)",
           name: post.name || "InnovaX Member",
+          university: post.university || "",
           role: post.role || "Member",
           time: post.time || "Now",
           title: post.title || "Untitled post",
@@ -322,12 +423,101 @@
           tags: Array.isArray(post.tags) ? post.tags : [],
           media: post.media || null,
           likes: Number(post.likes || 0),
+          liked: Boolean(post.liked),
           saved: Boolean(post.saved),
-          createdOrder: Number(post.id || index + 1)
+          createdOrder: Number.isFinite(parsedOrder) ? parsedOrder : (normalized.length - index)
         };
       });
     } catch (error) {
       state.posts = [];
+    }
+  }
+
+  async function loadTrendingInnovationsData() {
+    try {
+      const payload = await getJson("api/posts/trending.php?limit=5");
+      const rows = Array.isArray(payload.data?.trending) ? payload.data.trending : [];
+
+      state.trendingInnovations = rows
+        .map((row, index) => {
+          const count = Number(row.count || 0);
+          const tagRaw = String(row.tag || "").trim();
+          const tag = tagRaw.startsWith("#") ? tagRaw : `#${tagRaw}`;
+          if (tag === "#") {
+            return null;
+          }
+
+          return {
+            rank: Number(row.rank || index + 1),
+            tag,
+            count
+          };
+        })
+        .filter(Boolean);
+    } catch (error) {
+      const counts = new Map();
+      state.posts.forEach((post) => {
+        const tags = Array.isArray(post.tags) ? post.tags : [];
+        tags.forEach((tagRaw) => {
+          const clean = String(tagRaw || "").trim();
+          if (!clean) {
+            return;
+          }
+          const tag = clean.startsWith("#") ? clean : `#${clean}`;
+          counts.set(tag, (counts.get(tag) || 0) + 1);
+        });
+      });
+
+      state.trendingInnovations = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([tag, count], index) => ({
+          rank: index + 1,
+          tag,
+          count
+        }));
+    }
+  }
+
+  async function loadNotificationsData() {
+    if (!state.isLoggedIn) {
+      state.notifications = [];
+      state.notificationCount = 0;
+      return;
+    }
+
+    try {
+      const payload = await getJson("api/notifications/list.php");
+      const list = Array.isArray(payload.data?.notifications) ? payload.data.notifications : [];
+      state.notifications = list.map((entry) => ({
+        id: Number(entry.id || 0),
+        type: String(entry.type || "system"),
+        entityType: String(entry.entityType || ""),
+        entityId: String(entry.entityId || ""),
+        message: String(entry.message || ""),
+        isRead: Boolean(entry.isRead),
+        createdAt: String(entry.createdAt || "")
+      }));
+
+      const unreadFromServer = Number(payload.data?.unreadCount || 0);
+      if (Number.isFinite(unreadFromServer) && unreadFromServer >= 0) {
+        state.notificationCount = unreadFromServer;
+      } else {
+        state.notificationCount = state.notifications.filter((item) => !item.isRead).length;
+      }
+    } catch (error) {
+      state.notifications = [];
+      state.notificationCount = 0;
+    }
+  }
+
+  async function refreshNotificationsUi() {
+    try {
+      await loadNotificationsData();
+      updateNotificationBadge();
+      renderNotificationsPage();
+    } catch (error) {
+      // Ignore refresh failures silently; action results should still proceed.
     }
   }
 
@@ -338,6 +528,7 @@
       state.studentProfiles = list.map((student) => ({
         id: student.id,
         name: student.name,
+        imageUrl: student.profileImageUrl || "",
         title: student.title,
         badge: "Student"
       }));
@@ -353,6 +544,20 @@
       .join("")
       .slice(0, 2)
       .toUpperCase();
+  }
+
+  function applyAvatarVisual(node, imageUrl, fallbackText, gradient) {
+    if (!node) {
+      return;
+    }
+
+    const hasImage = Boolean(String(imageUrl || "").trim());
+    node.textContent = hasImage ? "" : String(fallbackText || "");
+    node.style.background = hasImage ? "#dbe6ff" : (gradient || "linear-gradient(135deg,#4E73DF,#6f8ee8)");
+    node.style.backgroundImage = hasImage ? `url('${escapeHtml(String(imageUrl))}')` : "";
+    node.style.backgroundSize = hasImage ? "cover" : "";
+    node.style.backgroundPosition = hasImage ? "center" : "";
+    node.style.backgroundRepeat = hasImage ? "no-repeat" : "";
   }
 
   function isOwnPost(post) {
@@ -379,12 +584,29 @@
   function buildPostCard(post) {
     const tags = Array.isArray(post.tags) ? post.tags : [];
     const tagsHtml = tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
+    const universityText = String(post.university || "").trim();
+    const universityHtml = universityText
+      ? `<div class="user-university">${escapeHtml(universityText)}</div>`
+      : "";
+    const descText = String(post.desc || "").trim();
+    const hasLongDesc = descText.length > POST_DESC_PREVIEW_LIMIT;
+    const descPreview = hasLongDesc ? `${descText.slice(0, POST_DESC_PREVIEW_LIMIT).trimEnd()}...` : descText;
+    const descHtml = hasLongDesc
+      ? `
+        <span class="post-desc-short" data-post-desc-short>${escapeHtml(descPreview)}</span>
+        <span class="post-desc-full" data-post-desc-full style="display:none;">${escapeHtml(descText)}</span>
+        <button class="post-desc-toggle" type="button" data-post-desc-toggle data-expanded="false">See more</button>
+      `
+      : escapeHtml(descText);
+    const hasImageMedia = Boolean(post.media && post.media.url);
     const mediaHtml = post.media
       ? `
         <div class="post-media">
-          <div class="post-media-inner">
-            <span style="font-size:3.5rem">${escapeHtml(post.media.emoji || "💡")}</span>
-            <p>${escapeHtml(post.media.label || "Post asset")}</p>
+          <div class="post-media-inner ${hasImageMedia ? "image-ratio" : ""}">
+            ${hasImageMedia
+              ? `<img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />`
+              : `<span style="font-size:3.5rem">${escapeHtml(post.media.emoji || "💡")}</span>`}
+            ${hasImageMedia ? "" : `<p>${escapeHtml(post.media.label || "Post asset")}</p>`}
           </div>
         </div>
       `
@@ -393,18 +615,216 @@
     return applyTemplate(state.postTemplate, {
       id: escapeHtml(post.id),
       authorId: escapeHtml(post.authorId),
-      avatarColor: escapeHtml(post.avatarColor || "linear-gradient(135deg,#4E73DF,#6f8ee8)"),
-      avatar: escapeHtml(post.avatar || getInitials(post.name)),
+      avatarStyle: post.avatarImageUrl
+        ? `background-image:url('${escapeHtml(post.avatarImageUrl)}');background-size:cover;background-position:center;background-repeat:no-repeat;`
+        : `background:${escapeHtml(post.avatarColor || "linear-gradient(135deg,#4E73DF,#6f8ee8)")};`,
+      avatar: escapeHtml(post.avatarImageUrl ? "" : (post.avatar || getInitials(post.name))),
       name: escapeHtml(post.name || "InnovaX Member"),
+      university: universityHtml,
       role: escapeHtml(post.role || "Member"),
-      time: escapeHtml(post.time || "Now"),
+      time: escapeHtml(formatDateTime(post.time)),
       title: escapeHtml(post.title || "Untitled post"),
-      desc: escapeHtml(post.desc || ""),
+      desc: descHtml,
       tags: tagsHtml,
       media: mediaHtml,
       likes: escapeHtml(post.likes ?? 0),
+      likeClass: post.liked ? "liked" : "",
+      saveClass: post.saved ? "saved" : "",
       moreMenu: buildMoreMenu(post)
     });
+  }
+
+  async function syncAuthenticatedUser() {
+    try {
+      const payload = await getJson("api/auth/me.php");
+      const user = payload.data?.user;
+      if (user && user.id && user.role) {
+        setLoggedInUser(user, user.role);
+        return true;
+      }
+    } catch (error) {
+      // Ignore here and fallback to local clear below.
+    }
+
+    clearLocalAuthState();
+    return false;
+  }
+
+  async function loadMyProfileData() {
+    if (document.body.dataset.page !== "my-profile") {
+      return;
+    }
+    if (!state.isLoggedIn) {
+      state.myProfile = null;
+      return;
+    }
+
+    try {
+      const payload = await getJson("api/users/my-profile.php");
+      const user = payload.data?.user;
+      if (user && user.id && user.role) {
+        setLoggedInUser(user, user.role);
+      }
+
+      const profile = payload.data?.profile;
+      state.myProfile = profile && typeof profile === "object" ? profile : null;
+    } catch (error) {
+      state.myProfile = null;
+    }
+  }
+
+  async function loadViewedUserProfileData() {
+    if (document.body.dataset.page !== "user-profile") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const userId = String(params.get("userId") || document.body.dataset.profileUserId || "").trim();
+    if (!userId) {
+      state.viewedUserProfile = null;
+      return;
+    }
+
+    try {
+      const payload = await getJson(`api/users/public-profile.php?userId=${encodeURIComponent(userId)}`);
+      const user = payload.data?.user;
+      const profile = payload.data?.profile;
+      if (!user || !user.id) {
+        throw new Error("Invalid user profile response.");
+      }
+
+      state.viewedUserProfile = {
+        user,
+        profile: profile && typeof profile === "object" ? profile : {}
+      };
+
+      document.body.dataset.profileUserId = user.id;
+      document.body.dataset.profileUserName = user.name || "";
+      document.body.dataset.profileUserRole = user.role || "student";
+      document.body.dataset.profileUserUniversity = user.university || "";
+      document.body.dataset.profileUserAvatar = user.profileImageUrl || "";
+      document.body.dataset.profileUserCover = user.coverImageUrl || "";
+      document.body.dataset.profileUserBio = user.bio || "";
+    } catch (error) {
+      state.viewedUserProfile = null;
+      showToast(normalizeApiError(error, "Unable to load selected user profile."));
+    }
+  }
+
+  function renderMyProfileDetails() {
+    if (document.body.dataset.page !== "my-profile") {
+      return;
+    }
+
+    const roleMetaNode = document.querySelector("[data-profile-role-meta]");
+    const skillsWrap = document.querySelector("[data-profile-skills]");
+
+    if (roleMetaNode) {
+      if (state.userRole === "student") {
+        const faculty = String(state.myProfile?.faculty || "").trim();
+        const department = String(state.myProfile?.department || "").trim();
+        const studentId = String(state.myProfile?.studentId || "").trim();
+        const chunks = [];
+
+        if (department) {
+          chunks.push(department);
+        }
+        if (faculty) {
+          chunks.push(faculty);
+        }
+        if (studentId) {
+          chunks.push(`ID: ${studentId}`);
+        }
+
+        roleMetaNode.textContent = chunks.length ? chunks.join(" • ") : "Student profile";
+      } else if (state.userRole === "expert") {
+        const title = String(state.currentUser?.title || "").trim();
+        const organization = String(state.currentUser?.organization || "").trim();
+        const chunks = [];
+
+        if (title) {
+          chunks.push(title);
+        }
+        if (organization) {
+          chunks.push(organization);
+        }
+
+        roleMetaNode.textContent = chunks.length ? chunks.join(" • ") : "Expert profile";
+      } else {
+        roleMetaNode.textContent = "";
+      }
+    }
+
+    if (skillsWrap) {
+      const skills = Array.isArray(state.myProfile?.skills) ? state.myProfile.skills : [];
+      if (!skills.length) {
+        skillsWrap.innerHTML = "<span class=\"section-note\">No skills added yet.</span>";
+      } else {
+        skillsWrap.innerHTML = skills
+          .map((skill) => `#${String(skill || "").trim().replace(/^#/, "")}`)
+          .filter((skill) => skill !== "#")
+          .map((skill) => `<span class=\"tag\">${escapeHtml(skill)}</span>`)
+          .join("");
+      }
+    }
+  }
+
+  function renderUserProfileDetails() {
+    if (document.body.dataset.page !== "user-profile") {
+      return;
+    }
+
+    const roleMetaNode = document.querySelector("[data-profile-role-meta]");
+    const skillsWrap = document.querySelector("[data-profile-skills]");
+    if (roleMetaNode) {
+      const publicRole = String(document.body.dataset.profileUserRole || "student").toLowerCase();
+      if (publicRole === "student") {
+        const faculty = String(state.viewedUserProfile?.profile?.faculty || "").trim();
+        const department = String(state.viewedUserProfile?.profile?.department || "").trim();
+        const chunks = [];
+
+        if (faculty) {
+          chunks.push(faculty);
+        }
+        if (department) {
+          chunks.push(department);
+        }
+
+        roleMetaNode.textContent = chunks.length ? chunks.join(" • ") : "Student profile";
+      } else {
+        const title = String(state.viewedUserProfile?.user?.title || "").trim();
+        const organization = String(state.viewedUserProfile?.user?.organization || "").trim();
+        const chunks = [];
+
+        if (title) {
+          chunks.push(title);
+        }
+        if (organization) {
+          chunks.push(organization);
+        }
+
+        roleMetaNode.textContent = chunks.length ? chunks.join(" • ") : "Expert profile";
+      }
+    }
+
+    if (!skillsWrap) {
+      return;
+    }
+
+    const skills = Array.isArray(state.viewedUserProfile?.profile?.skills)
+      ? state.viewedUserProfile.profile.skills
+      : [];
+
+    if (!skills.length) {
+      skillsWrap.innerHTML = "<span class=\"section-note\">No skills added yet.</span>";
+      return;
+    }
+
+    skillsWrap.innerHTML = skills
+      .map((skill) => `#${String(skill || "").trim().replace(/^#/, "")}`)
+      .filter((skill) => skill !== "#")
+      .map((skill) => `<span class=\"tag\">${escapeHtml(skill)}</span>`)
+      .join("");
   }
 
   function getFeedSortedPosts() {
@@ -429,6 +849,12 @@
         return own;
       }
       case "user":
+        if (document.body.dataset.page === "user-profile") {
+          const viewedUserId = String(document.body.dataset.profileUserId || "").trim();
+          if (viewedUserId) {
+            return sortedFeed.filter((post) => String(post.authorId || "") === viewedUserId);
+          }
+        }
         return sortedFeed.filter((post) => String(post.role || "").toLowerCase().includes("student"));
       default:
         return sortedFeed;
@@ -481,15 +907,125 @@
     container.innerHTML = topPosts;
   }
 
+  function renderTrendingInnovations() {
+    const container = document.querySelector("[data-trending-list]");
+    if (!container) {
+      return;
+    }
+
+    const items = Array.isArray(state.trendingInnovations) ? state.trendingInnovations : [];
+    if (!items.length) {
+      container.innerHTML = "<p class='section-note'>No trending tags yet.</p>";
+      return;
+    }
+
+    const html = items
+      .map((item, index) => {
+        const count = Number(item.count || 0);
+        const badge = index === 0 ? "hot" : index === 1 ? "new" : "";
+        const badgeLabel = index === 0 ? "Hot" : index === 1 ? "New" : "Trend";
+        return `
+          <button class="trend-item" type="button">
+            <div class="trend-rank">#${escapeHtml(item.rank || index + 1)}</div>
+            <div class="trend-info">
+              <div class="trend-name">${escapeHtml(item.tag || "#innovation")}</div>
+              <div class="trend-count">${escapeHtml(count)} posts</div>
+            </div>
+            <span class="trend-badge ${badge}">${badgeLabel}</span>
+          </button>
+        `;
+      })
+      .join("");
+
+    container.innerHTML = html;
+  }
+
+  function renderNotificationsPage() {
+    if (document.body.dataset.page !== "notifications") {
+      return;
+    }
+
+    const listNode = document.querySelector("[data-notification-list]");
+    const markAllBtn = document.querySelector("[data-mark-all-read]");
+    if (!listNode) {
+      return;
+    }
+
+    if (!state.isLoggedIn) {
+      listNode.innerHTML = "<p class='section-note'>Login to view notifications.</p>";
+      if (markAllBtn) {
+        markAllBtn.disabled = true;
+      }
+      return;
+    }
+
+    const items = Array.isArray(state.notifications) ? state.notifications : [];
+    if (!items.length) {
+      listNode.innerHTML = "<p class='section-note'>No notifications yet.</p>";
+    } else {
+      listNode.innerHTML = items
+        .map((item) => {
+          const icon = item.type === "like" ? "fa-heart" : item.type === "rating" ? "fa-star" : "fa-bell";
+          const gradient = item.type === "like"
+            ? "linear-gradient(135deg,#E74A3B,#c0392b)"
+            : item.type === "rating"
+              ? "linear-gradient(135deg,#F6C23E,#e0a800)"
+              : "linear-gradient(135deg,#4E73DF,#6f8ee8)";
+
+          return `
+            <article class="notification-item ${item.isRead ? "read" : ""}">
+              <div class="avatar" style="background:${gradient};"><i class="fas ${icon}"></i></div>
+              <div>
+                <strong>InnovaX</strong>
+                <p class="section-note">${escapeHtml(item.message || "Notification")}</p>
+                <p class="section-note">${escapeHtml(formatDateTime(item.createdAt))}</p>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    if (markAllBtn) {
+      const hasUnread = items.some((item) => !item.isRead);
+      markAllBtn.disabled = !hasUnread;
+      if (!markAllBtn.dataset.bound) {
+        markAllBtn.dataset.bound = "1";
+        markAllBtn.addEventListener("click", async () => {
+          if (!state.isLoggedIn) {
+            return;
+          }
+
+          try {
+            await postJson("api/notifications/mark-all-read.php", {});
+            state.notifications = state.notifications.map((item) => ({ ...item, isRead: true }));
+            state.notificationCount = 0;
+            updateNotificationBadge();
+            renderNotificationsPage();
+            showToast("All notifications marked as read.");
+          } catch (error) {
+            showToast(normalizeApiError(error, "Unable to mark notifications."));
+          }
+        });
+      }
+    }
+  }
+
   function updateNotificationBadge() {
     const badges = Array.from(document.querySelectorAll("#notif-badge"));
+    const unreadCount = state.isLoggedIn
+      ? (Number.isFinite(Number(state.notificationCount))
+        ? Number(state.notificationCount)
+        : state.notifications.filter((item) => !item.isRead).length)
+      : 0;
+
     badges.forEach((badge) => {
       if (!state.isLoggedIn) {
         badge.style.display = "none";
         return;
       }
-      badge.textContent = String(state.notificationCount);
-      badge.style.display = state.notificationCount > 0 ? "flex" : "none";
+      badge.textContent = String(unreadCount);
+      badge.style.display = unreadCount > 0 ? "flex" : "none";
     });
   }
 
@@ -546,6 +1082,7 @@
 
     const sidebarName = document.getElementById("sidebar-user-name");
     const sidebarRole = document.getElementById("sidebar-user-role");
+    const sidebarCover = document.getElementById("sidebar-user-cover");
     const sidebarAvatar = document.getElementById("sidebar-user-avatar");
     const sidebarStats = document.getElementById("sidebar-user-stats");
     const sidebarStatValue = document.getElementById("sidebar-user-stat-value");
@@ -556,7 +1093,17 @@
       const initials = getInitials(state.currentUser.name);
       if (sidebarName) sidebarName.textContent = state.currentUser.name;
       if (sidebarRole) sidebarRole.textContent = state.userRole === "student" ? "Student" : "Expert";
-      if (sidebarAvatar) sidebarAvatar.textContent = initials;
+      if (sidebarCover) {
+        const coverUrl = String(state.currentUser.coverImageUrl || "").trim();
+        sidebarCover.style.backgroundImage = coverUrl
+          ? `url(${coverUrl})`
+          : "linear-gradient(120deg,#f3f4f6,#d9dde8)";
+        sidebarCover.style.backgroundSize = "cover";
+        sidebarCover.style.backgroundPosition = "center";
+      }
+      if (sidebarAvatar) {
+        applyAvatarVisual(sidebarAvatar, state.currentUser.profileImageUrl, initials, "linear-gradient(135deg,#4E73DF,#6f8ee8)");
+      }
 
       if (sidebarStats) {
         if (state.userRole === "student") {
@@ -572,14 +1119,22 @@
       }
 
       if (navAvatar) {
-        navAvatar.textContent = initials;
+        applyAvatarVisual(navAvatar, state.currentUser.profileImageUrl, initials, "linear-gradient(135deg,#4E73DF,#6f8ee8)");
         navAvatar.dataset.route = "my-profile.html";
         navAvatar.title = "My Profile";
       }
-    } else if (navAvatar) {
-      navAvatar.textContent = "IN";
-      navAvatar.dataset.route = "login.html";
-      navAvatar.title = "Login";
+    } else {
+      if (sidebarCover) {
+        sidebarCover.style.backgroundImage = "linear-gradient(120deg,#f3f4f6,#d9dde8)";
+        sidebarCover.style.backgroundSize = "cover";
+        sidebarCover.style.backgroundPosition = "center";
+      }
+
+      if (navAvatar) {
+        applyAvatarVisual(navAvatar, "", "IN", "linear-gradient(135deg,#4E73DF,#6f8ee8)");
+        navAvatar.dataset.route = "login.html";
+        navAvatar.title = "Login";
+      }
     }
   }
 
@@ -624,12 +1179,14 @@
     const uniNodes = Array.from(document.querySelectorAll("[data-profile-university]"));
     const avatarNodes = Array.from(document.querySelectorAll("[data-profile-avatar]"));
     const coverNodes = Array.from(document.querySelectorAll("[data-profile-cover]"));
+    const bioNodes = Array.from(document.querySelectorAll("[data-profile-bio]"));
 
     let name = "InnovaX Member";
     let role = "student";
     let university = "";
     let avatarUrl = "";
     let coverUrl = "";
+    let bio = "";
 
     if (page === "my-profile") {
       if (state.currentUser?.name) {
@@ -639,6 +1196,7 @@
       university = role === "student" ? String(state.currentUser?.university || "").trim() : "";
       avatarUrl = state.currentUser?.profileImageUrl || DEFAULT_PROFILE_AVATAR_URL;
       coverUrl = state.currentUser?.coverImageUrl || DEFAULT_PROFILE_COVER_URL;
+      bio = String(state.currentUser?.bio || "").trim();
     } else {
       name = document.body.dataset.profileUserName || name;
       role = (document.body.dataset.profileUserRole || "student").toLowerCase();
@@ -652,6 +1210,7 @@
       if (document.body.dataset.profileUserCover) {
         coverUrl = document.body.dataset.profileUserCover;
       }
+      bio = String(document.body.dataset.profileUserBio || "").trim();
     }
 
     nameNodes.forEach((node) => {
@@ -684,6 +1243,14 @@
         node.style.display = "none";
       }
     });
+
+    bioNodes.forEach((node) => {
+      if (bio) {
+        node.textContent = bio;
+      } else {
+        node.textContent = "No bio added yet.";
+      }
+    });
   }
 
   function initMyProfileMediaEditor() {
@@ -707,7 +1274,7 @@
       input.click();
     };
 
-    const applyImage = (file, target) => {
+    const applyImage = async (file, target, triggerButton) => {
       if (!file) {
         return;
       }
@@ -715,43 +1282,53 @@
         showToast("Please select an image file.");
         return;
       }
-      if (file.size > 4 * 1024 * 1024) {
-        showToast("Image must be under 4MB.");
+      if (file.size > 8 * 1024 * 1024) {
+        showToast("Image must be under 8MB.");
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = String(reader.result || "");
+      setSubmitBusy(triggerButton, true, "Uploading...");
+      showToast("Uploading...");
+
+      try {
+        const result = await fileToDataUrl(file);
         if (!result) {
           showToast("Unable to read selected image.");
           return;
         }
 
-        if (target === "avatar") {
-          state.currentUser.profileImageUrl = result;
-        } else {
-          state.currentUser.coverImageUrl = result;
+        const payload = await postJson("api/users/update-media.php", {
+          target,
+          image_data_url: result
+        });
+
+        const user = payload.data?.user;
+        if (!user || !user.id || !user.role) {
+          throw new Error("Invalid profile update response.");
         }
 
-        saveCurrentUserState();
+        setLoggedInUser(user, user.role);
+        updateSidebarAndNav();
         updateProfileIdentity();
         showToast(target === "avatar" ? "Profile image updated." : "Cover image updated.");
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        showToast(normalizeApiError(error, "Unable to update image."));
+      } finally {
+        setSubmitBusy(triggerButton, false, "Uploading...");
+      }
     };
 
     if (avatarBtn && avatarInput) {
       avatarBtn.addEventListener("click", () => openPicker(avatarInput));
       avatarInput.addEventListener("change", () => {
-        applyImage(avatarInput.files?.[0], "avatar");
+        applyImage(avatarInput.files?.[0], "avatar", avatarBtn);
       });
     }
 
     if (coverBtn && coverInput) {
       coverBtn.addEventListener("click", () => openPicker(coverInput));
       coverInput.addEventListener("change", () => {
-        applyImage(coverInput.files?.[0], "cover");
+        applyImage(coverInput.files?.[0], "cover", coverBtn);
       });
     }
   }
@@ -937,7 +1514,125 @@
     });
   }
 
-  function publishFromComposer(card) {
+  function initCreatePostUploads(composer) {
+    const triggerButtons = Array.from(composer.querySelectorAll("[data-upload-trigger]"));
+    const uploadInputs = Array.from(composer.querySelectorAll("[data-upload-input]"));
+    const triggerInput = composer.querySelector("[data-open-editor]");
+    const previewWrap = composer.querySelector("[data-create-upload-preview]");
+    const previewImage = composer.querySelector("[data-create-preview-image]");
+    const previewLabel = composer.querySelector("[data-create-preview-label]");
+    const removeBtn = composer.querySelector("[data-remove-upload]");
+    const inputMap = new Map(uploadInputs.map((input) => [input.dataset.uploadInput, input]));
+
+    const clearPreview = () => {
+      if (previewWrap) {
+        previewWrap.style.display = "none";
+      }
+      if (previewImage) {
+        previewImage.src = "";
+      }
+      if (previewLabel) {
+        previewLabel.textContent = "";
+      }
+    };
+
+    const renderPreview = () => {
+      if (!previewWrap || !previewImage || !previewLabel) {
+        return;
+      }
+
+      if (!state.createPostMedia?.previewUrl) {
+        clearPreview();
+        return;
+      }
+
+      previewImage.src = state.createPostMedia.previewUrl;
+      previewLabel.textContent = state.createPostMedia.label || "Selected image";
+      previewWrap.style.display = "grid";
+    };
+
+    const updateTriggerLabel = () => {
+      if (!triggerInput) {
+        return;
+      }
+      if (state.createPostMedia?.label) {
+        triggerInput.value = `Selected: ${state.createPostMedia.label}`;
+      } else {
+        triggerInput.value = "";
+      }
+    };
+
+    triggerButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!state.isLoggedIn) {
+          showLoginDialog();
+          return;
+        }
+        if (state.userRole !== "student") {
+          showToast("Experts cannot publish posts.");
+          return;
+        }
+
+        const type = button.dataset.uploadTrigger;
+        const input = inputMap.get(type);
+        if (!input) {
+          return;
+        }
+
+        input.value = "";
+        input.click();
+      });
+    });
+
+    inputMap.forEach((input, type) => {
+      input.addEventListener("change", () => {
+        const file = input.files?.[0] || null;
+        if (!file) {
+          return;
+        }
+
+        if (type !== "image") {
+          return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+          showToast("Please select an image file.");
+          return;
+        }
+
+        if (file.size > 8 * 1024 * 1024) {
+          showToast("Image must be under 8MB.");
+          return;
+        }
+
+        if (state.createPostMedia?.previewUrl) {
+          URL.revokeObjectURL(state.createPostMedia.previewUrl);
+        }
+
+        state.createPostMedia = {
+          type: "image",
+          file,
+          label: file.name || "Post image",
+          previewUrl: URL.createObjectURL(file)
+        };
+        updateTriggerLabel();
+        renderPreview();
+      });
+    });
+
+    if (removeBtn) {
+      removeBtn.addEventListener("click", () => {
+        if (state.createPostMedia?.previewUrl) {
+          URL.revokeObjectURL(state.createPostMedia.previewUrl);
+        }
+        state.createPostMedia = null;
+        updateTriggerLabel();
+        clearPreview();
+      });
+    }
+  }
+
+  async function publishFromComposer(card) {
     if (!state.isLoggedIn) {
       showLoginDialog();
       return;
@@ -965,34 +1660,68 @@
       return;
     }
 
-    const newOrder = state.posts.length ? Math.max(...state.posts.map((post) => post.createdOrder || 0)) + 1 : 1;
+    const finalTitle = title || "New student post";
+    const titleWordCount = countWords(finalTitle);
+    if (titleWordCount < POST_TITLE_MIN_WORDS || titleWordCount > POST_TITLE_MAX_WORDS) {
+      showToast(`Title should be ${POST_TITLE_MIN_WORDS}-${POST_TITLE_MAX_WORDS} words.`);
+      titleEl?.focus();
+      return;
+    }
 
-    const newPost = {
-      id: `new-${Date.now()}`,
-      authorId: state.currentUser.id,
-      avatar: getInitials(state.currentUser.name),
-      avatarColor: "linear-gradient(135deg,#4E73DF,#6f8ee8)",
-      name: state.currentUser.name,
-      role: "Student Creator",
-      time: "Just now",
-      title: title || "New student post",
-      desc: desc || "",
-      tags,
-      media: null,
-      likes: 0,
-      saved: false,
-      createdOrder: newOrder
-    };
+    const publishBtn = card.querySelector("[data-publish-post]");
+    setSubmitBusy(publishBtn, true, "Publishing...");
 
-    state.posts.unshift(newPost);
-    renderPostStreams();
-    renderMostLikelyPosts();
+    try {
+      let mediaType = "none";
+      let mediaDataUrl = "";
+      let mediaLabel = "";
 
-    if (titleEl) titleEl.value = "";
-    if (descEl) descEl.value = "";
-    if (tagsEl) tagsEl.value = "";
+      if (state.createPostMedia?.type === "image" && state.createPostMedia.file) {
+        mediaType = "image";
+        mediaDataUrl = await fileToDataUrl(state.createPostMedia.file);
+        mediaLabel = state.createPostMedia.label || "Post image";
+      }
 
-    showToast("Post published.");
+      await postJson("api/posts/create.php", {
+        title: finalTitle,
+        description: desc || "",
+        tags,
+        media_type: mediaType,
+        media_data_url: mediaDataUrl,
+        media_label: mediaLabel
+      });
+
+      await loadPostsData();
+      await loadTrendingInnovationsData();
+      renderPostStreams();
+      renderTrendingInnovations();
+      renderMostLikelyPosts();
+      await refreshNotificationsUi();
+
+      if (titleEl) titleEl.value = "";
+      if (descEl) descEl.value = "";
+      if (tagsEl) tagsEl.value = "";
+      if (state.createPostMedia?.previewUrl) {
+        URL.revokeObjectURL(state.createPostMedia.previewUrl);
+      }
+      state.createPostMedia = null;
+      const triggerInput = card.querySelector("[data-open-editor]");
+      if (triggerInput) {
+        triggerInput.value = "";
+      }
+      const previewWrap = card.querySelector("[data-create-upload-preview]");
+      const previewImage = card.querySelector("[data-create-preview-image]");
+      const previewLabel = card.querySelector("[data-create-preview-label]");
+      if (previewWrap) previewWrap.style.display = "none";
+      if (previewImage) previewImage.src = "";
+      if (previewLabel) previewLabel.textContent = "";
+
+      showToast("Post published.");
+    } catch (error) {
+      showToast(normalizeApiError(error, "Unable to publish post."));
+    } finally {
+      setSubmitBusy(publishBtn, false, "Publishing...");
+    }
   }
 
   function initCreatePostComposer() {
@@ -1002,7 +1731,7 @@
     }
 
     const feed = document.querySelector("[data-page='feed']");
-    if (!feed && document.body.dataset.page !== "feed") {
+    if (!feed && document.body.dataset.page !== "feed" && document.body.dataset.page !== "create-post") {
       return;
     }
 
@@ -1010,6 +1739,16 @@
     const editor = composer.querySelector("[data-post-editor]");
     const trigger = composer.querySelector("[data-open-editor]");
     const publishBtn = composer.querySelector("[data-publish-post]");
+    const avatar = composer.querySelector(".create-post-top .avatar");
+
+    if (state.isLoggedIn && avatar && state.currentUser?.name) {
+      applyAvatarVisual(
+        avatar,
+        state.currentUser.profileImageUrl,
+        getInitials(state.currentUser.name),
+        "linear-gradient(135deg,#4E73DF,#6f8ee8)"
+      );
+    }
 
     if (!state.isLoggedIn) {
       composer.classList.add("create-post-disabled");
@@ -1026,10 +1765,6 @@
       if (roleNote) {
         roleNote.textContent = "Student posts are published immediately.";
       }
-      const avatar = composer.querySelector(".create-post-top .avatar");
-      if (avatar && state.currentUser?.name) {
-        avatar.textContent = getInitials(state.currentUser.name);
-      }
     }
 
     if (trigger && editor) {
@@ -1045,6 +1780,8 @@
         editor.classList.add("open");
       });
     }
+
+    initCreatePostUploads(composer);
 
     if (publishBtn) {
       publishBtn.addEventListener("click", () => publishFromComposer(composer));
@@ -1063,6 +1800,7 @@
   function removePostById(postId) {
     state.posts = state.posts.filter((post) => String(post.id) !== String(postId));
     renderPostStreams();
+    renderTrendingInnovations();
     renderMostLikelyPosts();
   }
 
@@ -1094,10 +1832,25 @@
         closePostMenus();
 
         if (action === "delete" && postId) {
-          if (window.confirm("Delete this post?")) {
-            removePostById(postId);
-            showToast("Post deleted.");
-          }
+          showConfirmDialog({
+            title: "Delete Post",
+            message: "Are you sure you want to delete this post?",
+            confirmLabel: "Delete",
+            cancelLabel: "Cancel"
+          }).then((confirmed) => {
+            if (!confirmed) {
+              return;
+            }
+
+            postJson("api/posts/delete.php", { post_id: postId })
+              .then(() => {
+                removePostById(postId);
+                showToast("Post deleted.");
+              })
+              .catch((error) => {
+                showToast(normalizeApiError(error, "Unable to delete post."));
+              });
+          });
         }
         return;
       }
@@ -1106,20 +1859,60 @@
         closePostMenus();
       }
 
+      const descToggle = event.target.closest("[data-post-desc-toggle]");
+      if (descToggle) {
+        const isExpanded = descToggle.dataset.expanded === "true";
+        const descWrap = descToggle.closest(".post-desc");
+        const shortNode = descWrap?.querySelector("[data-post-desc-short]");
+        const fullNode = descWrap?.querySelector("[data-post-desc-full]");
+
+        if (shortNode && fullNode) {
+          shortNode.style.display = isExpanded ? "inline" : "none";
+          fullNode.style.display = isExpanded ? "none" : "inline";
+          descToggle.textContent = isExpanded ? "See more" : "See less";
+          descToggle.dataset.expanded = isExpanded ? "false" : "true";
+        }
+        return;
+      }
+
       const likeBtn = event.target.closest("[data-like-btn]");
       if (likeBtn) {
         if (!requireAuthAction()) {
           return;
         }
 
-        likeBtn.classList.toggle("liked");
         const card = likeBtn.closest("[data-post-id]");
-        const count = card?.querySelector("[data-like-count]");
-        if (count) {
-          const current = Number.parseInt(count.textContent, 10) || 0;
-          const delta = likeBtn.classList.contains("liked") ? 1 : -1;
-          count.textContent = String(Math.max(0, current + delta));
+        const postId = card?.dataset.postId || likeBtn.dataset.postId;
+        if (!postId) {
+          return;
         }
+
+        const post = postId ? findPostById(postId) : null;
+        const count = card?.querySelector("[data-like-count]");
+
+        postJson("api/posts/toggle-like.php", { post_id: postId })
+          .then(async (payload) => {
+            const liked = Boolean(payload.data?.liked);
+            const likes = Number(payload.data?.likes || 0);
+
+            likeBtn.classList.toggle("liked", liked);
+            if (count) {
+              count.textContent = String(likes);
+            }
+
+            if (post) {
+              post.likes = likes;
+              post.liked = liked;
+            }
+
+            await refreshNotificationsUi();
+
+            showToast(liked ? "Liked post." : "Like removed.");
+          })
+          .catch((error) => {
+            showToast(normalizeApiError(error, "Unable to update like."));
+          });
+
         return;
       }
 
@@ -1128,8 +1921,32 @@
         if (!requireAuthAction()) {
           return;
         }
-        saveBtn.classList.toggle("saved");
-        showToast(saveBtn.classList.contains("saved") ? "Saved post." : "Removed from saved.");
+
+        const card = saveBtn.closest("[data-post-id]");
+        const postId = card?.dataset.postId || saveBtn.dataset.postId;
+        if (!postId) {
+          return;
+        }
+
+        const post = postId ? findPostById(postId) : null;
+
+        postJson("api/posts/toggle-save.php", { post_id: postId })
+          .then(async (payload) => {
+            const saved = Boolean(payload.data?.saved);
+            saveBtn.classList.toggle("saved", saved);
+
+            if (post) {
+              post.saved = saved;
+            }
+
+            await refreshNotificationsUi();
+
+            showToast(saved ? "Saved post." : "Removed from saved.");
+          })
+          .catch((error) => {
+            showToast(normalizeApiError(error, "Unable to update saved state."));
+          });
+
         return;
       }
 
@@ -1155,6 +1972,199 @@
     });
   }
 
+  async function initSettingsPage() {
+    if (document.body.dataset.page !== "settings") {
+      return;
+    }
+
+    if (!state.isLoggedIn || !state.currentUser) {
+      showToast("Please login first.");
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 500);
+      return;
+    }
+
+    const profileForm = document.getElementById("settingsProfileForm");
+    const passwordForm = document.getElementById("settingsPasswordForm");
+    const expertFields = document.querySelector("[data-settings-expert-fields]");
+    const studentFields = document.querySelector("[data-settings-student-fields]");
+
+    let currentSkills = [];
+    if (state.userRole === "student") {
+      try {
+        const profilePayload = await getJson("api/users/my-profile.php");
+        const profileSkills = profilePayload.data?.profile?.skills;
+        if (Array.isArray(profileSkills)) {
+          currentSkills = profileSkills.map((skill) => String(skill || "").trim()).filter(Boolean).slice(0, 5);
+        }
+      } catch (error) {
+        currentSkills = [];
+      }
+    }
+
+    if (expertFields) {
+      expertFields.style.display = state.userRole === "expert" ? "block" : "none";
+    }
+    if (studentFields) {
+      studentFields.style.display = state.userRole === "student" ? "block" : "none";
+    }
+
+    if (profileForm) {
+      const fullNameInput = profileForm.querySelector("input[name='full_name']");
+      const bioInput = profileForm.querySelector("textarea[name='bio']");
+      const titleInput = profileForm.querySelector("input[name='title']");
+      const organizationInput = profileForm.querySelector("input[name='organization']");
+      const skillsInput = profileForm.querySelector("input[name='skills_csv']");
+      const skillsPreview = profileForm.querySelector("[data-settings-skill-preview]");
+
+      const parseSkillsFromCsv = (raw) => {
+        const normalized = [];
+        String(raw || "")
+          .split(",")
+          .map((item) => String(item || "").trim().replace(/^#/, ""))
+          .filter(Boolean)
+          .forEach((skill) => {
+            const lower = skill.toLowerCase();
+            if (!normalized.some((entry) => entry.toLowerCase() === lower)) {
+              normalized.push(skill);
+            }
+          });
+        return normalized;
+      };
+
+      const renderSkillsPreview = (skills) => {
+        if (!skillsPreview) {
+          return;
+        }
+
+        if (!skills.length) {
+          skillsPreview.innerHTML = "<span class=\"section-note\">No skills selected</span>";
+          return;
+        }
+
+        skillsPreview.innerHTML = skills
+          .map((skill) => `<span class=\"tag\">#${escapeHtml(skill)}</span>`)
+          .join("");
+      };
+
+      if (fullNameInput) {
+        fullNameInput.value = state.currentUser.name || "";
+      }
+      if (bioInput) {
+        bioInput.value = state.currentUser.bio || "";
+      }
+      if (titleInput) {
+        titleInput.value = state.currentUser.title || "";
+      }
+      if (organizationInput) {
+        organizationInput.value = state.currentUser.organization || "";
+      }
+      if (skillsInput) {
+        skillsInput.value = currentSkills.join(", ");
+        renderSkillsPreview(currentSkills);
+        skillsInput.addEventListener("input", () => {
+          const parsed = parseSkillsFromCsv(skillsInput.value).slice(0, 5);
+          renderSkillsPreview(parsed);
+        });
+      }
+
+      profileForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const submitBtn = profileForm.querySelector("button[type='submit']");
+        const fullName = fullNameInput?.value?.trim() || "";
+        const bio = bioInput?.value?.trim() || "";
+        const title = titleInput?.value?.trim() || "";
+        const organization = organizationInput?.value?.trim() || "";
+        const skills = skillsInput ? parseSkillsFromCsv(skillsInput.value) : [];
+
+        if (!fullName) {
+          showToast("Display name is required.");
+          fullNameInput?.focus();
+          return;
+        }
+
+        if (skills.length > 5) {
+          showToast("Maximum 5 skills allowed.");
+          skillsInput?.focus();
+          return;
+        }
+
+        setSubmitBusy(submitBtn, true, "Saving...");
+        try {
+          const payload = await postJson("api/users/update-profile.php", {
+            full_name: fullName,
+            bio,
+            title,
+            organization,
+            skills
+          });
+
+          const user = payload.data?.user;
+          if (!user || !user.id || !user.role) {
+            throw new Error("Invalid profile response.");
+          }
+
+          setLoggedInUser(user, user.role);
+          updateSidebarAndNav();
+          updateProfileIdentity();
+          renderMyProfileDetails();
+          if (skillsInput && state.userRole === "student") {
+            skillsInput.value = skills.join(", ");
+            renderSkillsPreview(skills);
+          }
+          showToast("Profile updated successfully.");
+        } catch (error) {
+          showToast(normalizeApiError(error, "Unable to update profile."));
+        } finally {
+          setSubmitBusy(submitBtn, false, "Saving...");
+        }
+      });
+    }
+
+    if (passwordForm) {
+      passwordForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const currentPassword = passwordForm.querySelector("input[name='current_password']")?.value || "";
+        const newPassword = passwordForm.querySelector("input[name='new_password']")?.value || "";
+        const confirmPassword = passwordForm.querySelector("input[name='confirm_password']")?.value || "";
+        const submitBtn = passwordForm.querySelector("button[type='submit']");
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          showToast("Please fill all password fields.");
+          return;
+        }
+
+        if (newPassword.length < 6) {
+          showToast("New password must be at least 6 characters.");
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          showToast("New password and confirm password do not match.");
+          return;
+        }
+
+        setSubmitBusy(submitBtn, true, "Updating...");
+        try {
+          await postJson("api/auth/change-password.php", {
+            current_password: currentPassword,
+            new_password: newPassword
+          });
+
+          passwordForm.reset();
+          showToast("Password updated successfully.");
+        } catch (error) {
+          showToast(normalizeApiError(error, "Unable to update password."));
+        } finally {
+          setSubmitBusy(submitBtn, false, "Updating...");
+        }
+      });
+    }
+  }
+
   function renderPostViewPage() {
     if (document.body.dataset.page !== "post-view") {
       return;
@@ -1172,16 +2182,16 @@
     const timeNode = document.querySelector("[data-post-time]");
     const tagsNode = document.querySelector("[data-post-tags]");
     const mediaWrap = document.querySelector("[data-post-media]");
-    const mediaEmojiNode = document.querySelector("[data-post-media-emoji]");
-    const mediaLabelNode = document.querySelector("[data-post-media-label]");
+    const mediaInnerNode = document.querySelector("[data-post-media-inner]");
     const detailCard = document.getElementById("post-detail-card");
     const likeBtn = document.querySelector("[data-like-btn]");
+    const saveBtn = document.querySelector("[data-save-btn]");
     const likeCount = document.querySelector("[data-like-count]");
 
     if (titleNode) titleNode.textContent = post.title || "Untitled post";
     if (descNode) descNode.textContent = post.desc || "No description added for this post.";
     if (timeNode) {
-      timeNode.innerHTML = `<i class="fas fa-clock"></i> ${escapeHtml(post.time || "Now")}`;
+      timeNode.innerHTML = `<i class="fas fa-clock"></i> ${escapeHtml(formatDateTime(post.time))}`;
     }
 
     if (tagsNode) {
@@ -1191,13 +2201,24 @@
         : "<span class=\"tag\">#Innovation</span>";
     }
 
-    if (mediaWrap && mediaEmojiNode && mediaLabelNode) {
+    if (mediaWrap && mediaInnerNode) {
       if (post.media) {
         mediaWrap.style.display = "block";
-        mediaEmojiNode.textContent = post.media.emoji || "💡";
-        mediaLabelNode.textContent = post.media.label || "Post media";
+        if (post.media.url) {
+          mediaInnerNode.classList.add("image-ratio");
+          mediaInnerNode.innerHTML = `
+            <img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />
+          `;
+        } else {
+          mediaInnerNode.classList.remove("image-ratio");
+          mediaInnerNode.innerHTML = `
+            <span style="font-size:3.5rem;" data-post-media-emoji>${escapeHtml(post.media.emoji || "💡")}</span>
+            <p data-post-media-label>${escapeHtml(post.media.label || "Post media")}</p>
+          `;
+        }
       } else {
         mediaWrap.style.display = "none";
+        mediaInnerNode.classList.remove("image-ratio");
       }
     }
 
@@ -1206,6 +2227,11 @@
     }
     if (likeBtn) {
       likeBtn.dataset.postId = String(post.id);
+      likeBtn.classList.toggle("liked", Boolean(post.liked));
+    }
+    if (saveBtn) {
+      saveBtn.dataset.postId = String(post.id);
+      saveBtn.classList.toggle("saved", Boolean(post.saved));
     }
     if (likeCount) {
       likeCount.textContent = String(Number(post.likes || 0));
@@ -1406,13 +2432,49 @@
 
     const studentHtml = studentHits
       .map((profile) => {
-        return `<article class="article-card"><h3>Student: ${escapeHtml(profile.name)}</h3><p>${escapeHtml(profile.title)} · Badge: ${escapeHtml(profile.badge)}</p></article>`;
+        const thumb = profile.imageUrl
+          ? `<img class="search-result-thumb" src="${escapeHtml(profile.imageUrl)}" alt="${escapeHtml(profile.name)}" />`
+          : `<div class="search-result-thumb search-result-thumb-fallback">${escapeHtml(getInitials(profile.name))}</div>`;
+        const subheading = profile.title || "Student profile";
+        const tertiary = profile.badge ? `Badge: ${profile.badge}` : "";
+
+        return `
+          <a class="article-card search-result-card" href="user-profile.html?userId=${encodeURIComponent(profile.id)}">
+            ${thumb}
+            <div class="search-result-content">
+              <h3>${escapeHtml(profile.name)}</h3>
+              <p class="search-result-subheading">${escapeHtml(subheading)}</p>
+              <p class="search-result-tertiary">${escapeHtml(tertiary)}</p>
+            </div>
+          </a>
+        `;
       })
       .join("");
 
     const postHtml = sortedPostHits
       .map((post) => {
-        return `<article class="article-card"><h3>Post: ${escapeHtml(post.title || "Untitled")}</h3><p>Author: ${escapeHtml(post.name || "Member")} · ${escapeHtml(post.likes)} likes</p></article>`;
+        const postThumb = post.media?.url
+          ? `<img class="search-result-thumb" src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.title || "Post image")}" />`
+          : post.avatarImageUrl
+            ? `<img class="search-result-thumb" src="${escapeHtml(post.avatarImageUrl)}" alt="${escapeHtml(post.name || "Member")}" />`
+            : `<div class="search-result-thumb search-result-thumb-fallback"><i class="fas fa-file-lines"></i></div>`;
+        const subheading = `By ${post.name || "Member"} · ${post.likes} likes`;
+        const descPreview = String(post.desc || "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 110);
+        const tertiary = descPreview ? `${descPreview}${descPreview.length >= 110 ? "..." : ""}` : "Open post to view details";
+
+        return `
+          <a class="article-card search-result-card" href="${buildPostViewUrl(post.id)}">
+            ${postThumb}
+            <div class="search-result-content">
+              <h3>${escapeHtml(post.title || "Untitled")}</h3>
+              <p class="search-result-subheading">${escapeHtml(subheading)}</p>
+              <p class="search-result-tertiary">${escapeHtml(tertiary)}</p>
+            </div>
+          </a>
+        `;
       })
       .join("");
 
@@ -1589,6 +2651,10 @@
   }
 
   async function init() {
+    await syncAuthenticatedUser();
+    await loadMyProfileData();
+    await loadViewedUserProfileData();
+    await loadNotificationsData();
     await mountComponents();
     initNavbar();
     setActiveNav();
@@ -1599,16 +2665,22 @@
     enforceProfileRestrictions();
     gateMyProfileForGuests();
     initSearchForms();
+    await initSettingsPage();
 
     await loadPostTemplate();
     await loadPostsData();
+    await loadTrendingInnovationsData();
     await loadStudentProfilesData();
     updateSidebarAndNav();
     applyRoleBasedProfileLayout();
     updateProfileIdentity();
+    renderMyProfileDetails();
+    renderUserProfileDetails();
     updateProfileLikes();
     renderPostStreams();
+    renderTrendingInnovations();
     renderMostLikelyPosts();
+    renderNotificationsPage();
     renderPostViewPage();
     renderExpertRatingsPage();
     initFeedSort();

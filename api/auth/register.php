@@ -25,6 +25,18 @@ $facultyId = intval($payload["faculty_id"] ?? 0);
 $departmentId = intval($payload["department_id"] ?? 0);
 $skills = is_array($payload["skills"] ?? null) ? $payload["skills"] : [];
 
+$normalizedSkills = [];
+foreach ($skills as $skillRaw) {
+    $skillName = strtolower(trim((string)$skillRaw));
+    $skillName = ltrim($skillName, "#");
+    if ($skillName === "") {
+        continue;
+    }
+    if (!in_array($skillName, $normalizedSkills, true)) {
+        $normalizedSkills[] = $skillName;
+    }
+}
+
 if ($role === "student") {
     if ($studentId === "" || $universityId <= 0 || $facultyId <= 0 || $departmentId <= 0) {
         json_response(400, false, "Student registration requires student ID, university, faculty and department.");
@@ -38,6 +50,10 @@ if ($role === "student") {
     }
     if (!reference_id_exists("departments", $departmentId)) {
         json_response(400, false, "Selected department is invalid.");
+    }
+
+    if (count($normalizedSkills) > 5) {
+        json_response(400, false, "Maximum 5 skills are allowed.");
     }
 }
 
@@ -76,34 +92,17 @@ try {
         }
         $insertStudent->close();
 
-        if (!empty($skills)) {
-            $insertSkill = Database::prepare("INSERT IGNORE INTO skills (name) VALUES (?)");
-            $selectSkill = Database::prepare("SELECT id FROM skills WHERE name = ? LIMIT 1");
+        if (!empty($normalizedSkills)) {
             $insertUserSkill = Database::prepare("INSERT IGNORE INTO user_skills (user_id, skill_id) VALUES (?, ?)");
 
-            foreach ($skills as $skillNameRaw) {
-                $skillName = trim((string)$skillNameRaw);
-                if ($skillName === "") {
-                    continue;
-                }
-
-                $insertSkill->bind_param("s", $skillName);
-                $insertSkill->execute();
-
-                $selectSkill->bind_param("s", $skillName);
-                $selectSkill->execute();
-                $skillResult = $selectSkill->get_result();
-                $skillRow = $skillResult ? $skillResult->fetch_assoc() : null;
-
-                if ($skillRow && isset($skillRow["id"])) {
-                    $skillId = intval($skillRow["id"]);
+            foreach ($normalizedSkills as $skillName) {
+                $skillId = skill_id_by_name($skillName);
+                if ($skillId > 0) {
                     $insertUserSkill->bind_param("si", $userId, $skillId);
                     $insertUserSkill->execute();
                 }
             }
 
-            $insertSkill->close();
-            $selectSkill->close();
             $insertUserSkill->close();
         }
     } else {
@@ -118,11 +117,13 @@ try {
     }
 
     $fetchUser = Database::prepare(
-        "SELECT u.id, u.role, u.full_name, u.email, u.profile_image_url, u.cover_image_url,
-                uni.name AS university_name
+        "SELECT u.id, u.role, u.full_name, u.email, u.profile_image_url, u.cover_image_url, u.bio,
+                sp.university_id,
+            ep.title AS expert_title,
+                ep.organization AS expert_organization
          FROM users u
          LEFT JOIN student_profiles sp ON sp.user_id = u.id
-         LEFT JOIN universities uni ON uni.id = sp.university_id
+         LEFT JOIN expert_profiles ep ON ep.user_id = u.id
          WHERE u.id = ?
          LIMIT 1"
     );
@@ -137,6 +138,8 @@ try {
     if (!$user) {
         json_response(500, false, "Account created but user lookup failed.");
     }
+
+    set_authenticated_user($user["id"]);
 
     json_response(201, true, "Account created.", [
         "user" => normalize_user_for_client($user)

@@ -20,20 +20,46 @@
     <section class="content-column">
       <section class="section-card">
         <div class="section-head"><div class="section-title">Edit Profile</div></div>
-        <form class="auth-form">
-          <label class="field-wrap"><span>Display Name</span><input type="text" value="Alex Johnson" /></label>
-          <label class="field-wrap"><span>Bio</span><textarea>Designing high-impact innovation workflows for student and professional communities.</textarea></label>
-          <button class="btn-primary" type="button">Save Changes</button>
+        <form class="auth-form" id="settingsProfileForm">
+          <label class="field-wrap">
+            <span>Display Name</span>
+            <input type="text" name="full_name" placeholder="Your display name" required />
+          </label>
+          <label class="field-wrap">
+            <span>Bio</span>
+            <textarea name="bio" rows="4" maxlength="1000" placeholder="Tell others about your work and interests"></textarea>
+          </label>
+
+          <div data-settings-expert-fields style="display:none;">
+            <label class="field-wrap">
+              <span>Title</span>
+              <input type="text" name="title" placeholder="e.g. Senior Engineer" />
+            </label>
+            <label class="field-wrap">
+              <span>Organization</span>
+              <input type="text" name="organization" placeholder="e.g. Innovax Labs" />
+            </label>
+          </div>
+
+          <div data-settings-student-fields style="display:none;">
+            <label class="field-wrap">
+              <span>Skills & Interests (max 5, comma separated)</span>
+              <input type="text" name="skills_csv" placeholder="AI, Design, Research" />
+            </label>
+            <div class="tag-list" data-settings-skill-preview></div>
+          </div>
+
+          <button class="btn-primary" type="submit">Save Changes</button>
         </form>
       </section>
 
       <section class="section-card">
         <div class="section-head"><div class="section-title">Change Password</div></div>
-        <form class="auth-form">
-          <label class="field-wrap"><span>Current Password</span><input type="password" /></label>
-          <label class="field-wrap"><span>New Password</span><input type="password" /></label>
-          <label class="field-wrap"><span>Confirm Password</span><input type="password" /></label>
-          <button class="btn-primary" type="button">Update Password</button>
+        <form class="auth-form" id="settingsPasswordForm">
+          <label class="field-wrap"><span>Current Password</span><input type="password" name="current_password" required /></label>
+          <label class="field-wrap"><span>New Password</span><input type="password" name="new_password" minlength="6" required /></label>
+          <label class="field-wrap"><span>Confirm Password</span><input type="password" name="confirm_password" minlength="6" required /></label>
+          <button class="btn-primary" type="submit">Update Password</button>
         </form>
       </section>
     </section>

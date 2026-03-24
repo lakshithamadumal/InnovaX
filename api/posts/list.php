@@ -5,6 +5,8 @@ require_once __DIR__ . "/../bootstrap.php";
 require_method("GET");
 initialize_core_schema();
 
+$authUserId = get_authenticated_user_id();
+
 function initials_from_name($name)
 {
     $trimmed = trim((string)$name);
@@ -28,20 +30,27 @@ function initials_from_name($name)
 }
 
 try {
-    $result = Database::search(
+    $statement = Database::prepare(
         "SELECT p.id, p.author_id, p.title, p.description, p.media_type, p.media_url, p.media_label,
-                p.is_company_owned, p.created_at, u.full_name, u.role,
+            p.is_company_owned, p.created_at, u.full_name, u.role, u.profile_image_url, sp_author.university_id,
                 COALESCE(GROUP_CONCAT(DISTINCT pt.tag ORDER BY pt.tag SEPARATOR ','), '') AS tag_list,
-                COUNT(DISTINCT pl.user_id) AS likes_count
+                COUNT(DISTINCT pl.user_id) AS likes_count,
+                MAX(CASE WHEN pl.user_id = ? THEN 1 ELSE 0 END) AS liked_by_me,
+                MAX(CASE WHEN sp.user_id = ? THEN 1 ELSE 0 END) AS saved_by_me
          FROM posts p
          INNER JOIN users u ON u.id = p.author_id
+         LEFT JOIN student_profiles sp_author ON sp_author.user_id = p.author_id
          LEFT JOIN post_tags pt ON pt.post_id = p.id
          LEFT JOIN post_likes pl ON pl.post_id = p.id
+         LEFT JOIN saved_posts sp ON sp.post_id = p.id
          WHERE p.deleted_at IS NULL
          GROUP BY p.id, p.author_id, p.title, p.description, p.media_type, p.media_url, p.media_label,
-                  p.is_company_owned, p.created_at, u.full_name, u.role
+                  p.is_company_owned, p.created_at, u.full_name, u.role, u.profile_image_url, sp_author.university_id
          ORDER BY p.created_at DESC"
     );
+    $statement->bind_param("ss", $authUserId, $authUserId);
+    $statement->execute();
+    $result = $statement->get_result();
 
     $posts = [];
     while ($row = $result->fetch_assoc()) {
@@ -59,6 +68,8 @@ try {
         $media = null;
         if (!empty($row["media_type"]) && $row["media_type"] !== "none") {
             $media = [
+                "type" => $row["media_type"],
+                "url" => $row["media_url"] ?: "",
                 "emoji" => "💡",
                 "label" => $row["media_label"] ?: ucfirst($row["media_type"])
             ];
@@ -68,8 +79,10 @@ try {
             "id" => $row["id"],
             "authorId" => $row["author_id"],
             "avatar" => initials_from_name($row["full_name"]),
+            "avatarImageUrl" => $row["profile_image_url"] ?: "",
             "avatarColor" => "linear-gradient(135deg,#4E73DF,#6f8ee8)",
             "name" => $row["full_name"],
+            "university" => reference_name_by_id("universities", intval($row["university_id"] ?? 0)),
             "role" => normalize_role_label($row["role"]),
             "time" => $row["created_at"],
             "title" => $row["title"],
@@ -77,10 +90,13 @@ try {
             "tags" => $tags,
             "media" => $media,
             "likes" => intval($row["likes_count"]),
-            "saved" => false,
+            "liked" => intval($row["liked_by_me"]) === 1,
+            "saved" => intval($row["saved_by_me"]) === 1,
             "companyOwned" => intval($row["is_company_owned"]) === 1
         ];
     }
+
+    $statement->close();
 
     json_response(200, true, "Posts loaded.", ["posts" => $posts]);
 } catch (Exception $exception) {

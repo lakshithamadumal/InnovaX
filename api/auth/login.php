@@ -15,11 +15,13 @@ if ($email === "" || $password === "") {
 
 try {
     $statement = Database::prepare(
-        "SELECT u.id, u.role, u.full_name, u.email, u.password_hash, u.profile_image_url, u.cover_image_url,
-                uni.name AS university_name
+        "SELECT u.id, u.role, u.full_name, u.email, u.password_hash, u.profile_image_url, u.cover_image_url, u.bio,
+                sp.university_id,
+            ep.title AS expert_title,
+                ep.organization AS expert_organization
          FROM users u
          LEFT JOIN student_profiles sp ON sp.user_id = u.id
-         LEFT JOIN universities uni ON uni.id = sp.university_id
+         LEFT JOIN expert_profiles ep ON ep.user_id = u.id
          WHERE u.email = ?
          LIMIT 1"
     );
@@ -32,6 +34,10 @@ try {
     if (!$user || !password_verify($password, $user["password_hash"])) {
         json_response(401, false, "Invalid email or password.");
     }
+
+    set_authenticated_user($user["id"]);
+    $roleLabel = strtolower(trim((string)($user["role"] ?? ""))) === "expert" ? "Expert" : "Student";
+    create_notification($user["id"], "system", "auth", $user["id"], $roleLabel . " login successful.", null);
 
     json_response(200, true, "Login successful.", [
         "user" => normalize_user_for_client($user)

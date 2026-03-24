@@ -7,35 +7,37 @@ initialize_core_schema();
 
 try {
     $result = Database::search(
-        "SELECT u.id, u.full_name, uni.name AS university_name, fac.name AS faculty_name, dep.name AS department_name
+        "SELECT u.id, u.full_name, u.profile_image_url, sp.university_id, sp.faculty_id, sp.department_id
          FROM users u
          INNER JOIN student_profiles sp ON sp.user_id = u.id
-         LEFT JOIN universities uni ON uni.id = sp.university_id
-         LEFT JOIN faculties fac ON fac.id = sp.faculty_id
-         LEFT JOIN departments dep ON dep.id = sp.department_id
          WHERE u.role = 'student'
          ORDER BY u.created_at DESC"
     );
 
     $students = [];
     while ($row = $result->fetch_assoc()) {
+        $universityName = reference_name_by_id("universities", intval($row["university_id"] ?? 0));
+        $facultyName = reference_name_by_id("faculties", intval($row["faculty_id"] ?? 0));
+        $departmentName = reference_name_by_id("departments", intval($row["department_id"] ?? 0));
+
         $titleParts = [];
-        if (!empty($row["department_name"])) {
-            $titleParts[] = $row["department_name"] . " Student";
+        if ($departmentName !== "") {
+            $titleParts[] = $departmentName . " Student";
         } else {
             $titleParts[] = "Student";
         }
-        if (!empty($row["university_name"])) {
-            $titleParts[] = $row["university_name"];
+        if ($universityName !== "") {
+            $titleParts[] = $universityName;
         }
 
         $students[] = [
             "id" => $row["id"],
             "name" => $row["full_name"],
+            "profileImageUrl" => $row["profile_image_url"] ?: "",
             "title" => implode(" · ", $titleParts),
-            "faculty" => $row["faculty_name"] ?: "",
-            "department" => $row["department_name"] ?: "",
-            "university" => $row["university_name"] ?: ""
+            "faculty" => $facultyName,
+            "department" => $departmentName,
+            "university" => $universityName
         ];
     }
 

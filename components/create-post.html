@@ -15,10 +15,22 @@
         <span>Category</span>
         <select data-create-category>
           <option value="AI">AI</option>
+          <option value="MachineLearning">Machine Learning</option>
+          <option value="DataScience">Data Science</option>
+          <option value="CyberSecurity">Cyber Security</option>
+          <option value="Cloud">Cloud Computing</option>
+          <option value="IoT">IoT</option>
+          <option value="Robotics">Robotics</option>
           <option value="Web3">Web3</option>
           <option value="GreenTech">GreenTech</option>
           <option value="BioTech">BioTech</option>
           <option value="Design">Design</option>
+          <option value="EdTech">EdTech</option>
+          <option value="HealthTech">HealthTech</option>
+          <option value="FinTech">FinTech</option>
+          <option value="AgriTech">AgriTech</option>
+          <option value="Research">Research</option>
+          <option value="Startup">Startup</option>
         </select>
       </label>
       <label class="field-wrap">
@@ -29,11 +41,15 @@
 
     <div class="upload-strip">
       <button class="upload-btn image" type="button" data-upload-trigger="image"><i class="fas fa-image"></i> Image</button>
-      <button class="upload-btn video" type="button" data-upload-trigger="video"><i class="fas fa-video"></i> Video</button>
-      <button class="upload-btn file" type="button" data-upload-trigger="file"><i class="fas fa-paperclip"></i> File</button>
       <input type="file" class="hidden-upload" data-upload-input="image" accept="image/*" />
-      <input type="file" class="hidden-upload" data-upload-input="video" accept="video/*" />
-      <input type="file" class="hidden-upload" data-upload-input="file" />
+    </div>
+
+    <div class="create-upload-preview" data-create-upload-preview style="display:none;">
+      <img src="" alt="Selected image preview" data-create-preview-image />
+      <div class="create-upload-preview-meta">
+        <p class="section-note" data-create-preview-label></p>
+        <button type="button" class="btn-secondary" data-remove-upload>Remove</button>
+      </div>
     </div>
   </div>
 
