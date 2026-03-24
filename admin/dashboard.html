@@ -3,144 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InnovaX Admin Dashboard</title>
+  <title>InnovaX Admin | Summary</title>
+  <link rel="icon" type="image/png" href="https://innovax.works/assets/images/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body class="admin-body">
-  <header class="admin-header">
-    <div class="admin-header-left">
-      <div class="admin-logo"><i class="fas fa-layer-group"></i></div>
-      <div>
-        <h1>InnovaX Admin Dashboard</h1>
-        <p id="adminWelcome">Manage users, posts, ratings, and broadcasts.</p>
-      </div>
-    </div>
-    <div class="admin-header-right">
-      <a class="btn-secondary" href="../feed.html" target="_blank" rel="noopener">Open Site</a>
-      <button id="logoutBtn" class="btn-danger" type="button">Logout</button>
-    </div>
-  </header>
+<body class="admin-body" data-page="summary">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <a class="brand" href="./dashboard.html"><i class="fas fa-shield-halved"></i><span>InnovaX Admin</span></a>
+      <nav class="admin-nav">
+        <a class="nav-item active" data-nav="summary" href="./dashboard.html"><i class="fas fa-chart-pie"></i>Summary</a>
+        <a class="nav-item" data-nav="students" href="./students.html"><i class="fas fa-user-graduate"></i>Students</a>
+        <a class="nav-item" data-nav="experts" href="./experts.html"><i class="fas fa-user-tie"></i>Experts</a>
+        <a class="nav-item" data-nav="posts" href="./posts.html"><i class="fas fa-newspaper"></i>Posts</a>
+        <a class="nav-item" data-nav="ratings" href="./ratings.html"><i class="fas fa-star"></i>Ratings</a>
+        <a class="nav-item" data-nav="notifications" href="./notifications.html"><i class="fas fa-bell"></i>Send Notifications</a>
+        <a class="nav-item" data-nav="emails" href="./emails.html"><i class="fas fa-envelope"></i>Send Emails</a>
+      </nav>
+      <button id="logoutBtn" class="btn-danger sidebar-logout" type="button">Logout</button>
+    </aside>
 
-  <main class="admin-main">
-    <section class="summary-grid" id="summaryGrid"></section>
+    <main class="admin-content">
+      <header class="content-head">
+        <h1>Dashboard Summary</h1>
+        <p id="adminWelcome">Loading admin session...</p>
+      </header>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Users</h2>
-        <div class="panel-filters">
-          <select id="userRoleFilter">
-            <option value="">All Roles</option>
-            <option value="student">Students</option>
-            <option value="expert">Experts</option>
-          </select>
-          <input id="userSearch" type="search" placeholder="Search name, email, title..." />
-          <button id="userSearchBtn" class="btn-primary" type="button">Search</button>
+      <section class="summary-grid" id="summaryGrid"></section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Ratings Snapshot</h2>
         </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Email</th>
-              <th>Institution / Org</th>
-              <th>Posts</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody"></tbody>
-        </table>
-      </div>
-    </section>
+        <div id="ratingSummaryCards" class="summary-grid compact-grid"></div>
+      </section>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Posts</h2>
-        <div class="panel-filters">
-          <select id="postRoleFilter">
-            <option value="">All Authors</option>
-            <option value="student">Student Posts</option>
-            <option value="expert">Expert Posts</option>
-          </select>
-          <input id="postUserIdFilter" type="text" placeholder="Filter by User ID" />
-          <input id="postSearch" type="search" placeholder="Search title, desc, author" />
-          <button id="postSearchBtn" class="btn-primary" type="button">Search</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Author</th>
-              <th>Created</th>
-              <th>Likes</th>
-              <th>Ratings</th>
-              <th>Avg Score</th>
-            </tr>
-          </thead>
-          <tbody id="postsTableBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Expert Ratings</h2>
-        <div class="panel-filters">
-          <input id="ratingAuthorFilter" type="text" placeholder="Filter by Post Owner User ID" />
-          <input id="ratingSearch" type="search" placeholder="Search post, expert, note" />
-          <button id="ratingSearchBtn" class="btn-primary" type="button">Search</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Post</th>
-              <th>Owner</th>
-              <th>Expert</th>
-              <th>Score</th>
-              <th>Note</th>
-              <th>Submitted</th>
-            </tr>
-          </thead>
-          <tbody id="ratingsTableBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel action-panels">
-      <div class="action-card">
-        <h3>Send All Notifications</h3>
-        <textarea id="broadcastMessage" rows="4" placeholder="Enter message for all users..."></textarea>
-        <button id="sendAllNotificationsBtn" class="btn-primary" type="button">Send To All Users</button>
-      </div>
-
-      <div class="action-card">
-        <h3>Send All Emails (Students Only)</h3>
-        <input id="studentEmailTitle" type="text" placeholder="Email title" />
-        <textarea id="studentEmailDescription" rows="5" placeholder="Email description"></textarea>
-        <button id="sendStudentEmailsBtn" class="btn-primary" type="button">Send To All Students</button>
-      </div>
-    </section>
-
-    <p id="dashboardMessage" class="form-message" aria-live="polite"></p>
-  </main>
-
-  <div id="userDetailModal" class="modal" aria-hidden="true">
-    <div class="modal-card">
-      <button id="closeModalBtn" class="modal-close" type="button"><i class="fas fa-xmark"></i></button>
-      <h3>User More Details</h3>
-      <div id="modalUserInfo" class="modal-user-info"></div>
-      <h4>User Posts</h4>
-      <div id="modalUserPosts" class="modal-post-list"></div>
-    </div>
+      <p id="dashboardMessage" class="form-message" aria-live="polite"></p>
+    </main>
   </div>
 
   <script src="./app.js"></script>

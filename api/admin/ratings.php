@@ -15,11 +15,18 @@ $sql = "SELECT r.id, r.post_id, r.expert_id, r.score, r.note, r.submitted_at,
             p.title AS post_title,
             e.full_name AS expert_name,
             a.id AS author_id,
-            a.full_name AS author_name
+            a.full_name AS author_name,
+            COALESCE(post_avg.avg_score, 0) AS post_average_score,
+            COALESCE(post_avg.rating_count, 0) AS post_rating_count
         FROM expert_ratings r
         INNER JOIN posts p ON p.id = r.post_id
         INNER JOIN users e ON e.id = r.expert_id
         INNER JOIN users a ON a.id = p.author_id
+        LEFT JOIN (
+            SELECT post_id, AVG(score) AS avg_score, COUNT(*) AS rating_count
+            FROM expert_ratings
+            GROUP BY post_id
+        ) post_avg ON post_avg.post_id = r.post_id
         WHERE p.deleted_at IS NULL";
 
 $types = "";
@@ -53,7 +60,7 @@ if ($authorId !== "") {
     $params[] = $authorId;
 }
 
-$sql .= " ORDER BY r.submitted_at DESC";
+$sql .= " ORDER BY COALESCE(post_avg.avg_score, 0) DESC, COALESCE(post_avg.rating_count, 0) DESC, r.submitted_at DESC";
 
 try {
     $statement = Database::prepare($sql);
@@ -64,7 +71,23 @@ try {
     $result = $statement->get_result();
 
     $ratings = [];
+    $totalScore = 0.0;
+    $topPostTitle = "";
+    $topPostAverage = 0.0;
+    $topPostRatingsCount = 0;
     while ($row = $result->fetch_assoc()) {
+        $score = round(floatval($row["score"] ?? 0), 1);
+        $postAverage = round(floatval($row["post_average_score"] ?? 0), 1);
+        $postRatingCount = intval($row["post_rating_count"] ?? 0);
+
+        if ($topPostTitle === "" || $postAverage > $topPostAverage) {
+            $topPostTitle = (string)($row["post_title"] ?? "");
+            $topPostAverage = $postAverage;
+            $topPostRatingsCount = $postRatingCount;
+        }
+
+        $totalScore += $score;
+
         $ratings[] = [
             "id" => intval($row["id"] ?? 0),
             "postId" => $row["post_id"],
@@ -73,7 +96,9 @@ try {
             "expertName" => $row["expert_name"],
             "authorId" => $row["author_id"],
             "authorName" => $row["author_name"],
-            "score" => round(floatval($row["score"] ?? 0), 1),
+            "score" => $score,
+            "postAverageScore" => $postAverage,
+            "postRatingCount" => $postRatingCount,
             "note" => $row["note"] ?: "",
             "submittedAt" => $row["submitted_at"]
         ];
@@ -81,7 +106,19 @@ try {
 
     $statement->close();
 
-    json_response(200, true, "Ratings loaded.", ["ratings" => $ratings]);
+    $ratingsCount = count($ratings);
+    $overallAverage = $ratingsCount > 0 ? round($totalScore / $ratingsCount, 1) : 0.0;
+
+    json_response(200, true, "Ratings loaded.", [
+        "summary" => [
+            "totalRatings" => $ratingsCount,
+            "overallAverageScore" => $overallAverage,
+            "topRatedPostTitle" => $topPostTitle,
+            "topRatedPostAverage" => $topPostAverage,
+            "topRatedPostRatingsCount" => $topPostRatingsCount
+        ],
+        "ratings" => $ratings
+    ]);
 } catch (Exception $exception) {
     json_response(500, false, "Unable to load ratings.");
 }

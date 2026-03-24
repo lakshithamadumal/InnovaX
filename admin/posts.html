@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX Admin | Posts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="admin-body" data-page="posts">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <a class="brand" href="./dashboard.html"><i class="fas fa-shield-halved"></i><span>InnovaX Admin</span></a>
+      <nav class="admin-nav">
+        <a class="nav-item" data-nav="summary" href="./dashboard.html"><i class="fas fa-chart-pie"></i>Summary</a>
+        <a class="nav-item" data-nav="students" href="./students.html"><i class="fas fa-user-graduate"></i>Students</a>
+        <a class="nav-item" data-nav="experts" href="./experts.html"><i class="fas fa-user-tie"></i>Experts</a>
+        <a class="nav-item active" data-nav="posts" href="./posts.html"><i class="fas fa-newspaper"></i>Posts</a>
+        <a class="nav-item" data-nav="ratings" href="./ratings.html"><i class="fas fa-star"></i>Ratings</a>
+        <a class="nav-item" data-nav="notifications" href="./notifications.html"><i class="fas fa-bell"></i>Send Notifications</a>
+        <a class="nav-item" data-nav="emails" href="./emails.html"><i class="fas fa-envelope"></i>Send Emails</a>
+      </nav>
+      <button id="logoutBtn" class="btn-danger sidebar-logout" type="button">Logout</button>
+    </aside>
+
+    <main class="admin-content">
+      <header class="content-head">
+        <h1>Posts</h1>
+        <p id="adminWelcome">Search, filter and monitor all posts.</p>
+      </header>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Post Directory</h2>
+          <div class="panel-filters">
+            <select id="postRoleFilter">
+              <option value="">All Authors</option>
+              <option value="student">Student Posts</option>
+              <option value="expert">Expert Posts</option>
+            </select>
+            <input id="postUserIdFilter" type="text" placeholder="Filter by User ID" />
+            <input id="postSearch" type="search" placeholder="Search title, description, author" />
+            <button id="postSearchBtn" class="btn-primary" type="button">Search</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Created</th>
+                <th>Likes</th>
+                <th>Ratings</th>
+                <th>Avg Score</th>
+              </tr>
+            </thead>
+            <tbody id="postsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p id="dashboardMessage" class="form-message" aria-live="polite"></p>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
