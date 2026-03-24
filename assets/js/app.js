@@ -152,6 +152,15 @@
     return new URL(buildPostViewUrl(postId), `${PUBLIC_SITE_ORIGIN}/`).href;
   }
 
+  function buildEmptyPageUrl(code) {
+    const params = new URLSearchParams();
+    if (code) {
+      params.set("code", String(code));
+    }
+    const query = params.toString();
+    return query ? `empty-page.html?${query}` : "empty-page.html";
+  }
+
   function copyTextToClipboard(text) {
     if (navigator.clipboard?.writeText) {
       return navigator.clipboard.writeText(text);
@@ -2423,9 +2432,15 @@
     }
 
     const params = new URLSearchParams(window.location.search);
-    const requestedPostId = params.get("postId");
-    const post = (requestedPostId && findPostById(requestedPostId)) || state.posts[0] || null;
+    const requestedPostId = String(params.get("postId") || "").trim();
+    if (!requestedPostId) {
+      window.location.replace(buildEmptyPageUrl("missing-post-id"));
+      return;
+    }
+
+    const post = findPostById(requestedPostId);
     if (!post) {
+      window.location.replace(buildEmptyPageUrl("post-not-found"));
       return;
     }
 

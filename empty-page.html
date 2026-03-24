@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>InnovaX | Page Not Available</title>
+  <meta name="description" content="The requested content is not available on InnovaX." />
+  <meta name="robots" content="noindex, follow" />
+
+  <link rel="icon" type="image/png" href="https://innovax.works/assets/images/favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+
+  <style>
+    .empty-route-wrap {
+      min-height: calc(100vh - var(--navbar-h) - 120px);
+      display: grid;
+      place-items: center;
+      padding: 28px 16px;
+    }
+
+    .empty-route-card {
+      width: min(720px, 100%);
+      border-radius: calc(var(--radius) + 6px);
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(900px 240px at 0% 0%, rgba(78, 115, 223, 0.15), transparent 55%),
+        linear-gradient(180deg, #ffffff, #f9fbff 68%, #f2f6ff);
+      box-shadow: var(--shadow-lg);
+      padding: 30px 26px;
+      text-align: center;
+    }
+
+    .empty-route-icon {
+      width: 78px;
+      height: 78px;
+      border-radius: 24px;
+      margin: 0 auto 12px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 1.6rem;
+      background: linear-gradient(140deg, var(--primary), #6f8ee8);
+      box-shadow: 0 12px 24px rgba(78, 115, 223, 0.24);
+    }
+
+    .empty-route-card h1 {
+      font-size: clamp(1.3rem, 3.4vw, 2rem);
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .empty-route-card p {
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    .empty-route-actions {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .empty-route-code {
+      margin-top: 12px;
+      color: var(--text-muted);
+      font-size: 0.84rem;
+      letter-spacing: 0.01em;
+    }
+  </style>
+</head>
+<body data-page="empty" data-active-nav="">
+  <div class="toast" id="toast"></div>
+  <div data-component="navbar"></div>
+
+  <main class="empty-route-wrap">
+    <section class="empty-route-card">
+      <div class="empty-route-icon"><i class="fas fa-link-slash"></i></div>
+      <h1>This Page Is Empty</h1>
+      <p data-empty-message>
+        The link you opened does not point to an available item. Please return to the feed and open a valid post link.
+      </p>
+      <div class="empty-route-actions">
+        <a class="btn-primary" href="feed.html">Go To Feed</a>
+        <a class="btn-secondary" href="index.html">Go To Home</a>
+      </div>
+      <div class="empty-route-code" data-empty-code></div>
+    </section>
+  </main>
+
+  <div data-component="footer"></div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var code = (params.get("code") || "").trim();
+      var messageNode = document.querySelector("[data-empty-message]");
+      var codeNode = document.querySelector("[data-empty-code]");
+
+      if (code === "missing-post-id" && messageNode) {
+        messageNode.textContent = "No post id was provided in the link. Open a post from the feed and try again.";
+      } else if (code === "post-not-found" && messageNode) {
+        messageNode.textContent = "This post is no longer available or the link is invalid. Please select another post from the feed.";
+      }
+
+      if (codeNode) {
+        codeNode.textContent = code ? "Reference: " + code : "";
+      }
+    })();
+  </script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
