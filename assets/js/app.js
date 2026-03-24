@@ -23,8 +23,24 @@
     createPostMedia: null
   };
 
+  function normalizeAvatarUrl(urlValue) {
+    const raw = String(urlValue || "").trim();
+    if (!raw) {
+      return "";
+    }
+
+    const normalized = raw.replace(/\\/g, "/").toLowerCase();
+    const defaultAvatar = DEFAULT_PROFILE_AVATAR_URL.toLowerCase();
+
+    if (normalized === defaultAvatar || normalized.endsWith("/default-avatar.svg") || normalized.endsWith("assets/images/users/default-avatar.svg")) {
+      return "";
+    }
+
+    return raw;
+  }
+
   if (state.currentUser) {
-    state.currentUser.profileImageUrl = state.currentUser.profileImageUrl || DEFAULT_PROFILE_AVATAR_URL;
+    state.currentUser.profileImageUrl = normalizeAvatarUrl(state.currentUser.profileImageUrl);
     state.currentUser.coverImageUrl = state.currentUser.coverImageUrl || DEFAULT_PROFILE_COVER_URL;
     localStorage.setItem("currentUser", JSON.stringify(state.currentUser));
   }
@@ -138,7 +154,7 @@
     state.userRole = normalizedRole;
     state.currentUser = {
       ...user,
-      profileImageUrl: user?.profileImageUrl || DEFAULT_PROFILE_AVATAR_URL,
+      profileImageUrl: normalizeAvatarUrl(user?.profileImageUrl),
       coverImageUrl: user?.coverImageUrl || DEFAULT_PROFILE_COVER_URL
     };
     localStorage.setItem("isLoggedIn", "true");
@@ -551,7 +567,8 @@
       return;
     }
 
-    const hasImage = Boolean(String(imageUrl || "").trim());
+    const safeImageUrl = normalizeAvatarUrl(imageUrl);
+    const hasImage = Boolean(safeImageUrl);
     if (hasImage) {
       node.removeAttribute("data-guest-logo");
       node.textContent = "";
@@ -563,7 +580,7 @@
       node.textContent = String(fallbackText || "");
     }
     node.style.background = hasImage ? "#dbe6ff" : (gradient || "linear-gradient(135deg,#4E73DF,#6f8ee8)");
-    node.style.backgroundImage = hasImage ? `url('${escapeHtml(String(imageUrl))}')` : "";
+    node.style.backgroundImage = hasImage ? `url('${escapeHtml(String(safeImageUrl))}')` : "";
     node.style.backgroundSize = hasImage ? "cover" : "";
     node.style.backgroundPosition = hasImage ? "center" : "";
     node.style.backgroundRepeat = hasImage ? "no-repeat" : "";
@@ -1212,7 +1229,7 @@
       }
       role = state.userRole || "student";
       university = role === "student" ? String(state.currentUser?.university || "").trim() : "";
-      avatarUrl = state.currentUser?.profileImageUrl || DEFAULT_PROFILE_AVATAR_URL;
+      avatarUrl = normalizeAvatarUrl(state.currentUser?.profileImageUrl);
       coverUrl = state.currentUser?.coverImageUrl || DEFAULT_PROFILE_COVER_URL;
       bio = String(state.currentUser?.bio || "").trim();
     } else {
@@ -1223,7 +1240,7 @@
         : "";
 
       if (document.body.dataset.profileUserAvatar) {
-        avatarUrl = document.body.dataset.profileUserAvatar;
+        avatarUrl = normalizeAvatarUrl(document.body.dataset.profileUserAvatar);
       }
       if (document.body.dataset.profileUserCover) {
         coverUrl = document.body.dataset.profileUserCover;
