@@ -13,6 +13,11 @@
   const POST_TITLE_MIN_WORDS = 2;
   const POST_TITLE_MAX_WORDS = 20;
   const PUBLIC_SITE_ORIGIN = "https://innovax.works";
+  const IMAGE_UPLOAD_PRESETS = {
+    avatar: { maxWidth: 720, maxHeight: 720, quality: 0.8 },
+    cover: { maxWidth: 1600, maxHeight: 900, quality: 0.78 },
+    post: { maxWidth: 1600, maxHeight: 1600, quality: 0.8 }
+  };
 
   const state = {
     isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn") || "false"),
@@ -622,6 +627,93 @@
       reader.onerror = () => reject(new Error("Failed to read file."));
       reader.readAsDataURL(file);
     });
+  }
+
+  function loadImageForCanvas(file) {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Failed to decode image."));
+      };
+
+      image.src = objectUrl;
+    });
+  }
+
+  async function fileToOptimizedDataUrl(file, presetKey = "post") {
+    if (!file) {
+      throw new Error("No file selected.");
+    }
+
+    const mime = String(file.type || "").toLowerCase();
+    if (!mime.startsWith("image/")) {
+      throw new Error("Please select an image file.");
+    }
+
+    // Keep formats that should not be raster-compressed on canvas.
+    if (mime === "image/gif" || mime === "image/svg+xml") {
+      return fileToDataUrl(file);
+    }
+
+    const preset = IMAGE_UPLOAD_PRESETS[presetKey] || IMAGE_UPLOAD_PRESETS.post;
+    const maxWidth = Number(preset.maxWidth || 1600);
+    const maxHeight = Number(preset.maxHeight || 1600);
+    const quality = Number(preset.quality || 0.8);
+
+    let image;
+    try {
+      image = await loadImageForCanvas(file);
+    } catch (error) {
+      return fileToDataUrl(file);
+    }
+
+    const sourceWidth = Number(image.naturalWidth || image.width || 0);
+    const sourceHeight = Number(image.naturalHeight || image.height || 0);
+    if (!sourceWidth || !sourceHeight) {
+      return fileToDataUrl(file);
+    }
+
+    const scale = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
+    const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
+    const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const context = canvas.getContext("2d", { alpha: false });
+
+    if (!context) {
+      return fileToDataUrl(file);
+    }
+
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, targetWidth, targetHeight);
+    context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+    const preferredOutputType = "image/webp";
+    let optimizedDataUrl = canvas.toDataURL(preferredOutputType, quality);
+
+    if (!optimizedDataUrl || optimizedDataUrl === "data:," || optimizedDataUrl.length < 50) {
+      return fileToDataUrl(file);
+    }
+
+    if (!optimizedDataUrl.startsWith("data:image/webp")) {
+      optimizedDataUrl = canvas.toDataURL("image/jpeg", quality);
+    }
+
+    if (!optimizedDataUrl || optimizedDataUrl === "data:," || optimizedDataUrl.length < 50) {
+      return fileToDataUrl(file);
+    }
+
+    return optimizedDataUrl;
   }
 
   async function fetchText(path) {
@@ -1693,7 +1785,7 @@
       showToast("Uploading...");
 
       try {
-        const result = await fileToDataUrl(file);
+        const result = await fileToOptimizedDataUrl(file, target === "cover" ? "cover" : "avatar");
         if (!result) {
           showToast("Unable to read selected image.");
           return;
@@ -2086,7 +2178,7 @@
 
       if (state.createPostMedia?.type === "image" && state.createPostMedia.file) {
         mediaType = "image";
-        mediaDataUrl = await fileToDataUrl(state.createPostMedia.file);
+        mediaDataUrl = await fileToOptimizedDataUrl(state.createPostMedia.file, "post");
         mediaLabel = state.createPostMedia.label || "Post image";
       }
 
