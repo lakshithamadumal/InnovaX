@@ -336,6 +336,9 @@ select:focus {
 }
 
 .panel-filters-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: nowrap;
   width: min(560px, 100%);
 }
@@ -348,6 +351,10 @@ select:focus {
 .panel-filters-inline .btn-primary {
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.post-search-inline {
+  width: min(460px, 100%);
 }
 
 .table-wrap {

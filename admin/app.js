@@ -216,19 +216,21 @@
     }
 
     if (!posts.length) {
-      body.innerHTML = '<tr><td colspan="6" class="muted">No posts found.</td></tr>';
+      body.innerHTML = '<tr><td colspan="7" class="muted">No posts found.</td></tr>';
       return;
     }
 
     body.innerHTML = posts.map((post) => {
+      const postViewUrl = `https://innovax.works/post-view.html?postId=${encodeURIComponent(String(post.id || ""))}`;
       return `
         <tr>
           <td><strong>${escapeHtml(post.title)}</strong><div class="muted">${escapeHtml(post.id)}</div></td>
-          <td>${escapeHtml(post.authorName)}<div class="muted">${rolePill(post.authorRole)}</div></td>
+          <td>${escapeHtml(post.authorName)}</td>
           <td>${escapeHtml(formatDate(post.createdAt))}</td>
           <td>${Number(post.likes || 0)}</td>
           <td>${Number(post.ratingsCount || 0)}</td>
           <td>${Number(post.averageRating || 0)}</td>
+          <td><a class="btn-secondary" href="${postViewUrl}" target="_blank" rel="noopener">View Post</a></td>
         </tr>
       `;
     }).join("");

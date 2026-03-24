@@ -34,9 +34,8 @@ $params = [];
 
 if ($query !== "") {
     $like = "%" . $query . "%";
-    $sql .= " AND (p.title LIKE ? OR p.description LIKE ? OR u.full_name LIKE ?)";
-    $types .= "sss";
-    $params[] = $like;
+    $sql .= " AND (p.title LIKE ? OR u.full_name LIKE ?)";
+    $types .= "ss";
     $params[] = $like;
     $params[] = $like;
 }

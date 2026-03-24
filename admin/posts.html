@@ -37,14 +37,10 @@
         <div class="panel-head">
           <h2>Post Directory</h2>
           <div class="panel-filters">
-            <select id="postRoleFilter">
-              <option value="">All Authors</option>
-              <option value="student">Student Posts</option>
-              <option value="expert">Expert Posts</option>
-            </select>
-            <input id="postUserIdFilter" type="text" placeholder="Filter by User ID" />
-            <input id="postSearch" type="search" placeholder="Search title, description, author" />
-            <button id="postSearchBtn" class="btn-primary" type="button">Search</button>
+            <div class="panel-filters-inline post-search-inline">
+              <input id="postSearch" type="search" placeholder="Search title, author" />
+              <button id="postSearchBtn" class="btn-primary" type="button">Search</button>
+            </div>
           </div>
         </div>
         <div class="table-wrap">
@@ -57,6 +53,7 @@
                 <th>Likes</th>
                 <th>Ratings</th>
                 <th>Avg Score</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="postsTableBody"></tbody>
