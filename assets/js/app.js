@@ -1,6 +1,5 @@
 (() => {
   const templateCache = new Map();
-  const EXPERT_RATINGS_STORAGE_KEY = "expertPostRatings";
   const DEFAULT_PROFILE_AVATAR_URL = "assets/images/users/default-avatar.svg";
   const DEFAULT_PROFILE_COVER_URL = "assets/images/users/default-cover.svg";
   const POST_DESC_PREVIEW_LIMIT = 180;
@@ -21,7 +20,8 @@
     notifications: [],
     trendingInnovations: [],
     feedSort: "recent",
-    createPostMedia: null
+    createPostMedia: null,
+    expertRatings: []
   };
 
   function normalizeAvatarUrl(urlValue) {
@@ -104,40 +104,8 @@
     return cleaned.split(/\s+/).filter(Boolean).length;
   }
 
-  function getExpertRatingsStore() {
-    try {
-      const raw = localStorage.getItem(EXPERT_RATINGS_STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch (error) {
-      return {};
-    }
-  }
-
-  function saveExpertRatingsStore(store) {
-    localStorage.setItem(EXPERT_RATINGS_STORAGE_KEY, JSON.stringify(store));
-  }
-
   function getCurrentExpertRatings() {
-    if (!state.currentUser?.id) {
-      return [];
-    }
-
-    const store = getExpertRatingsStore();
-    const ratings = Array.isArray(store[state.currentUser.id]) ? store[state.currentUser.id] : [];
-    return ratings
-      .filter((rating) => rating && rating.postId)
-      .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
-  }
-
-  function setCurrentExpertRatings(ratings) {
-    if (!state.currentUser?.id) {
-      return;
-    }
-
-    const store = getExpertRatingsStore();
-    store[state.currentUser.id] = ratings;
-    saveExpertRatingsStore(store);
+    return Array.isArray(state.expertRatings) ? state.expertRatings : [];
   }
 
   function findPostById(postId) {
@@ -560,6 +528,34 @@
           count
         }));
     }
+  }
+
+  async function loadMyExpertRatingsData() {
+    if (!state.isLoggedIn || state.userRole !== "expert") {
+      state.expertRatings = [];
+      return state.expertRatings;
+    }
+
+    try {
+      const payload = await getJson("api/ratings/list.php");
+      const rows = Array.isArray(payload.data?.ratings) ? payload.data.ratings : [];
+
+      state.expertRatings = rows
+        .filter((entry) => entry && entry.postId)
+        .map((entry) => ({
+          id: Number(entry.id || 0),
+          postId: String(entry.postId || ""),
+          postTitle: String(entry.postTitle || ""),
+          score: Number(Number(entry.score || 0).toFixed(1)),
+          note: String(entry.note || ""),
+          submittedAt: entry.submittedAt || entry.submitted_at || null
+        }))
+        .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+    } catch (error) {
+      state.expertRatings = [];
+    }
+
+    return state.expertRatings;
   }
 
   async function loadNotificationsData() {
@@ -2428,7 +2424,7 @@
     }
   }
 
-  function renderPostViewPage() {
+  async function renderPostViewPage() {
     if (document.body.dataset.page !== "post-view") {
       return;
     }
@@ -2540,6 +2536,7 @@
       return;
     }
 
+    await loadMyExpertRatingsData();
     const currentRatings = getCurrentExpertRatings();
     const existing = currentRatings.find((entry) => String(entry.postId) === String(post.id));
 
@@ -2567,7 +2564,7 @@
       noteInput.value = "";
     }
 
-    form.onsubmit = (event) => {
+    form.onsubmit = async (event) => {
       event.preventDefault();
 
       const score = Number.parseFloat(String(rateInput?.value || ""));
@@ -2585,24 +2582,29 @@
         return;
       }
 
-      const updatedRatings = [
-        ...currentRatings,
-        {
-          postId: String(post.id),
-          postTitle: post.title || "Untitled post",
-          score: Number(score.toFixed(1)),
-          note: expertNote,
-          submittedAt: new Date().toISOString()
-        }
-      ];
+      const submitBtn = form.querySelector("[data-expert-submit-btn]");
+      setSubmitBusy(submitBtn, true, "Submitting...");
 
-      setCurrentExpertRatings(updatedRatings);
-      showToast("Rating submitted.");
-      renderPostViewPage();
+      try {
+        await postJson("api/ratings/submit.php", {
+          post_id: String(post.id),
+          score: Number(score.toFixed(1)),
+          note: expertNote
+        });
+
+        await loadMyExpertRatingsData();
+        await refreshNotificationsUi();
+        showToast("Rating submitted.");
+        await renderPostViewPage();
+      } catch (error) {
+        showToast(normalizeApiError(error, "Unable to submit rating."));
+      } finally {
+        setSubmitBusy(submitBtn, false, "Submitting...");
+      }
     };
   }
 
-  function renderExpertRatingsPage() {
+  async function renderExpertRatingsPage() {
     if (document.body.dataset.page !== "expert-ratings") {
       return;
     }
@@ -2631,6 +2633,7 @@
       return;
     }
 
+    await loadMyExpertRatingsData();
     const ratings = getCurrentExpertRatings();
     if (!ratings.length) {
       list.innerHTML = `<div class="card empty-state"><i class="fas fa-star"></i><p>You have not submitted any ratings yet.</p></div>`;
@@ -3628,8 +3631,8 @@
     renderTrendingInnovations();
     renderMostLikelyPosts();
     renderNotificationsPage();
-    renderPostViewPage();
-    renderExpertRatingsPage();
+    await renderPostViewPage();
+    await renderExpertRatingsPage();
     initFeedSort();
     renderSearchResults();
     initMyProfileMediaEditor();
