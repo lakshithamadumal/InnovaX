@@ -64,12 +64,34 @@
       return "Just now";
     }
 
-    return parsed.toLocaleString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    const now = new Date();
+    const timePart = parsed.toLocaleTimeString(undefined, {
       hour: "numeric",
       minute: "2-digit"
+    });
+
+    const sameDay =
+      parsed.getFullYear() === now.getFullYear() &&
+      parsed.getMonth() === now.getMonth() &&
+      parsed.getDate() === now.getDate();
+
+    if (sameDay) {
+      return timePart;
+    }
+
+    const sameYear = parsed.getFullYear() === now.getFullYear();
+    if (sameYear) {
+      const dayPart = parsed.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric"
+      });
+      return `${dayPart} • ${timePart}`;
+    }
+
+    return parsed.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
     });
   }
 

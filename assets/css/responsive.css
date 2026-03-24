@@ -445,9 +445,4 @@
 		height: 34px;
 		font-size: 0.68rem;
 	}
-
-	body[data-page="my-profile"] .profile-hero > .inline-actions,
-	body[data-page="user-profile"] .profile-hero > .inline-actions {
-		grid-template-columns: 1fr;
-	}
 }
