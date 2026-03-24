@@ -226,11 +226,10 @@
     const dialog = document.createElement("div");
     dialog.className = "auth-dialog-overlay";
     dialog.innerHTML = `
-      <div class="auth-dialog-card" role="dialog" aria-modal="true" aria-label="Login required">
+      <div class="auth-dialog-card auth-login-dialog" role="dialog" aria-modal="true" aria-label="Login required">
         <h2>Login Required</h2>
         <p>Please login to continue this action.</p>
-        <div class="auth-dialog-actions">
-          <button type="button" class="btn-secondary" data-dialog-close>Cancel</button>
+        <div class="auth-dialog-actions auth-login-actions">
           <a href="login.html" class="btn-primary">Login</a>
           <a href="register.html" class="btn-secondary">Register</a>
         </div>
@@ -238,7 +237,7 @@
     `;
 
     dialog.addEventListener("click", (event) => {
-      if (event.target === dialog || event.target.closest("[data-dialog-close]")) {
+      if (event.target === dialog) {
         dialog.remove();
       }
     });
