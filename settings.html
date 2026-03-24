@@ -10,6 +10,146 @@
   <link rel="stylesheet" href="assets/css/layout.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
   <link rel="stylesheet" href="assets/css/responsive.css" />
+  <style>
+    body[data-page="settings"] .skills-input-container {
+      margin-top: 8px;
+      position: relative;
+    }
+
+    body[data-page="settings"] .skills-input-field {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    body[data-page="settings"] .skills-search {
+      width: 100%;
+      border: 1px solid #cfd7ee;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      background: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    body[data-page="settings"] .skills-search:focus {
+      outline: none;
+      border-color: #5d7fe6;
+      box-shadow: 0 0 0 3px rgba(93, 127, 230, 0.14);
+    }
+
+    body[data-page="settings"] .skills-dropdown {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0;
+      right: 0;
+      z-index: 20;
+      background: #fff;
+      border: 1px solid #d7dff2;
+      border-radius: 12px;
+      box-shadow: 0 12px 24px rgba(34, 54, 108, 0.13);
+      max-height: 210px;
+      overflow-y: auto;
+    }
+
+    body[data-page="settings"] .skills-dropdown-item {
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      border-bottom: 1px solid #edf1fb;
+    }
+
+    body[data-page="settings"] .skills-dropdown-item:last-child {
+      border-bottom: 0;
+    }
+
+    body[data-page="settings"] .skills-dropdown-item:hover {
+      background: #f1f5ff;
+    }
+
+    body[data-page="settings"] .skills-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 4px 0 10px;
+      min-height: 34px;
+    }
+
+    body[data-page="settings"] .skill-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #c8d6ff;
+      background: linear-gradient(140deg, #edf2ff 0%, #f7f9ff 100%);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.84rem;
+      color: #1f3f8f;
+      font-weight: 600;
+    }
+
+    body[data-page="settings"] .skill-tag button {
+      border: 0;
+      background: transparent;
+      color: #4867be;
+      font-size: 0.85rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    body[data-page="settings"] .skill-tag button:hover {
+      color: #213f97;
+    }
+
+    body[data-page="settings"] .suggested-skill-wrap {
+      background: #f8faff;
+      border: 1px solid #e4ebfb;
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    body[data-page="settings"] .suggested-skill-title {
+      font-size: 0.8rem;
+      color: #5167a8;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+    }
+
+    body[data-page="settings"] .suggested-skill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    body[data-page="settings"] .suggested-skill {
+      border: 1px solid #d7e1ff;
+      background: #ffffff;
+      color: #284a9e;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    body[data-page="settings"] .suggested-skill:hover {
+      border-color: #a9bfff;
+      box-shadow: 0 8px 18px rgba(67, 96, 175, 0.12);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 640px) {
+      body[data-page="settings"] .skills-input-field {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body data-page="settings" data-active-nav="feed">
   <div class="toast" id="toast"></div>
