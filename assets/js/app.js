@@ -975,19 +975,23 @@
       listNode.innerHTML = items
         .map((item) => {
           const icon = item.type === "like" ? "fa-heart" : item.type === "rating" ? "fa-star" : "fa-bell";
-          const gradient = item.type === "like"
-            ? "linear-gradient(135deg,#E74A3B,#c0392b)"
+          const label = item.type === "like" ? "Like" : item.type === "rating" ? "Rating" : "Alert";
+          const iconTypeClass = item.type === "like"
+            ? "notification-icon--like"
             : item.type === "rating"
-              ? "linear-gradient(135deg,#F6C23E,#e0a800)"
-              : "linear-gradient(135deg,#4E73DF,#6f8ee8)";
+              ? "notification-icon--rating"
+              : "notification-icon--alert";
 
           return `
             <article class="notification-item ${item.isRead ? "read" : ""}">
-              <div class="avatar" style="background:${gradient};"><i class="fas ${icon}"></i></div>
-              <div>
-                <strong>InnovaX</strong>
-                <p class="section-note">${escapeHtml(item.message || "Notification")}</p>
-                <p class="section-note">${escapeHtml(formatDateTime(item.createdAt))}</p>
+              <div class="notification-icon ${iconTypeClass}"><i class="fas ${icon}"></i></div>
+              <div class="notification-content">
+                <div class="notification-meta-row">
+                  <span class="notification-type">${escapeHtml(label)}</span>
+                  <time class="notification-time">${escapeHtml(formatDateTime(item.createdAt))}</time>
+                </div>
+                <p class="notification-message">${escapeHtml(item.message || "Notification")}</p>
+                ${item.isRead ? "" : "<span class='notification-unread'>New</span>"}
               </div>
             </article>
           `;
@@ -1826,6 +1830,61 @@
     renderMostLikelyPosts();
   }
 
+  function syncLikeState(postId, liked, likes) {
+    const normalizedPostId = String(postId || "");
+    const normalizedLikes = Number(likes || 0);
+
+    state.posts.forEach((item) => {
+      if (String(item.id) === normalizedPostId) {
+        item.liked = Boolean(liked);
+        item.likes = normalizedLikes;
+      }
+    });
+
+    const cards = Array.from(document.querySelectorAll("[data-post-id]"));
+    cards.forEach((card) => {
+      if (String(card.dataset.postId || "") !== normalizedPostId) {
+        return;
+      }
+
+      const btn = card.querySelector("[data-like-btn]");
+      const count = card.querySelector("[data-like-count]");
+      if (btn) {
+        btn.classList.toggle("liked", Boolean(liked));
+      }
+      if (count) {
+        count.textContent = String(normalizedLikes);
+      }
+    });
+
+    const looseButtons = Array.from(document.querySelectorAll("[data-like-btn]"));
+    looseButtons.forEach((btn) => {
+      if (String(btn.dataset.postId || "") === normalizedPostId) {
+        btn.classList.toggle("liked", Boolean(liked));
+      }
+    });
+
+    const looseCounts = Array.from(document.querySelectorAll("[data-like-count]"));
+    looseCounts.forEach((count) => {
+      const holderPostId = count.closest("[data-post-id]")?.dataset.postId;
+      if (String(holderPostId || "") === normalizedPostId) {
+        count.textContent = String(normalizedLikes);
+      }
+    });
+
+    updateProfileLikes();
+    updateSidebarAndNav();
+    renderMostLikelyPosts();
+
+    if (state.feedSort === "likes") {
+      renderPostStreams();
+    }
+
+    if (document.body.dataset.page === "search-results") {
+      renderSearchResults();
+    }
+  }
+
   function initEventDelegation() {
     document.addEventListener("click", (event) => {
       const restrictedLink = event.target.closest("[data-requires-login]");
@@ -1909,23 +1968,12 @@
           return;
         }
 
-        const post = postId ? findPostById(postId) : null;
-        const count = card?.querySelector("[data-like-count]");
-
         postJson("api/posts/toggle-like.php", { post_id: postId })
           .then(async (payload) => {
             const liked = Boolean(payload.data?.liked);
             const likes = Number(payload.data?.likes || 0);
 
-            likeBtn.classList.toggle("liked", liked);
-            if (count) {
-              count.textContent = String(likes);
-            }
-
-            if (post) {
-              post.likes = likes;
-              post.liked = liked;
-            }
+            syncLikeState(postId, liked, likes);
 
             await refreshNotificationsUi();
 

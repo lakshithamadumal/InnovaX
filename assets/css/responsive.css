@@ -85,6 +85,16 @@
 		flex-wrap: wrap;
 	}
 
+	.notification-meta-row {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 6px;
+	}
+
+	.notification-time {
+		white-space: normal;
+	}
+
 	.expert-rating-item-head {
 		flex-direction: column;
 		align-items: flex-start;
