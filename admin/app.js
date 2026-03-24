@@ -243,11 +243,12 @@
     }
 
     if (!ratings.length) {
-      body.innerHTML = '<tr><td colspan="7" class="muted">No ratings found.</td></tr>';
+      body.innerHTML = '<tr><td colspan="8" class="muted">No ratings found.</td></tr>';
       return;
     }
 
     body.innerHTML = ratings.map((rating) => {
+      const postViewUrl = `https://innovax.works/post-view.html?postId=${encodeURIComponent(String(rating.postId || ""))}`;
       return `
         <tr>
           <td>${escapeHtml(rating.postTitle)}<div class="muted">${escapeHtml(rating.postId)}</div></td>
@@ -257,6 +258,7 @@
           <td>${Number(rating.score || 0)}</td>
           <td>${escapeHtml(rating.note || "-")}</td>
           <td>${escapeHtml(formatDate(rating.submittedAt))}</td>
+          <td><a class="btn-secondary" href="${postViewUrl}" target="_blank" rel="noopener">View Post</a></td>
         </tr>
       `;
     }).join("");
