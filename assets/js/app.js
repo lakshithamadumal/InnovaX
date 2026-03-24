@@ -2,7 +2,11 @@
   const templateCache = new Map();
   const jsonResponseCache = new Map();
   const inFlightJsonRequests = new Map();
+  const prefetchedRoutes = new Set();
+  const warmedApiPaths = new Set();
   const API_CACHE_STORAGE_PREFIX = "innovaX.apiCache.v1.";
+  const COMPONENT_CACHE_STORAGE_PREFIX = "innovaX.componentCache.v1.";
+  const COMPONENT_CACHE_TTL_MS = 10 * 60 * 1000;
   const DEFAULT_PROFILE_AVATAR_URL = "assets/images/users/default-avatar.svg";
   const DEFAULT_PROFILE_COVER_URL = "assets/images/users/default-cover.svg";
   const POST_DESC_PREVIEW_LIMIT = 180;
@@ -307,14 +311,30 @@
     return `${API_CACHE_STORAGE_PREFIX}${encodeURIComponent(String(path || ""))}`;
   }
 
-  function readCachedJson(path) {
+  function readCachedJson(path, options = {}) {
+    const allowExpired = Boolean(options.allowExpired);
     const key = getApiCacheStorageKey(path);
+    const now = Date.now();
 
     if (jsonResponseCache.has(key)) {
       const value = jsonResponseCache.get(key);
-      if (value && Number(value.expiresAt || 0) > Date.now()) {
-        return value.payload;
+      const expiresAt = Number(value?.expiresAt || 0);
+      if (value && expiresAt > now) {
+        return {
+          payload: value.payload,
+          isStale: false,
+          expiresAt
+        };
       }
+
+      if (value && allowExpired) {
+        return {
+          payload: value.payload,
+          isStale: true,
+          expiresAt
+        };
+      }
+
       jsonResponseCache.delete(key);
     }
 
@@ -325,13 +345,23 @@
       }
 
       const parsed = JSON.parse(raw);
-      if (!parsed || Number(parsed.expiresAt || 0) <= Date.now()) {
+      const expiresAt = Number(parsed?.expiresAt || 0);
+      if (!parsed || !Number.isFinite(expiresAt)) {
+        sessionStorage.removeItem(key);
+        return null;
+      }
+
+      if (expiresAt <= now && !allowExpired) {
         sessionStorage.removeItem(key);
         return null;
       }
 
       jsonResponseCache.set(key, parsed);
-      return parsed.payload;
+      return {
+        payload: parsed.payload,
+        isStale: expiresAt <= now,
+        expiresAt
+      };
     } catch (error) {
       return null;
     }
@@ -437,12 +467,46 @@
 
   async function getJson(path, options = {}) {
     const ttlMs = Number(options.ttlMs || 0);
+    const staleTtlMs = Number(options.staleTtlMs || 0);
     const cacheKey = String(path || "");
+    const allowExpired = staleTtlMs > 0;
 
     if (ttlMs > 0) {
-      const cachedPayload = readCachedJson(cacheKey);
-      if (cachedPayload) {
-        return cachedPayload;
+      const cachedEntry = readCachedJson(cacheKey, { allowExpired });
+      if (cachedEntry?.payload) {
+        if (!cachedEntry.isStale) {
+          return cachedEntry.payload;
+        }
+
+        const staleAgeMs = Math.max(0, Date.now() - Number(cachedEntry.expiresAt || 0));
+        if (staleAgeMs <= staleTtlMs) {
+          if (!inFlightJsonRequests.has(cacheKey)) {
+            const refreshPromise = (async () => {
+              try {
+                const response = await fetch(path, {
+                  credentials: "same-origin"
+                });
+                let payload = null;
+                try {
+                  payload = await response.json();
+                } catch (error) {
+                  payload = null;
+                }
+
+                if (response.ok && payload && payload.success !== false) {
+                  writeCachedJson(cacheKey, payload, ttlMs);
+                }
+              } catch (error) {
+                // Ignore background refresh failures while serving stale data.
+              } finally {
+                inFlightJsonRequests.delete(cacheKey);
+              }
+            })();
+            inFlightJsonRequests.set(cacheKey, refreshPromise);
+          }
+
+          return cachedEntry.payload;
+        }
       }
     }
 
@@ -451,27 +515,27 @@
     }
 
     const requestPromise = (async () => {
-    const response = await fetch(path, {
-      credentials: "same-origin"
-    });
-    let payload = null;
+      const response = await fetch(path, {
+        credentials: "same-origin"
+      });
+      let payload = null;
 
-    try {
-      payload = await response.json();
-    } catch (error) {
-      payload = null;
-    }
+      try {
+        payload = await response.json();
+      } catch (error) {
+        payload = null;
+      }
 
-    if (!response.ok || !payload || payload.success === false) {
-      const message = payload?.message || `Request failed: ${path}`;
-      throw new Error(message);
-    }
+      if (!response.ok || !payload || payload.success === false) {
+        const message = payload?.message || `Request failed: ${path}`;
+        throw new Error(message);
+      }
 
       if (ttlMs > 0) {
         writeCachedJson(cacheKey, payload, ttlMs);
       }
 
-    return payload;
+      return payload;
     })();
 
     inFlightJsonRequests.set(cacheKey, requestPromise);
@@ -566,6 +630,20 @@
       return templateCache.get(path);
     }
 
+    const storageKey = `${COMPONENT_CACHE_STORAGE_PREFIX}${encodeURIComponent(String(path || ""))}`;
+    try {
+      const cachedRaw = sessionStorage.getItem(storageKey);
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw);
+        if (cached && Number(cached.expiresAt || 0) > Date.now() && typeof cached.text === "string") {
+          templateCache.set(path, cached.text);
+          return cached.text;
+        }
+      }
+    } catch (error) {
+      // Ignore broken cache entries and continue with network fetch.
+    }
+
     const response = await fetch(path);
     if (!response.ok) {
       throw new Error(`Failed to load ${path}`);
@@ -573,6 +651,16 @@
 
     const text = await response.text();
     templateCache.set(path, text);
+
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify({
+        expiresAt: Date.now() + COMPONENT_CACHE_TTL_MS,
+        text
+      }));
+    } catch (error) {
+      // Ignore storage errors for component caching.
+    }
+
     return text;
   }
 
@@ -587,7 +675,7 @@
 
   async function mountComponents() {
     const placeholders = Array.from(document.querySelectorAll("[data-component]"));
-    for (const placeholder of placeholders) {
+    await Promise.all(placeholders.map(async (placeholder) => {
       const componentName = placeholder.dataset.component;
       const componentPath = `components/${componentName}.html`;
 
@@ -601,13 +689,13 @@
 
         if (!nodes.length) {
           placeholder.remove();
-          continue;
+          return;
         }
         placeholder.replaceWith(...nodes);
       } catch (error) {
         placeholder.innerHTML = `<div class="card sidebar-section"><p class="section-note">Unable to load ${escapeHtml(componentName)}.</p></div>`;
       }
-    }
+    }));
   }
 
   async function loadPostTemplate() {
@@ -616,7 +704,7 @@
 
   async function loadPostsData() {
     try {
-      const payload = await getJson("api/posts/list.php", { ttlMs: 20000 });
+      const payload = await getJson("api/posts/list.php", { ttlMs: 120000, staleTtlMs: 10 * 60 * 1000 });
       const data = Array.isArray(payload.data?.posts) ? payload.data.posts : [];
       const normalized = Array.isArray(data) ? data : [];
 
@@ -655,7 +743,10 @@
     }
 
     try {
-      const payload = await getJson(`api/posts/view.php?postId=${encodeURIComponent(normalizedPostId)}`, { ttlMs: 20000 });
+      const payload = await getJson(`api/posts/view.php?postId=${encodeURIComponent(normalizedPostId)}`, {
+        ttlMs: 120000,
+        staleTtlMs: 10 * 60 * 1000
+      });
       const post = payload.data?.post;
       if (!post || !post.id) {
         return null;
@@ -697,7 +788,7 @@
 
   async function loadTrendingInnovationsData() {
     try {
-      const payload = await getJson("api/posts/trending.php?limit=5", { ttlMs: 20000 });
+      const payload = await getJson("api/posts/trending.php?limit=5", { ttlMs: 120000, staleTtlMs: 10 * 60 * 1000 });
       const rows = Array.isArray(payload.data?.trending) ? payload.data.trending : [];
 
       state.trendingInnovations = rows
@@ -748,7 +839,7 @@
     }
 
     try {
-      const payload = await getJson("api/ratings/list.php", { ttlMs: 15000 });
+      const payload = await getJson("api/ratings/list.php", { ttlMs: 60000, staleTtlMs: 5 * 60 * 1000 });
       const rows = Array.isArray(payload.data?.ratings) ? payload.data.ratings : [];
 
       state.expertRatings = rows
@@ -777,7 +868,7 @@
     }
 
     try {
-      const payload = await getJson("api/notifications/list.php", { ttlMs: 5000 });
+      const payload = await getJson("api/notifications/list.php", { ttlMs: 4000, staleTtlMs: 30000 });
       const list = Array.isArray(payload.data?.notifications) ? payload.data.notifications : [];
       state.notifications = list.map((entry) => ({
         id: Number(entry.id || 0),
@@ -813,7 +904,7 @@
 
   async function loadStudentProfilesData() {
     try {
-      const payload = await getJson("api/users/students.php", { ttlMs: 30000 });
+      const payload = await getJson("api/users/students.php", { ttlMs: 180000, staleTtlMs: 15 * 60 * 1000 });
       const list = Array.isArray(payload.data?.students) ? payload.data.students : [];
       state.studentProfiles = list.map((student) => ({
         id: student.id,
@@ -936,7 +1027,7 @@
 
   async function syncAuthenticatedUser() {
     try {
-      const payload = await getJson("api/auth/me.php", { ttlMs: 8000 });
+      const payload = await getJson("api/auth/me.php", { ttlMs: 30000, staleTtlMs: 5 * 60 * 1000 });
       const user = payload.data?.user;
       if (user && user.id && user.role) {
         setLoggedInUser(user, user.role);
@@ -960,7 +1051,7 @@
     }
 
     try {
-      const payload = await getJson("api/users/my-profile.php", { ttlMs: 15000 });
+      const payload = await getJson("api/users/my-profile.php", { ttlMs: 120000, staleTtlMs: 10 * 60 * 1000 });
       const user = payload.data?.user;
       if (user && user.id && user.role) {
         setLoggedInUser(user, user.role);
@@ -986,7 +1077,10 @@
     }
 
     try {
-      const payload = await getJson(`api/users/public-profile.php?userId=${encodeURIComponent(userId)}`, { ttlMs: 30000 });
+      const payload = await getJson(`api/users/public-profile.php?userId=${encodeURIComponent(userId)}`, {
+        ttlMs: 180000,
+        staleTtlMs: 15 * 60 * 1000
+      });
       const user = payload.data?.user;
       const profile = payload.data?.profile;
       if (!user || !user.id) {
@@ -2347,6 +2441,164 @@
         window.location.href = `search-results.html?q=${encodeURIComponent(query)}`;
       });
     });
+  }
+
+  function isPrefetchableInternalRoute(urlValue) {
+    try {
+      const url = new URL(urlValue, window.location.href);
+      if (url.origin !== window.location.origin) {
+        return false;
+      }
+      if (!/\.html$/i.test(url.pathname)) {
+        return false;
+      }
+      if (url.hash && url.pathname === window.location.pathname) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function buildWarmApiListForRoute(route) {
+    const list = [];
+
+    try {
+      const url = new URL(route, window.location.href);
+      const pageName = url.pathname.split("/").pop() || "";
+
+      if (["index.html", "feed.html", "saved-posts.html", "search-results.html", "post-view.html", "expert-ratings.html", "profile.html"].includes(pageName)) {
+        list.push("api/posts/list.php");
+      }
+
+      if (["index.html", "feed.html", "saved-posts.html"].includes(pageName)) {
+        list.push("api/posts/trending.php?limit=5");
+      }
+
+      if (pageName === "search-results.html") {
+        list.push("api/users/students.php");
+      }
+
+      if (["notifications.html"].includes(pageName) && state.isLoggedIn) {
+        list.push("api/notifications/list.php");
+      }
+
+      if (["my-profile.html", "settings.html", "profile.html"].includes(pageName) && state.isLoggedIn) {
+        list.push("api/users/my-profile.php");
+      }
+
+      if (pageName === "expert-ratings.html" && state.isLoggedIn && state.userRole === "expert") {
+        list.push("api/ratings/list.php");
+      }
+
+      if (pageName === "user-profile.html") {
+        const userId = String(url.searchParams.get("userId") || "").trim();
+        if (userId) {
+          list.push(`api/users/public-profile.php?userId=${encodeURIComponent(userId)}`);
+        }
+      }
+
+      if (pageName === "post-view.html") {
+        const postId = String(url.searchParams.get("postId") || "").trim();
+        if (postId) {
+          list.push(`api/posts/view.php?postId=${encodeURIComponent(postId)}`);
+        }
+      }
+    } catch (error) {
+      return [];
+    }
+
+    return list;
+  }
+
+  function warmApiCacheForRoute(route) {
+    const apiPaths = buildWarmApiListForRoute(route);
+    if (!apiPaths.length) {
+      return;
+    }
+
+    apiPaths.forEach((path) => {
+      const key = String(path);
+      if (warmedApiPaths.has(key)) {
+        return;
+      }
+
+      warmedApiPaths.add(key);
+      getJson(path, {
+        ttlMs: 120000,
+        staleTtlMs: 10 * 60 * 1000
+      }).catch(() => {
+        warmedApiPaths.delete(key);
+      });
+    });
+  }
+
+  function prefetchRoute(route) {
+    let url;
+    try {
+      url = new URL(route, window.location.href);
+    } catch (error) {
+      return;
+    }
+
+    const href = url.href;
+    if (prefetchedRoutes.has(href)) {
+      return;
+    }
+
+    prefetchedRoutes.add(href);
+
+    fetch(href, {
+      credentials: "same-origin"
+    }).catch(() => {
+      prefetchedRoutes.delete(href);
+    });
+
+    warmApiCacheForRoute(href);
+  }
+
+  function initNavigationPrefetch() {
+    const triggerPrefetch = (event) => {
+      const link = event.target?.closest?.("a[href]");
+      if (!link) {
+        return;
+      }
+
+      const href = String(link.getAttribute("href") || "").trim();
+      if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
+        return;
+      }
+
+      if (!isPrefetchableInternalRoute(href)) {
+        return;
+      }
+
+      prefetchRoute(href);
+    };
+
+    document.addEventListener("mouseover", triggerPrefetch, { passive: true });
+    document.addEventListener("touchstart", triggerPrefetch, { passive: true });
+    document.addEventListener("focusin", triggerPrefetch);
+  }
+
+  function initBackgroundWarmups() {
+    const commonRoutes = [
+      "index.html",
+      "feed.html",
+      "search-results.html",
+      "saved-posts.html",
+      "notifications.html",
+      "my-profile.html",
+      "settings.html",
+      "expert-ratings.html"
+    ];
+
+    setTimeout(() => {
+      commonRoutes.forEach((route) => {
+        prefetchRoute(route);
+      });
+    }, 300);
   }
 
   async function initSettingsPage() {
@@ -3830,6 +4082,7 @@
 
     initNavbar();
     setActiveNav();
+    initNavigationPrefetch();
     updateSidebarAndNav();
     updateSessionRoleBadges();
     updatePublicRoleBadges();
@@ -3883,6 +4136,7 @@
     initCreatePostComposer();
     initEventDelegation();
     initAuthForms();
+    initBackgroundWarmups();
 
     window.showToast = showToast;
     window.logout = logout;
