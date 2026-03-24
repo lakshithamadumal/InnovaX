@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InnovaX Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="admin-logo"><i class="fas fa-layer-group"></i></div>
+      <div>
+        <h1>InnovaX Admin Dashboard</h1>
+        <p id="adminWelcome">Manage users, posts, ratings, and broadcasts.</p>
+      </div>
+    </div>
+    <div class="admin-header-right">
+      <a class="btn-secondary" href="../feed.html" target="_blank" rel="noopener">Open Site</a>
+      <button id="logoutBtn" class="btn-danger" type="button">Logout</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section class="summary-grid" id="summaryGrid"></section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Users</h2>
+        <div class="panel-filters">
+          <select id="userRoleFilter">
+            <option value="">All Roles</option>
+            <option value="student">Students</option>
+            <option value="expert">Experts</option>
+          </select>
+          <input id="userSearch" type="search" placeholder="Search name, email, title..." />
+          <button id="userSearchBtn" class="btn-primary" type="button">Search</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Email</th>
+              <th>Institution / Org</th>
+              <th>Posts</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Posts</h2>
+        <div class="panel-filters">
+          <select id="postRoleFilter">
+            <option value="">All Authors</option>
+            <option value="student">Student Posts</option>
+            <option value="expert">Expert Posts</option>
+          </select>
+          <input id="postUserIdFilter" type="text" placeholder="Filter by User ID" />
+          <input id="postSearch" type="search" placeholder="Search title, desc, author" />
+          <button id="postSearchBtn" class="btn-primary" type="button">Search</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Created</th>
+              <th>Likes</th>
+              <th>Ratings</th>
+              <th>Avg Score</th>
+            </tr>
+          </thead>
+          <tbody id="postsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Expert Ratings</h2>
+        <div class="panel-filters">
+          <input id="ratingAuthorFilter" type="text" placeholder="Filter by Post Owner User ID" />
+          <input id="ratingSearch" type="search" placeholder="Search post, expert, note" />
+          <button id="ratingSearchBtn" class="btn-primary" type="button">Search</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Post</th>
+              <th>Owner</th>
+              <th>Expert</th>
+              <th>Score</th>
+              <th>Note</th>
+              <th>Submitted</th>
+            </tr>
+          </thead>
+          <tbody id="ratingsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel action-panels">
+      <div class="action-card">
+        <h3>Send All Notifications</h3>
+        <textarea id="broadcastMessage" rows="4" placeholder="Enter message for all users..."></textarea>
+        <button id="sendAllNotificationsBtn" class="btn-primary" type="button">Send To All Users</button>
+      </div>
+
+      <div class="action-card">
+        <h3>Send All Emails (Students Only)</h3>
+        <input id="studentEmailTitle" type="text" placeholder="Email title" />
+        <textarea id="studentEmailDescription" rows="5" placeholder="Email description"></textarea>
+        <button id="sendStudentEmailsBtn" class="btn-primary" type="button">Send To All Students</button>
+      </div>
+    </section>
+
+    <p id="dashboardMessage" class="form-message" aria-live="polite"></p>
+  </main>
+
+  <div id="userDetailModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <button id="closeModalBtn" class="modal-close" type="button"><i class="fas fa-xmark"></i></button>
+      <h3>User More Details</h3>
+      <div id="modalUserInfo" class="modal-user-info"></div>
+      <h4>User Posts</h4>
+      <div id="modalUserPosts" class="modal-post-list"></div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
