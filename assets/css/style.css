@@ -251,6 +251,22 @@ img {
   transform: scale(1.07);
 }
 
+.nav-avatar[data-guest-logo="true"] {
+  font-size: 0;
+}
+
+.nav-avatar[data-guest-logo="true"]::before {
+  content: "X";
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.nav-avatar[data-guest-logo="true"] i {
+  display: none;
+}
+
 /* Hamburger */
 .hamburger {
   display: none;

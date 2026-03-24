@@ -546,13 +546,22 @@
       .toUpperCase();
   }
 
-  function applyAvatarVisual(node, imageUrl, fallbackText, gradient) {
+  function applyAvatarVisual(node, imageUrl, fallbackText, gradient, useLogoIcon = false) {
     if (!node) {
       return;
     }
 
     const hasImage = Boolean(String(imageUrl || "").trim());
-    node.textContent = hasImage ? "" : String(fallbackText || "");
+    if (hasImage) {
+      node.removeAttribute("data-guest-logo");
+      node.textContent = "";
+    } else if (useLogoIcon) {
+      node.setAttribute("data-guest-logo", "true");
+      node.innerHTML = "<i class=\"fas fa-times\" aria-hidden=\"true\"></i>";
+    } else {
+      node.removeAttribute("data-guest-logo");
+      node.textContent = String(fallbackText || "");
+    }
     node.style.background = hasImage ? "#dbe6ff" : (gradient || "linear-gradient(135deg,#4E73DF,#6f8ee8)");
     node.style.backgroundImage = hasImage ? `url('${escapeHtml(String(imageUrl))}')` : "";
     node.style.backgroundSize = hasImage ? "cover" : "";
@@ -1084,6 +1093,7 @@
     const sidebarRole = document.getElementById("sidebar-user-role");
     const sidebarCover = document.getElementById("sidebar-user-cover");
     const sidebarAvatar = document.getElementById("sidebar-user-avatar");
+    const sidebarGuestAvatar = document.getElementById("sidebar-guest-avatar");
     const sidebarStats = document.getElementById("sidebar-user-stats");
     const sidebarStatValue = document.getElementById("sidebar-user-stat-value");
     const sidebarStatLabel = document.getElementById("sidebar-user-stat-label");
@@ -1130,8 +1140,12 @@
         sidebarCover.style.backgroundPosition = "center";
       }
 
+      if (sidebarGuestAvatar) {
+        applyAvatarVisual(sidebarGuestAvatar, "", "X", "linear-gradient(135deg,#4E73DF,#6f8ee8)", true);
+      }
+
       if (navAvatar) {
-        applyAvatarVisual(navAvatar, "", "IN", "linear-gradient(135deg,#4E73DF,#6f8ee8)");
+        applyAvatarVisual(navAvatar, "", "X", "linear-gradient(135deg,#4E73DF,#6f8ee8)", true);
         navAvatar.dataset.route = "login.html";
         navAvatar.title = "Login";
       }
@@ -1466,6 +1480,12 @@
 
     const navAvatar = document.querySelector(".nav-avatar");
     if (navAvatar) {
+      if (!state.isLoggedIn) {
+        applyAvatarVisual(navAvatar, "", "X", "linear-gradient(135deg,#4E73DF,#6f8ee8)", true);
+        navAvatar.dataset.route = "login.html";
+        navAvatar.title = "Login";
+      }
+
       navAvatar.addEventListener("click", () => {
         const route = navAvatar.dataset.route || "index.html";
         if (route === "my-profile.html" && !state.isLoggedIn) {
@@ -1748,6 +1768,8 @@
         getInitials(state.currentUser.name),
         "linear-gradient(135deg,#4E73DF,#6f8ee8)"
       );
+    } else if (!state.isLoggedIn && avatar) {
+      applyAvatarVisual(avatar, "", "X", "linear-gradient(135deg,#4E73DF,#6f8ee8)", true);
     }
 
     if (!state.isLoggedIn) {
