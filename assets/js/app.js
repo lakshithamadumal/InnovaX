@@ -6,6 +6,7 @@
   const POST_DESC_PREVIEW_LIMIT = 180;
   const POST_TITLE_MIN_WORDS = 2;
   const POST_TITLE_MAX_WORDS = 20;
+  const PUBLIC_SITE_ORIGIN = "https://innovax.works";
 
   const state = {
     isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn") || "false"),
@@ -145,6 +146,41 @@
 
   function buildPostViewUrl(postId) {
     return `post-view.html?postId=${encodeURIComponent(String(postId || ""))}`;
+  }
+
+  function buildPublicPostViewUrl(postId) {
+    return new URL(buildPostViewUrl(postId), `${PUBLIC_SITE_ORIGIN}/`).href;
+  }
+
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+
+    return new Promise((resolve, reject) => {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.top = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+
+      try {
+        const copied = document.execCommand("copy");
+        if (copied) {
+          resolve();
+          return;
+        }
+      } catch (error) {
+        reject(error);
+        return;
+      } finally {
+        document.body.removeChild(textarea);
+      }
+
+      reject(new Error("Clipboard copy failed"));
+    });
   }
 
   function showToast(message) {
@@ -2061,7 +2097,21 @@
 
       const shareBtn = event.target.closest("[data-share-btn]");
       if (shareBtn) {
-        showToast("Post link copied.");
+        const card = shareBtn.closest("[data-post-id]");
+        const postId = card?.dataset.postId || shareBtn.dataset.postId;
+        if (!postId) {
+          showToast("Unable to copy link.");
+          return;
+        }
+
+        const postUrl = buildPublicPostViewUrl(postId);
+        copyTextToClipboard(postUrl)
+          .then(() => {
+            showToast("Post link copied.");
+          })
+          .catch(() => {
+            showToast("Unable to copy link.");
+          });
       }
     });
   }
