@@ -238,13 +238,20 @@
 		max-height: 220px;
 	}
 
-	.inline-actions {
+	body[data-page="login"] .inline-actions,
+	body[data-page="register"] .inline-actions,
+	body[data-page="settings"] .register-actions .inline-actions {
 		width: 100%;
 	}
 
-	.inline-actions .btn-primary,
-	.inline-actions .btn-secondary,
-	.inline-actions button {
+	body[data-page="login"] .inline-actions .btn-primary,
+	body[data-page="login"] .inline-actions .btn-secondary,
+	body[data-page="register"] .inline-actions .btn-primary,
+	body[data-page="register"] .inline-actions .btn-secondary,
+	body[data-page="register"] .inline-actions button,
+	body[data-page="settings"] .register-actions .inline-actions .btn-primary,
+	body[data-page="settings"] .register-actions .inline-actions .btn-secondary,
+	body[data-page="settings"] .register-actions .inline-actions button {
 		width: 100%;
 		justify-content: center;
 	}
@@ -293,5 +300,154 @@
 
 	.action-btn span {
 		display: none;
+	}
+}
+
+/* =====================================================
+	   PAGE-SCOPED FIXES (Feed/Post/Profile/Register)
+	===================================================== */
+@media (max-width: 900px) {
+	body[data-page="feed"] .content-column,
+	body[data-page="saved-posts"] .content-column,
+	body[data-page="post-view"] .content-column,
+	body[data-page="my-profile"] .content-column,
+	body[data-page="user-profile"] .content-column {
+		min-width: 0;
+	}
+
+	body[data-page="feed"] .post-card,
+	body[data-page="saved-posts"] .post-card,
+	body[data-page="post-view"] .post-card,
+	body[data-page="post-view"] .section-card {
+		overflow: hidden;
+	}
+
+	body[data-page="feed"] .post-card .post-header,
+	body[data-page="saved-posts"] .post-card .post-header,
+	body[data-page="post-view"] .post-card .post-header {
+		flex-wrap: wrap;
+	}
+
+	body[data-page="feed"] .post-card .user-info,
+	body[data-page="saved-posts"] .post-card .user-info,
+	body[data-page="post-view"] .post-card .user-info,
+	body[data-page="feed"] .post-desc,
+	body[data-page="saved-posts"] .post-desc,
+	body[data-page="post-view"] .post-desc,
+	body[data-page="post-view"] .hero-subtitle {
+		min-width: 0;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+	}
+
+	body[data-page="feed"] .post-media-inner,
+	body[data-page="saved-posts"] .post-media-inner {
+		height: auto;
+		min-height: 200px;
+	}
+
+	body[data-page="feed"] .post-media-inner.image-ratio,
+	body[data-page="saved-posts"] .post-media-inner.image-ratio,
+	body[data-page="post-view"] .post-media-inner.image-ratio {
+		aspect-ratio: 1 / 1;
+	}
+
+	body[data-page="post-view"] .section-head {
+		flex-wrap: wrap;
+		align-items: flex-start;
+	}
+
+	body[data-page="post-view"] .hero-title {
+		font-size: 1rem;
+		line-height: 1.45;
+		overflow-wrap: anywhere;
+	}
+
+	body[data-page="my-profile"] .profile-hero > .inline-actions {
+		margin-left: 0;
+		width: 100%;
+	}
+
+	body[data-page="my-profile"] .profile-hero > .inline-actions .btn-primary,
+	body[data-page="my-profile"] .profile-hero > .inline-actions .btn-secondary,
+	body[data-page="user-profile"] .profile-hero > .inline-actions .btn-primary,
+	body[data-page="user-profile"] .profile-hero > .inline-actions .btn-secondary {
+		padding: 7px 12px;
+		font-size: 0.75rem;
+	}
+}
+
+@media (max-width: 640px) {
+	body[data-page="feed"] .create-post,
+	body[data-page="feed"] .post-card,
+	body[data-page="saved-posts"] .post-card,
+	body[data-page="saved-posts"] .hero-card,
+	body[data-page="post-view"] .post-card,
+	body[data-page="post-view"] .section-card {
+		padding: 12px;
+	}
+
+	body[data-page="feed"] .post-actions,
+	body[data-page="saved-posts"] .post-actions,
+	body[data-page="post-view"] .post-actions {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 4px;
+	}
+
+	body[data-page="feed"] .action-btn,
+	body[data-page="saved-posts"] .action-btn,
+	body[data-page="post-view"] .action-btn {
+		padding: 7px 6px;
+		font-size: 0.7rem;
+	}
+
+	body[data-page="my-profile"] .profile-hero,
+	body[data-page="user-profile"] .profile-hero {
+		gap: 10px;
+	}
+
+	body[data-page="my-profile"] .profile-hero > .inline-actions,
+	body[data-page="user-profile"] .profile-hero > .inline-actions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	body[data-page="my-profile"] .profile-hero > .inline-actions .btn-primary,
+	body[data-page="my-profile"] .profile-hero > .inline-actions .btn-secondary,
+	body[data-page="user-profile"] .profile-hero > .inline-actions .btn-primary,
+	body[data-page="user-profile"] .profile-hero > .inline-actions .btn-secondary {
+		width: 100%;
+		text-align: center;
+		justify-content: center;
+	}
+
+	body[data-page="register"] .auth-card {
+		width: min(96vw, 760px);
+	}
+
+	body[data-page="register"] .register-actions {
+		flex-direction: column-reverse;
+		align-items: stretch;
+	}
+
+	body[data-page="register"] #registerStepTracker {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 420px) {
+	body[data-page="feed"] .post-card .avatar,
+	body[data-page="saved-posts"] .post-card .avatar,
+	body[data-page="post-view"] .post-card .avatar {
+		width: 34px;
+		height: 34px;
+		font-size: 0.68rem;
+	}
+
+	body[data-page="my-profile"] .profile-hero > .inline-actions,
+	body[data-page="user-profile"] .profile-hero > .inline-actions {
+		grid-template-columns: 1fr;
 	}
 }
