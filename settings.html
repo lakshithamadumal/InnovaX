@@ -43,10 +43,20 @@
 
           <div data-settings-student-fields style="display:none;">
             <label class="field-wrap">
-              <span>Skills & Interests (max 5, comma separated)</span>
-              <input type="text" name="skills_csv" placeholder="AI, Design, Research" />
+              <span>Skills & Interests (max 5)</span>
+              <div class="skills-input-container">
+                <div class="skills-input-field">
+                  <input type="text" id="settingsSkillsSearch" class="skills-search" placeholder="Search and add skills" autocomplete="off" />
+                  <button type="button" class="btn-secondary" id="settingsSkillAddBtn" style="width:auto;">Add</button>
+                </div>
+                <div class="skills-dropdown" id="settingsSkillsDropdown" style="display:none;"></div>
+                <div class="skills-tags" id="settingsSelectedSkills"></div>
+                <div class="suggested-skill-wrap">
+                  <div class="suggested-skill-title">Suggested skills:</div>
+                  <div class="suggested-skill-list" id="settingsSuggestedSkills"></div>
+                </div>
+              </div>
             </label>
-            <div class="tag-list" data-settings-skill-preview></div>
           </div>
 
           <button class="btn-primary" type="submit">Save Changes</button>

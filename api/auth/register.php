@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/../bootstrap.php";
+require_once __DIR__ . "/mailer.php";
 
 require_method("POST");
 initialize_core_schema();
@@ -24,6 +25,9 @@ $universityId = intval($payload["university_id"] ?? 0);
 $facultyId = intval($payload["faculty_id"] ?? 0);
 $departmentId = intval($payload["department_id"] ?? 0);
 $skills = is_array($payload["skills"] ?? null) ? $payload["skills"] : [];
+
+$expertTitle = trim($payload["title"] ?? "");
+$expertOrganization = trim($payload["organization"] ?? "");
 
 $normalizedSkills = [];
 foreach ($skills as $skillRaw) {
@@ -107,9 +111,9 @@ try {
         }
     } else {
         $insertExpert = Database::prepare(
-            "INSERT INTO expert_profiles (user_id, verification_status) VALUES (?, 'pending')"
+            "INSERT INTO expert_profiles (user_id, title, organization, verification_status) VALUES (?, ?, ?, 'pending')"
         );
-        $insertExpert->bind_param("s", $userId);
+        $insertExpert->bind_param("sss", $userId, $expertTitle, $expertOrganization);
         if (!$insertExpert->execute()) {
             throw new Exception("Failed to create expert profile.");
         }
@@ -140,6 +144,12 @@ try {
     }
 
     set_authenticated_user($user["id"]);
+
+    try {
+        send_welcome_email($user["email"], $user["full_name"], $user["role"]);
+    } catch (Exception $mailException) {
+        // Do not fail registration if email service is unavailable.
+    }
 
     json_response(201, true, "Account created.", [
         "user" => normalize_user_for_client($user)

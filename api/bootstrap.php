@@ -498,6 +498,25 @@ function initialize_core_schema()
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
 
+    $userColumns = [];
+    $userColumnsQuery = Database::search("SHOW COLUMNS FROM users");
+    while ($columnRow = $userColumnsQuery->fetch_assoc()) {
+        $columnName = trim((string)($columnRow["Field"] ?? ""));
+        if ($columnName !== "") {
+            $userColumns[$columnName] = true;
+        }
+    }
+
+    if (!isset($userColumns["reset_code_hash"])) {
+        Database::iud("ALTER TABLE users ADD COLUMN reset_code_hash VARCHAR(255) NULL AFTER password_hash");
+    }
+    if (!isset($userColumns["reset_code_expires_at"])) {
+        Database::iud("ALTER TABLE users ADD COLUMN reset_code_expires_at DATETIME NULL AFTER reset_code_hash");
+    }
+    if (!isset($userColumns["reset_code_sent_at"])) {
+        Database::iud("ALTER TABLE users ADD COLUMN reset_code_sent_at DATETIME NULL AFTER reset_code_expires_at");
+    }
+
     Database::iud("CREATE TABLE IF NOT EXISTS student_profiles (
         user_id CHAR(36) PRIMARY KEY,
         student_id VARCHAR(50),

@@ -2060,16 +2060,38 @@
     const expertFields = document.querySelector("[data-settings-expert-fields]");
     const studentFields = document.querySelector("[data-settings-student-fields]");
 
+    const skillsSearch = document.getElementById("settingsSkillsSearch");
+    const skillsDropdown = document.getElementById("settingsSkillsDropdown");
+    const skillsTags = document.getElementById("settingsSelectedSkills");
+    const skillsAddBtn = document.getElementById("settingsSkillAddBtn");
+    const suggestedSkillsWrap = document.getElementById("settingsSuggestedSkills");
+
     let currentSkills = [];
+    let availableSkills = [];
+    let selectedSkills = [];
+
     if (state.userRole === "student") {
       try {
         const profilePayload = await getJson("api/users/my-profile.php");
         const profileSkills = profilePayload.data?.profile?.skills;
         if (Array.isArray(profileSkills)) {
           currentSkills = profileSkills.map((skill) => String(skill || "").trim()).filter(Boolean).slice(0, 5);
+          selectedSkills = [...currentSkills];
         }
       } catch (error) {
         currentSkills = [];
+        selectedSkills = [];
+      }
+
+      // Load available skills
+      try {
+        const skillsResponse = await fetch("data/skills.json", { cache: "no-store" });
+        const skillsData = await skillsResponse.json();
+        availableSkills = Array.isArray(skillsData)
+          ? skillsData.map((s) => String(s || "").trim()).filter(Boolean)
+          : [];
+      } catch (error) {
+        availableSkills = [];
       }
     }
 
@@ -2085,37 +2107,48 @@
       const bioInput = profileForm.querySelector("textarea[name='bio']");
       const titleInput = profileForm.querySelector("input[name='title']");
       const organizationInput = profileForm.querySelector("input[name='organization']");
-      const skillsInput = profileForm.querySelector("input[name='skills_csv']");
-      const skillsPreview = profileForm.querySelector("[data-settings-skill-preview]");
 
-      const parseSkillsFromCsv = (raw) => {
-        const normalized = [];
-        String(raw || "")
-          .split(",")
-          .map((item) => String(item || "").trim().replace(/^#/, ""))
-          .filter(Boolean)
-          .forEach((skill) => {
-            const lower = skill.toLowerCase();
-            if (!normalized.some((entry) => entry.toLowerCase() === lower)) {
-              normalized.push(skill);
-            }
-          });
-        return normalized;
+      const renderSkillTags = () => {
+        if (!skillsTags) return;
+        skillsTags.innerHTML = selectedSkills
+          .map((skill) => {
+            return `
+              <span class="skill-tag">
+                #${escapeHtml(skill)}
+                <button type="button" data-remove-settings-skill="${escapeHtml(skill)}">&times;</button>
+              </span>
+            `;
+          })
+          .join("");
       };
 
-      const renderSkillsPreview = (skills) => {
-        if (!skillsPreview) {
+      const addSkill = (skillNameRaw) => {
+        const skill = String(skillNameRaw || "").trim().replace(/^#/, "");
+        if (!skill) return;
+
+        const already = selectedSkills.some((item) => item.toLowerCase() === skill.toLowerCase());
+        if (already) return;
+        if (selectedSkills.length >= 5) {
+          showToast("Maximum 5 skills allowed.");
           return;
         }
 
-        if (!skills.length) {
-          skillsPreview.innerHTML = "<span class=\"section-note\">No skills selected</span>";
-          return;
-        }
+        selectedSkills.push(skill);
+        renderSkillTags();
+      };
 
-        skillsPreview.innerHTML = skills
-          .map((skill) => `<span class=\"tag\">#${escapeHtml(skill)}</span>`)
+      const renderSuggestedSkills = () => {
+        if (!suggestedSkillsWrap || !availableSkills.length) return;
+        suggestedSkillsWrap.innerHTML = availableSkills.slice(0, 12)
+          .map((skill) => `<button type="button" class="suggested-skill" data-suggested-settings-skill="${escapeHtml(skill)}">#${escapeHtml(skill)}</button>`)
           .join("");
+      };
+
+      const bindDropdownSelect = (dropdownNode, itemClass, callback) => {
+        if (!dropdownNode) return;
+        dropdownNode.querySelectorAll(itemClass).forEach((item) => {
+          item.addEventListener("click", () => callback(item));
+        });
       };
 
       if (fullNameInput) {
@@ -2130,14 +2163,78 @@
       if (organizationInput) {
         organizationInput.value = state.currentUser.organization || "";
       }
-      if (skillsInput) {
-        skillsInput.value = currentSkills.join(", ");
-        renderSkillsPreview(currentSkills);
-        skillsInput.addEventListener("input", () => {
-          const parsed = parseSkillsFromCsv(skillsInput.value).slice(0, 5);
-          renderSkillsPreview(parsed);
+
+      renderSkillTags();
+      renderSuggestedSkills();
+
+      if (skillsSearch && skillsAddBtn) {
+        skillsAddBtn.addEventListener("click", () => {
+          addSkill(skillsSearch.value);
+          skillsSearch.value = "";
+          if (skillsDropdown) {
+            skillsDropdown.style.display = "none";
+          }
+        });
+
+        skillsSearch.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addSkill(skillsSearch.value);
+            skillsSearch.value = "";
+            if (skillsDropdown) {
+              skillsDropdown.style.display = "none";
+            }
+          }
+        });
+
+        skillsSearch.addEventListener("input", () => {
+          if (!skillsDropdown) return;
+          const query = String(skillsSearch.value || "").trim().toLowerCase();
+          if (!query) {
+            skillsDropdown.style.display = "none";
+            return;
+          }
+
+          const filtered = availableSkills
+            .filter((skill) => !selectedSkills.some((entry) => entry.toLowerCase() === skill.toLowerCase()))
+            .filter((skill) => skill.toLowerCase().includes(query))
+            .slice(0, 8);
+
+          skillsDropdown.innerHTML = filtered
+            .map((skill) => `<div class="skills-dropdown-item" data-settings-skill-item="${escapeHtml(skill)}">${escapeHtml(skill)}</div>`)
+            .join("");
+
+          bindDropdownSelect(skillsDropdown, "[data-settings-skill-item]", (item) => {
+            addSkill(item.dataset.settingsSkillItem || "");
+            skillsSearch.value = "";
+            skillsDropdown.style.display = "none";
+          });
+
+          skillsDropdown.style.display = filtered.length ? "block" : "none";
         });
       }
+
+      profileForm.addEventListener("click", (event) => {
+        const removeBtn = event.target.closest("[data-remove-settings-skill]");
+        if (removeBtn) {
+          const value = String(removeBtn.dataset.removeSettingsSkill || "").trim().toLowerCase();
+          selectedSkills = selectedSkills.filter((item) => item.toLowerCase() !== value);
+          renderSkillTags();
+          return;
+        }
+
+        const suggestedBtn = event.target.closest("[data-suggested-settings-skill]");
+        if (suggestedBtn) {
+          addSkill(String(suggestedBtn.dataset.suggestedSettingsSkill || ""));
+          return;
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        if (skillsDropdown && !event.target.closest("#settingsSkillsSearch") && !event.target.closest("#settingsSkillsDropdown")) {
+          skillsDropdown.style.display = "none";
+        }
+      });
 
       profileForm.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -2147,7 +2244,7 @@
         const bio = bioInput?.value?.trim() || "";
         const title = titleInput?.value?.trim() || "";
         const organization = organizationInput?.value?.trim() || "";
-        const skills = skillsInput ? parseSkillsFromCsv(skillsInput.value) : [];
+        const skills = state.userRole === "student" ? selectedSkills : [];
 
         if (!fullName) {
           showToast("Display name is required.");
@@ -2157,7 +2254,7 @@
 
         if (skills.length > 5) {
           showToast("Maximum 5 skills allowed.");
-          skillsInput?.focus();
+          skillsSearch?.focus();
           return;
         }
 
@@ -2180,10 +2277,6 @@
           updateSidebarAndNav();
           updateProfileIdentity();
           renderMyProfileDetails();
-          if (skillsInput && state.userRole === "student") {
-            skillsInput.value = skills.join(", ");
-            renderSkillsPreview(skills);
-          }
           showToast("Profile updated successfully.");
         } catch (error) {
           showToast(normalizeApiError(error, "Unable to update profile."));
@@ -2596,6 +2689,684 @@
         } finally {
           setSubmitBusy(submitBtn, false, "Signing in...");
         }
+      });
+
+      const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+      const forgotModal = document.getElementById("forgotPasswordModal");
+      const forgotCloseBtn = document.getElementById("forgotCloseBtn");
+      const forgotStep1Form = document.getElementById("forgotStep1Form");
+      const forgotStep2Form = document.getElementById("forgotStep2Form");
+      const forgotStep3Form = document.getElementById("forgotStep3Form");
+      const forgotEmailInput = document.getElementById("forgotEmailInput");
+      const forgotCodeInput = document.getElementById("forgotCodeInput");
+      const forgotNewPasswordInput = document.getElementById("forgotNewPasswordInput");
+      const forgotConfirmPasswordInput = document.getElementById("forgotConfirmPasswordInput");
+      const forgotBackToEmailBtn = document.getElementById("forgotBackToEmailBtn");
+      const forgotBackToCodeBtn = document.getElementById("forgotBackToCodeBtn");
+
+      if (
+        forgotPasswordLink &&
+        forgotModal &&
+        forgotStep1Form &&
+        forgotStep2Form &&
+        forgotStep3Form &&
+        forgotEmailInput &&
+        forgotCodeInput &&
+        forgotNewPasswordInput &&
+        forgotConfirmPasswordInput
+      ) {
+        let resetEmail = "";
+        let verifiedCode = "";
+
+        const showForgotStep = (step) => {
+          forgotStep1Form.style.display = step === 1 ? "block" : "none";
+          forgotStep2Form.style.display = step === 2 ? "block" : "none";
+          forgotStep3Form.style.display = step === 3 ? "block" : "none";
+        };
+
+        const openForgotModal = () => {
+          forgotModal.style.display = "flex";
+          resetEmail = "";
+          verifiedCode = "";
+          forgotStep1Form.reset();
+          forgotStep2Form.reset();
+          forgotStep3Form.reset();
+          showForgotStep(1);
+        };
+
+        const closeForgotModal = () => {
+          forgotModal.style.display = "none";
+        };
+
+        forgotPasswordLink.addEventListener("click", openForgotModal);
+
+        if (forgotCloseBtn) {
+          forgotCloseBtn.addEventListener("click", closeForgotModal);
+        }
+
+        forgotModal.addEventListener("click", (event) => {
+          if (event.target === forgotModal) {
+            closeForgotModal();
+          }
+        });
+
+        if (forgotBackToEmailBtn) {
+          forgotBackToEmailBtn.addEventListener("click", () => {
+            showForgotStep(1);
+            forgotEmailInput.focus();
+          });
+        }
+
+        if (forgotBackToCodeBtn) {
+          forgotBackToCodeBtn.addEventListener("click", () => {
+            showForgotStep(2);
+            forgotCodeInput.focus();
+          });
+        }
+
+        forgotStep1Form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const submitBtn = forgotStep1Form.querySelector("button[type='submit']");
+          const email = String(forgotEmailInput.value || "").trim();
+          if (!email) {
+            showToast("Please enter your email.");
+            return;
+          }
+
+          setSubmitBusy(submitBtn, true, "Sending...");
+          try {
+            await postJson("api/auth/forgot-password.php", { email });
+            resetEmail = email;
+            showForgotStep(2);
+            forgotCodeInput.focus();
+            showToast("Verification code sent to your email.");
+          } catch (error) {
+            showToast(normalizeApiError(error, "Unable to send reset code."));
+          } finally {
+            setSubmitBusy(submitBtn, false, "Sending...");
+          }
+        });
+
+        forgotStep2Form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const submitBtn = forgotStep2Form.querySelector("button[type='submit']");
+          const code = String(forgotCodeInput.value || "").trim();
+
+          if (!resetEmail) {
+            showToast("Please request the code again.");
+            showForgotStep(1);
+            forgotEmailInput.focus();
+            return;
+          }
+
+          if (!/^\d{6}$/.test(code)) {
+            showToast("Enter a valid 6-digit verification code.");
+            forgotCodeInput.focus();
+            return;
+          }
+
+          setSubmitBusy(submitBtn, true, "Verifying...");
+          try {
+            await postJson("api/auth/verify-reset-code.php", { email: resetEmail, code });
+            verifiedCode = code;
+            showForgotStep(3);
+            forgotNewPasswordInput.focus();
+            showToast("Code verified. Set your new password.");
+          } catch (error) {
+            showToast(normalizeApiError(error, "Invalid or expired verification code."));
+          } finally {
+            setSubmitBusy(submitBtn, false, "Verifying...");
+          }
+        });
+
+        forgotStep3Form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const submitBtn = forgotStep3Form.querySelector("button[type='submit']");
+          const newPassword = String(forgotNewPasswordInput.value || "");
+          const confirmPassword = String(forgotConfirmPasswordInput.value || "");
+
+          if (!resetEmail || !verifiedCode) {
+            showToast("Please verify your code first.");
+            showForgotStep(1);
+            return;
+          }
+
+          if (newPassword.length < 6) {
+            showToast("Password must be at least 6 characters.");
+            forgotNewPasswordInput.focus();
+            return;
+          }
+
+          if (newPassword !== confirmPassword) {
+            showToast("Passwords do not match.");
+            forgotConfirmPasswordInput.focus();
+            return;
+          }
+
+          setSubmitBusy(submitBtn, true, "Resetting...");
+          try {
+            await postJson("api/auth/reset-password.php", {
+              email: resetEmail,
+              code: verifiedCode,
+              new_password: newPassword
+            });
+
+            closeForgotModal();
+            showToast("Password reset successful. Please sign in.");
+            loginForm.querySelector("input[type='email']").value = resetEmail;
+            loginForm.querySelector("input[type='password']").value = "";
+          } catch (error) {
+            showToast(normalizeApiError(error, "Unable to reset password."));
+          } finally {
+            setSubmitBusy(submitBtn, false, "Resetting...");
+          }
+        });
+      }
+    }
+
+    const registerWizardForm = document.getElementById("registerWizardForm");
+    if (registerWizardForm) {
+      const roleStage = document.getElementById("registerRoleStage");
+      const roleButtons = Array.from(document.querySelectorAll("[data-register-role]"));
+      const roleInput = document.getElementById("registerRoleInput");
+      const roleText = document.getElementById("registerRoleText");
+      const stepChips = Array.from(document.querySelectorAll("[data-step-chip]"));
+      const steps = Array.from(document.querySelectorAll("[data-register-step]"));
+      const studentOnly = Array.from(document.querySelectorAll("[data-student-only='true']"));
+      const expertOnly = Array.from(document.querySelectorAll("[data-expert-only='true']"));
+      const backBtn = document.getElementById("registerBackBtn");
+      const nextBtn = document.getElementById("registerNextBtn");
+      const reviewList = document.getElementById("registerReviewList");
+
+      const nameInput = document.getElementById("registerName");
+      const emailInput = document.getElementById("registerEmail");
+      const passwordInput = document.getElementById("registerPassword");
+      const confirmPasswordInput = document.getElementById("registerConfirmPassword");
+
+      const studentIdInput = document.getElementById("registerStudentId");
+      const universitySearch = document.getElementById("registerUniversitySearch");
+      const universityIdInput = document.getElementById("registerUniversityId");
+      const universityDropdown = document.getElementById("registerUniversityDropdown");
+      const facultySearch = document.getElementById("registerFacultySearch");
+      const facultyIdInput = document.getElementById("registerFacultyId");
+      const facultyDropdown = document.getElementById("registerFacultyDropdown");
+      const departmentSearch = document.getElementById("registerDepartmentSearch");
+      const departmentIdInput = document.getElementById("registerDepartmentId");
+      const departmentDropdown = document.getElementById("registerDepartmentDropdown");
+
+      const skillsSearch = document.getElementById("registerSkillsSearch");
+      const skillsDropdown = document.getElementById("registerSkillsDropdown");
+      const skillsTags = document.getElementById("registerSelectedSkills");
+      const skillsAddBtn = document.getElementById("registerSkillAddBtn");
+      const suggestedSkillsWrap = document.getElementById("registerSuggestedSkills");
+
+      const titleInput = document.getElementById("registerTitle");
+      const organizationInput = document.getElementById("registerOrganization");
+
+      let selectedRole = "";
+      let currentStep = 1;
+      let maxSteps = 1;
+      let selectedFacultyId = 0;
+      let universities = [];
+      let faculties = [];
+      let departments = [];
+      let skillNames = [];
+      let selectedSkills = [];
+
+      const fetchArray = async (path) => {
+        try {
+          const response = await fetch(path, { cache: "no-store" });
+          const data = await response.json();
+          return Array.isArray(data) ? data : [];
+        } catch (error) {
+          return [];
+        }
+      };
+
+      const updateStepUi = () => {
+        steps.forEach((node) => {
+          node.classList.toggle("active", Number(node.dataset.registerStep) === currentStep);
+        });
+        stepChips.forEach((chip) => {
+          chip.classList.toggle("active", Number(chip.dataset.stepChip) === currentStep);
+        });
+
+        if (backBtn) {
+          backBtn.style.display = currentStep > 1 ? "inline-flex" : "none";
+        }
+        if (nextBtn) {
+          nextBtn.textContent = currentStep === maxSteps ? "Create Account" : "Next";
+        }
+      };
+
+      const setRole = (role) => {
+        selectedRole = role;
+        maxSteps = role === "student" ? 3 : 2;
+        
+        if (roleInput) {
+          roleInput.value = role;
+        }
+        if (roleText) {
+          roleText.textContent = role === "expert" ? "Expert" : "Student";
+        }
+
+        studentOnly.forEach((node) => {
+          node.style.display = role === "student" ? "block" : "none";
+        });
+        expertOnly.forEach((node) => {
+          node.style.display = role === "expert" ? "block" : "none";
+        });
+
+        // Update step tracker visibility
+        const stepTracker = document.getElementById("registerStepTracker");
+        if (stepTracker) {
+          if (role === "student") {
+            stepTracker.style.display = "flex";
+            stepTracker.querySelectorAll("[data-step-chip]").forEach((chip) => {
+              chip.style.display = "flex";
+            });
+          } else {
+            stepTracker.style.display = "flex";
+            stepTracker.querySelector("[data-step-chip='3']").style.display = "none";
+          }
+        }
+
+        if (roleStage) {
+          roleStage.style.display = "none";
+        }
+        registerWizardForm.classList.add("active");
+        currentStep = 1;
+        updateStepUi();
+      };
+
+      const validateStep1 = () => {
+        const name = String(nameInput?.value || "").trim();
+        const email = String(emailInput?.value || "").trim();
+        const password = String(passwordInput?.value || "");
+        const confirm = String(confirmPasswordInput?.value || "");
+
+        if (!name || !email || !password || !confirm) {
+          showToast("Please fill all account fields.");
+          return false;
+        }
+        if (password.length < 6) {
+          showToast("Password must be at least 6 characters.");
+          passwordInput?.focus();
+          return false;
+        }
+        if (password !== confirm) {
+          showToast("Passwords do not match.");
+          confirmPasswordInput?.focus();
+          return false;
+        }
+        return true;
+      };
+
+      const validateStep2 = () => {
+        if (selectedRole === "expert") {
+          const title = String(titleInput?.value || "").trim();
+          const organization = String(organizationInput?.value || "").trim();
+          // Title and organization are optional for experts
+          return true;
+        }
+
+        if (selectedRole !== "student") {
+          return true;
+        }
+
+        const studentId = String(studentIdInput?.value || "").trim();
+        const universityId = Number(universityIdInput?.value || 0);
+        const facultyId = Number(facultyIdInput?.value || 0);
+        const departmentId = Number(departmentIdInput?.value || 0);
+
+        if (!studentId) {
+          showToast("Student ID is required.");
+          studentIdInput?.focus();
+          return false;
+        }
+        if (!universityId || !facultyId || !departmentId) {
+          showToast("Please select university, faculty and department.");
+          return false;
+        }
+        return true;
+      };
+
+      const validateStep3 = () => {
+        if (selectedRole !== "student") {
+          return true;
+        }
+        // Skills are optional, no validation needed
+        return true;
+      };
+
+      const normalizeSkillList = (items) => {
+        return items
+          .map((entry) => {
+            if (typeof entry === "string") {
+              return entry;
+            }
+            if (entry && typeof entry === "object") {
+              return entry.name || "";
+            }
+            return "";
+          })
+          .map((entry) => String(entry || "").trim().replace(/^#/, ""))
+          .filter(Boolean);
+      };
+
+      const renderSkillTags = () => {
+        if (!skillsTags) {
+          return;
+        }
+
+        skillsTags.innerHTML = selectedSkills
+          .map((skill) => {
+            return `
+              <span class="skill-tag">
+                #${escapeHtml(skill)}
+                <button type="button" data-remove-skill="${escapeHtml(skill)}">&times;</button>
+              </span>
+            `;
+          })
+          .join("");
+      };
+
+      const addSkill = (skillNameRaw) => {
+        const skill = String(skillNameRaw || "").trim().replace(/^#/, "");
+        if (!skill) {
+          return;
+        }
+
+        const already = selectedSkills.some((item) => item.toLowerCase() === skill.toLowerCase());
+        if (already) {
+          return;
+        }
+        if (selectedSkills.length >= 5) {
+          showToast("Maximum 5 skills allowed.");
+          return;
+        }
+
+        selectedSkills.push(skill);
+        renderSkillTags();
+      };
+
+      const renderSuggestedSkills = () => {
+        if (!suggestedSkillsWrap) {
+          return;
+        }
+        suggestedSkillsWrap.innerHTML = skillNames.slice(0, 12)
+          .map((skill) => `<button type="button" class="suggested-skill-btn" data-suggested-skill="${escapeHtml(skill)}">#${escapeHtml(skill)}</button>`)
+          .join("");
+      };
+
+      const bindDropdownSelect = (dropdownNode, itemClass, callback) => {
+        if (!dropdownNode) {
+          return;
+        }
+        dropdownNode.querySelectorAll(itemClass).forEach((item) => {
+          item.addEventListener("click", () => callback(item));
+        });
+      };
+
+      roleButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const role = String(btn.dataset.registerRole || "").trim();
+          if (role === "student" || role === "expert") {
+            setRole(role);
+          }
+        });
+      });
+
+      if (backBtn) {
+        backBtn.addEventListener("click", () => {
+          currentStep = Math.max(1, currentStep - 1);
+          updateStepUi();
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          if (currentStep === 1 && !validateStep1()) {
+            return;
+          }
+          if (currentStep === 2 && !validateStep2()) {
+            return;
+          }
+          if (currentStep === 3 && !validateStep3()) {
+            return;
+          }
+
+          if (currentStep < maxSteps) {
+            currentStep += 1;
+            updateStepUi();
+            return;
+          }
+
+          registerWizardForm.requestSubmit();
+        });
+      }
+
+      registerWizardForm.addEventListener("click", (event) => {
+        const removeBtn = event.target.closest("[data-remove-skill]");
+        if (removeBtn) {
+          const value = String(removeBtn.dataset.removeSkill || "").trim().toLowerCase();
+          selectedSkills = selectedSkills.filter((item) => item.toLowerCase() !== value);
+          renderSkillTags();
+          return;
+        }
+
+        const suggestedBtn = event.target.closest("[data-suggested-skill]");
+        if (suggestedBtn) {
+          addSkill(String(suggestedBtn.dataset.suggestedSkill || ""));
+          return;
+        }
+      });
+
+      if (skillsAddBtn && skillsSearch) {
+        skillsAddBtn.addEventListener("click", () => {
+          addSkill(skillsSearch.value);
+          skillsSearch.value = "";
+          if (skillsDropdown) {
+            skillsDropdown.style.display = "none";
+          }
+        });
+
+        skillsSearch.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addSkill(skillsSearch.value);
+            skillsSearch.value = "";
+            if (skillsDropdown) {
+              skillsDropdown.style.display = "none";
+            }
+          }
+        });
+
+        skillsSearch.addEventListener("input", () => {
+          if (!skillsDropdown) {
+            return;
+          }
+          const query = String(skillsSearch.value || "").trim().toLowerCase();
+          if (!query) {
+            skillsDropdown.style.display = "none";
+            return;
+          }
+
+          const filtered = skillNames
+            .filter((skill) => !selectedSkills.some((entry) => entry.toLowerCase() === skill.toLowerCase()))
+            .filter((skill) => skill.toLowerCase().includes(query))
+            .slice(0, 8);
+
+          skillsDropdown.innerHTML = filtered
+            .map((skill) => `<div class="skills-dropdown-item" data-skill-item="${escapeHtml(skill)}">${escapeHtml(skill)}</div>`)
+            .join("");
+
+          bindDropdownSelect(skillsDropdown, "[data-skill-item]", (item) => {
+            addSkill(item.dataset.skillItem || "");
+            skillsSearch.value = "";
+            skillsDropdown.style.display = "none";
+          });
+
+          skillsDropdown.style.display = filtered.length ? "block" : "none";
+        });
+      }
+
+      if (universitySearch && universityDropdown && universityIdInput) {
+        universitySearch.addEventListener("input", () => {
+          universityIdInput.value = "";
+          const query = String(universitySearch.value || "").trim().toLowerCase();
+          if (!query) {
+            universityDropdown.style.display = "none";
+            return;
+          }
+
+          const filtered = universities.filter((item) => String(item.name || "").toLowerCase().includes(query)).slice(0, 8);
+          universityDropdown.innerHTML = filtered.map((item) => {
+            return `<div class="university-dropdown-item" data-id="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>`;
+          }).join("");
+
+          bindDropdownSelect(universityDropdown, ".university-dropdown-item", (item) => {
+            universitySearch.value = item.dataset.name || "";
+            universityIdInput.value = item.dataset.id || "";
+            universityDropdown.style.display = "none";
+          });
+
+          universityDropdown.style.display = filtered.length ? "block" : "none";
+        });
+      }
+
+      if (facultySearch && facultyDropdown && facultyIdInput && departmentIdInput && departmentSearch) {
+        facultySearch.addEventListener("input", () => {
+          selectedFacultyId = 0;
+          facultyIdInput.value = "";
+          departmentIdInput.value = "";
+          departmentSearch.value = "";
+
+          const query = String(facultySearch.value || "").trim().toLowerCase();
+          if (!query) {
+            facultyDropdown.style.display = "none";
+            return;
+          }
+
+          const filtered = faculties.filter((item) => String(item.name || "").toLowerCase().includes(query)).slice(0, 8);
+          facultyDropdown.innerHTML = filtered.map((item) => {
+            return `<div class="faculty-dropdown-item" data-id="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>`;
+          }).join("");
+
+          bindDropdownSelect(facultyDropdown, ".faculty-dropdown-item", (item) => {
+            facultySearch.value = item.dataset.name || "";
+            facultyIdInput.value = item.dataset.id || "";
+            selectedFacultyId = Number(item.dataset.id || 0);
+            facultyDropdown.style.display = "none";
+          });
+
+          facultyDropdown.style.display = filtered.length ? "block" : "none";
+        });
+      }
+
+      if (departmentSearch && departmentDropdown && departmentIdInput) {
+        departmentSearch.addEventListener("input", () => {
+          departmentIdInput.value = "";
+          const query = String(departmentSearch.value || "").trim().toLowerCase();
+          if (!query) {
+            departmentDropdown.style.display = "none";
+            return;
+          }
+
+          const source = selectedFacultyId
+            ? departments.filter((item) => Number(item.facultyId || 0) === selectedFacultyId)
+            : departments;
+
+          const filtered = source.filter((item) => String(item.name || "").toLowerCase().includes(query)).slice(0, 8);
+          departmentDropdown.innerHTML = filtered.map((item) => {
+            return `<div class="department-dropdown-item" data-id="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>`;
+          }).join("");
+
+          bindDropdownSelect(departmentDropdown, ".department-dropdown-item", (item) => {
+            departmentSearch.value = item.dataset.name || "";
+            departmentIdInput.value = item.dataset.id || "";
+            departmentDropdown.style.display = "none";
+          });
+
+          departmentDropdown.style.display = filtered.length ? "block" : "none";
+        });
+      }
+
+      document.addEventListener("click", (event) => {
+        if (universityDropdown && !event.target.closest("#registerUniversitySearch") && !event.target.closest("#registerUniversityDropdown")) {
+          universityDropdown.style.display = "none";
+        }
+        if (facultyDropdown && !event.target.closest("#registerFacultySearch") && !event.target.closest("#registerFacultyDropdown")) {
+          facultyDropdown.style.display = "none";
+        }
+        if (departmentDropdown && !event.target.closest("#registerDepartmentSearch") && !event.target.closest("#registerDepartmentDropdown")) {
+          departmentDropdown.style.display = "none";
+        }
+        if (skillsDropdown && !event.target.closest("#registerSkillsSearch") && !event.target.closest("#registerSkillsDropdown")) {
+          skillsDropdown.style.display = "none";
+        }
+      });
+
+      registerWizardForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (!selectedRole) {
+          showToast("Please select a role first.");
+          return;
+        }
+        if (!validateStep1() || !validateStep2() || !validateStep3()) {
+          return;
+        }
+
+        const payload = {
+          role: selectedRole,
+          full_name: String(nameInput?.value || "").trim(),
+          email: String(emailInput?.value || "").trim(),
+          password: String(passwordInput?.value || "")
+        };
+
+        if (selectedRole === "student") {
+          payload.student_id = String(studentIdInput?.value || "").trim();
+          payload.university_id = Number(universityIdInput?.value || 0);
+          payload.faculty_id = Number(facultyIdInput?.value || 0);
+          payload.department_id = Number(departmentIdInput?.value || 0);
+          payload.skills = selectedSkills;
+        } else if (selectedRole === "expert") {
+          payload.title = String(titleInput?.value || "").trim();
+          payload.organization = String(organizationInput?.value || "").trim();
+        }
+
+        setSubmitBusy(nextBtn, true, "Creating account...");
+        try {
+          const response = await postJson("api/auth/register.php", payload);
+          const user = response.data?.user;
+          if (!user || !user.role) {
+            throw new Error("Invalid register response.");
+          }
+
+          setLoggedInUser(user, user.role);
+          showToast("Account created successfully.");
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 450);
+        } catch (error) {
+          showToast(normalizeApiError(error, "Unable to create account."));
+        } finally {
+          setSubmitBusy(nextBtn, false, "Creating account...");
+        }
+      });
+
+      Promise.all([
+        fetchArray("data/universities.json"),
+        fetchArray("data/faculties.json"),
+        fetchArray("data/departments.json"),
+        fetchArray("data/skills.json")
+      ]).then(([uniRows, facRows, depRows, skillRows]) => {
+        universities = uniRows;
+        faculties = facRows;
+        departments = depRows;
+        skillNames = normalizeSkillList(skillRows);
+        renderSuggestedSkills();
       });
     }
 

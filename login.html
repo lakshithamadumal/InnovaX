@@ -28,6 +28,9 @@
 					<span>Password</span>
 					<input type="password" placeholder="Enter password" required />
 				</label>
+				<div class="inline-actions" style="justify-content:flex-end; margin-top:-2px;">
+					<button type="button" class="btn-link" id="forgotPasswordLink">Forgot password?</button>
+				</div>
 				<div class="inline-actions" style="justify-content:space-between;">
 					<a href="register.html" class="btn-secondary">Create account</a>
 					<button type="submit" class="btn-primary">Sign In</button>
@@ -35,6 +38,52 @@
 			</form>
 		</section>
 	</main>
+
+	<div class="auth-dialog-overlay" id="forgotPasswordModal" style="display:none;">
+		<div class="auth-dialog-card forgot-card" role="dialog" aria-modal="true" aria-label="Forgot password">
+			<div class="forgot-head">
+				<h2>Reset Password</h2>
+				<button type="button" class="btn-icon-close" id="forgotCloseBtn" aria-label="Close">&times;</button>
+			</div>
+			<p class="forgot-sub">Use your account email to receive a secure verification code.</p>
+
+			<form id="forgotStep1Form" class="forgot-step" data-step="1">
+				<label class="field-wrap">
+					<span>Email address</span>
+					<input type="email" id="forgotEmailInput" placeholder="you@example.com" required />
+				</label>
+				<div class="auth-dialog-actions">
+					<button type="submit" class="btn-primary">Send Code</button>
+				</div>
+			</form>
+
+			<form id="forgotStep2Form" class="forgot-step" data-step="2" style="display:none;">
+				<label class="field-wrap">
+					<span>Verification code</span>
+					<input type="text" id="forgotCodeInput" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit code" required />
+				</label>
+				<div class="auth-dialog-actions">
+					<button type="button" class="btn-secondary" id="forgotBackToEmailBtn">Back</button>
+					<button type="submit" class="btn-primary">Next</button>
+				</div>
+			</form>
+
+			<form id="forgotStep3Form" class="forgot-step" data-step="3" style="display:none;">
+				<label class="field-wrap">
+					<span>New password</span>
+					<input type="password" id="forgotNewPasswordInput" minlength="6" placeholder="Minimum 6 characters" required />
+				</label>
+				<label class="field-wrap">
+					<span>Confirm new password</span>
+					<input type="password" id="forgotConfirmPasswordInput" minlength="6" placeholder="Re-enter new password" required />
+				</label>
+				<div class="auth-dialog-actions">
+					<button type="button" class="btn-secondary" id="forgotBackToCodeBtn">Back</button>
+					<button type="submit" class="btn-primary">Reset Password</button>
+				</div>
+			</form>
+		</div>
+	</div>
 
 	<script src="assets/js/app.js"></script>
 	<style>
@@ -47,6 +96,53 @@
 		.auth-modern-card {
 			border: 1px solid rgba(78, 115, 223, 0.18);
 			box-shadow: 0 24px 50px rgba(40, 60, 120, 0.12);
+		}
+		.btn-link {
+			border: none;
+			background: none;
+			color: #355fc8;
+			font-size: 0.82rem;
+			font-weight: 600;
+			cursor: pointer;
+			padding: 0;
+		}
+		.btn-link:hover {
+			color: #1f4db3;
+			text-decoration: underline;
+		}
+		.forgot-card {
+			max-width: 520px;
+		}
+		.forgot-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+			margin-bottom: 6px;
+		}
+		.forgot-head h2 {
+			margin: 0;
+		}
+		.forgot-sub {
+			margin-top: 0;
+			margin-bottom: 14px;
+		}
+		.btn-icon-close {
+			border: 1px solid rgba(78, 115, 223, 0.24);
+			background: #f5f8ff;
+			color: #355fc8;
+			width: 32px;
+			height: 32px;
+			border-radius: 10px;
+			font-size: 1.1rem;
+			line-height: 1;
+			cursor: pointer;
+		}
+		.btn-icon-close:hover {
+			background: #eaf1ff;
+		}
+		.forgot-step .field-wrap {
+			margin-bottom: 12px;
 		}
 	</style>
 </body>

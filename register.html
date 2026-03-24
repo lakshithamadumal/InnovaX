@@ -18,58 +18,374 @@
 				linear-gradient(130deg, #fffdf5 0%, #f7faff 60%, #eef7ff 100%);
 		}
 		.auth-card {
-			border: 1px solid rgba(78, 115, 223, 0.18);
-			box-shadow: 0 24px 52px rgba(40, 60, 120, 0.12);
+			border: 1px solid rgba(78, 115, 223, 0.12);
+			box-shadow: 0 20px 40px rgba(40, 60, 120, 0.08);
+			width: min(700px, 94vw);
+			border-radius: 16px;
 		}
-		.role-selector {
-			margin-bottom: 2rem;
+		.register-role-stage {
+			margin-top: 24px;
 		}
-		.role-selector-label {
+		.register-role-label {
 			display: block;
-			margin-bottom: 1rem;
-			font-weight: 600;
+			margin-bottom: 1.2rem;
+			font-weight: 700;
 			color: var(--text);
+			font-size: 1.1rem;
 		}
-		.role-buttons {
+		.register-role-buttons {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
-			gap: 1rem;
+			gap: 14px;
 		}
-		.role-btn {
-			padding: 1.5rem;
-			border: 2px solid var(--border);
-			border-radius: 8px;
-			background: transparent;
+		.register-role-btn {
+			padding: 16px 14px;
+			border: 2px solid rgba(78, 115, 223, 0.2);
+			border-radius: 12px;
+			background: linear-gradient(135deg, #f8faff 0%, #f0f5ff 100%);
 			cursor: pointer;
 			transition: all 0.3s ease;
 			display: flex;
-			flex-direction: column;
+			flex-direction: row;
 			align-items: center;
-			gap: 0.5rem;
+			justify-content: center;
+			gap: 8px;
+			font-weight: 500;
 			font-size: 1rem;
+		}
+		.register-role-btn:hover {
+			border-color: var(--primary);
+			box-shadow: 0 8px 20px rgba(78, 115, 223, 0.15);
+			transform: translateY(-2px);
+		}
+		.register-role-btn.active {
+			background: linear-gradient(135deg, #4e73df 0%, #3d5ac1 100%);
+			color: #fff;
+			border-color: var(--primary);
+		}
+		.register-role-btn i {
+			font-size: 1.2rem;
+		}
+		.role-locked-badge {
+			background: linear-gradient(135deg, rgba(78, 115, 223, 0.08) 0%, rgba(78, 115, 223, 0.04) 100%);
+			border: 1px solid rgba(78, 115, 223, 0.2);
+			border-radius: 10px;
+			padding: 12px 14px;
+			margin-bottom: 18px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 0.95rem;
+			font-weight: 500;
 			color: var(--text);
 		}
-		.role-btn:hover {
-			border-color: var(--primary);
-			background: rgba(78, 115, 223, 0.05);
+		.role-locked-badge i {
+			color: var(--primary);
+			font-size: 0.9rem;
 		}
-		.role-btn.active {
+		.step-tracker {
+			display: flex;
+			gap: 12px;
+			margin-bottom: 24px;
+			padding: 0 2px;
+		}
+		.step-chip {
+			flex: 1;
+			padding: 10px 8px;
+			border-radius: 8px;
+			background: rgba(78, 115, 223, 0.06);
+			text-align: center;
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: rgba(40, 60, 120, 0.5);
+			transition: all 0.3s ease;
+			position: relative;
+		}
+		.step-chip.active {
+			background: linear-gradient(135deg, rgba(78, 115, 223, 0.15), rgba(78, 115, 223, 0.08));
+			color: var(--primary);
+			font-weight: 600;
+		}
+		.register-wizard {
+			margin-top: 16px;
+		}
+		.register-step {
+			display: none;
+			animation: fadeIn 0.3s ease;
+		}
+		.register-step.active {
+			display: block;
+		}
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(8px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		.register-grid-2 {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 14px;
+		}
+		.field-wrap span {
+			font-weight: 600;
+			font-size: 0.95rem;
+		}
+		.skills-input-container {
+			margin-top: 8px;
+		}
+		.skills-input-field {
+			display: grid;
+			grid-template-columns: 1fr auto;
+			gap: 8px;
+			margin-bottom: 12px;
+		}
+		.skills-search {
+			padding: 10px 12px;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			font-size: 0.95rem;
+		}
+		.skills-search:focus {
 			border-color: var(--primary);
-			background: var(--primary);
+			outline: none;
+			box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.1);
+		}
+		.btn-secondary {
+			padding: 10px 16px;
+			background: linear-gradient(135deg, rgba(100, 120, 180, 0.08), rgba(78, 115, 223, 0.04));
+			border: 1px solid rgba(78, 115, 223, 0.2);
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			font-weight: 500;
+			font-size: 0.9rem;
+		}
+		.btn-secondary:hover {
+			background: linear-gradient(135deg, rgba(100, 120, 180, 0.12), rgba(78, 115, 223, 0.08));
+			border-color: var(--primary);
+		}
+		.btn-primary {
+			padding: 12px 24px;
+			background: linear-gradient(135deg, #4e73df 0%, #3d5ac1 100%);
 			color: white;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			font-weight: 600;
+			font-size: 0.95rem;
 		}
-		.role-btn i {
-			font-size: 1.5rem;
+		.btn-primary:hover {
+			box-shadow: 0 8px 16px rgba(78, 115, 223, 0.3);
+			transform: translateY(-1px);
 		}
-		.role-specific-form {
+		.skills-tags {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin-bottom: 12px;
+		}
+		.skill-tag {
+			background: linear-gradient(135deg, rgba(78, 115, 223, 0.2), rgba(78, 115, 223, 0.1));
+			border: 1px solid rgba(78, 115, 223, 0.3);
+			border-radius: 6px;
+			padding: 6px 10px;
+			font-size: 0.85rem;
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			color: var(--text);
+			font-weight: 500;
+		}
+		.skill-tag button {
+			background: none;
+			border: none;
+			cursor: pointer;
+			color: rgba(40, 60, 120, 0.5);
+			font-size: 0.75rem;
+			padding: 0;
+			transition: color 0.2s ease;
+		}
+		.skill-tag button:hover {
+			color: var(--primary);
+		}
+		.suggested-skill-wrap {
+			margin-bottom: 4px;
+		}
+		.suggested-skill-title {
+			font-size: 0.8rem;
+			font-weight: 600;
+			color: rgba(40, 60, 120, 0.6);
+			margin-bottom: 8px;
+			text-transform: uppercase;
+			letter-spacing: 0.4px;
+		}
+		.suggested-skill-list {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+		}
+		.suggested-skill {
+			background: linear-gradient(135deg, #f0f5ff 0%, #f8faff 100%);
+			border: 1px solid rgba(78, 115, 223, 0.15);
+			border-radius: 6px;
+			padding: 6px 10px;
+			font-size: 0.85rem;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			font-weight: 500;
+		}
+		.suggested-skill:hover {
+			background: linear-gradient(135deg, rgba(78, 115, 223, 0.1), rgba(78, 115, 223, 0.05));
+			border-color: var(--primary);
+		}
+		.university-dropdown,
+		.faculty-dropdown,
+		.department-dropdown,
+		.skills-dropdown {
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			background: white;
+			border: 1px solid rgba(78, 115, 223, 0.15);
+			border-radius: 8px;
+			max-height: 200px;
+			overflow-y: auto;
+			z-index: 10;
+			box-shadow: 0 8px 20px rgba(40, 60, 120, 0.1);
+			margin-top: 4px;
+		}
+		.university-dropdown-item,
+		.faculty-dropdown-item,
+		.department-dropdown-item,
+		.skills-dropdown-item {
+			padding: 10px 12px;
+			cursor: pointer;
+			border-bottom: 1px solid rgba(78, 115, 223, 0.08);
+			font-size: 0.9rem;
+			transition: background 0.15s ease;
+		}
+		.university-dropdown-item:last-child,
+		.faculty-dropdown-item:last-child,
+		.department-dropdown-item:last-child,
+		.skills-dropdown-item:last-child {
+			border-bottom: none;
+		}
+		.university-dropdown-item:hover,
+		.university-dropdown-item.highlighted,
+		.faculty-dropdown-item:hover,
+		.faculty-dropdown-item.highlighted,
+		.department-dropdown-item:hover,
+		.department-dropdown-item.highlighted,
+		.skills-dropdown-item:hover,
+		.skills-dropdown-item.highlighted {
+			background: rgba(78, 115, 223, 0.08);
+		}
+		.register-actions {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 12px;
+			margin-top: 24px;
+		}
+		.inline-actions {
+			display: flex;
+			gap: 10px;
+		}
+		@media (max-width: 768px) {
+			.register-role-buttons,
+			.register-grid-2 {
+				grid-template-columns: 1fr;
+			}
+			.step-tracker {
+				gap: 8px;
+			}
+			.step-chip {
+				font-size: 0.75rem;
+				padding: 8px 6px;
+			}
+			.register-actions {
+				flex-direction: column-reverse;
+			}
+			.inline-actions {
+				width: 100%;
+			}
+			.inline-actions button {
+				flex: 1;
+			}
+		}
+			font-size: 0.98rem;
+			font-weight: 600;
+			color: var(--text);
+		}
+		.register-role-btn:hover {
+			border-color: var(--primary);
+			transform: translateY(-1px);
+			box-shadow: 0 10px 20px rgba(78, 115, 223, 0.13);
+		}
+		.register-role-btn i {
+			font-size: 1rem;
+		}
+		.register-wizard {
+			display: none;
+			margin-top: 18px;
+		}
+		.register-wizard.active {
+			display: block;
+		}
+		.role-locked-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			background: rgba(78, 115, 223, 0.11);
+			color: #1f4db3;
+			padding: 8px 12px;
+			border-radius: 999px;
+			font-size: 0.82rem;
+			font-weight: 700;
+			margin-bottom: 12px;
+		}
+		.step-tracker {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 8px;
+			margin-bottom: 14px;
+		}
+		.step-chip {
+			padding: 8px 10px;
+			border-radius: 10px;
+			border: 1px solid var(--border);
+			background: #fff;
+			font-size: 0.78rem;
+			color: var(--text-muted);
+			text-align: center;
+			font-weight: 600;
+		}
+		.step-chip.active {
+			border-color: rgba(78, 115, 223, 0.35);
+			background: #eef4ff;
+			color: #1f4db3;
+		}
+		.register-step {
 			display: none;
 		}
-		.role-specific-form.active {
+		.register-step.active {
 			display: block;
+		}
+		.register-grid-2 {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 10px;
 		}
 		.skills-input-container {
 			position: relative;
-			margin-bottom: 1rem;
+			margin-bottom: 0.7rem;
 		}
 		.skills-input-field {
 			display: flex;
@@ -104,7 +420,7 @@
 			display: flex;
 			flex-wrap: wrap;
 			gap: 0.5rem;
-			margin-top: 0.5rem;
+			margin-top: 0.45rem;
 		}
 		.skill-tag {
 			display: inline-flex;
@@ -123,6 +439,33 @@
 			cursor: pointer;
 			padding: 0;
 			font-size: 1rem;
+		}
+		.suggested-skill-wrap {
+			margin-top: 8px;
+		}
+		.suggested-skill-title {
+			font-size: 0.76rem;
+			font-weight: 600;
+			color: var(--text-muted);
+			margin-bottom: 6px;
+		}
+		.suggested-skill-list {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+		}
+		.suggested-skill-btn {
+			border: 1px solid rgba(78, 115, 223, 0.26);
+			background: #f6f9ff;
+			color: #355fc8;
+			font-size: 0.76rem;
+			font-weight: 600;
+			padding: 5px 10px;
+			border-radius: 999px;
+			cursor: pointer;
+		}
+		.suggested-skill-btn:hover {
+			background: #eaf1ff;
 		}
 		.university-dropdown {
 			position: absolute;
@@ -178,6 +521,40 @@
 			color: var(--text);
 			font-size: 0.9rem;
 		}
+		.review-list {
+			display: grid;
+			gap: 8px;
+			margin: 8px 0 14px;
+		}
+		.review-item {
+			display: grid;
+			grid-template-columns: 150px 1fr;
+			gap: 8px;
+			font-size: 0.88rem;
+		}
+		.review-item strong {
+			color: var(--text-muted);
+			font-weight: 600;
+		}
+		.review-item span {
+			color: var(--text);
+		}
+		.register-actions {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 10px;
+		}
+		@media (max-width: 768px) {
+			.register-role-buttons,
+			.register-grid-2 {
+				grid-template-columns: 1fr;
+			}
+			.review-item {
+				grid-template-columns: 1fr;
+				gap: 4px;
+			}
+		}
 	</style>
 </head>
 <body data-page="register" data-active-nav="feed">
@@ -186,393 +563,139 @@
 	<main class="auth-shell">
 		<section class="auth-card">
 			<h1>Create Your InnovaX Account</h1>
-			<p>Choose your role and join the student-expert innovation network.</p>
+			<p>Select your role once, then complete the guided registration.</p>
 
-			<!-- Role Selection -->
-			<div class="role-selector" id="roleSelector">
-				<label class="role-selector-label">I am a:</label>
-				<div class="role-buttons">
-					<button type="button" class="role-btn" data-role="student">
+			<div class="register-role-stage" id="registerRoleStage">
+				<label class="register-role-label">Choose your role to begin:</label>
+				<div class="register-role-buttons">
+					<button type="button" class="register-role-btn" data-register-role="student">
 						<i class="fas fa-user-graduate"></i>
-						<span>Student</span>
+						Student
 					</button>
-					<button type="button" class="role-btn" data-role="expert">
+					<button type="button" class="register-role-btn" data-register-role="expert">
 						<i class="fas fa-chalkboard-user"></i>
-						<span>Expert</span>
+						Expert
 					</button>
 				</div>
 			</div>
 
-			<!-- Student Registration Form -->
-			<form class="auth-form role-specific-form" id="studentForm" data-role="student">
-				<div class="selected-role-display">
-					Role: <strong>Student</strong>
+			<form class="auth-form register-wizard" id="registerWizardForm" novalidate>
+				<input type="hidden" id="registerRoleInput" name="role" />
+				<div class="role-locked-badge" id="registerRoleBadge">
+					<i class="fas fa-lock"></i>
+					<span>Role locked: <strong id="registerRoleText">Student</strong></span>
 				</div>
-				<label class="field-wrap">
-					<span>Full Name</span>
-					<input type="text" name="full_name" placeholder="Alex Johnson" required />
-				</label>
-				<label class="field-wrap">
-					<span>Email</span>
-					<input type="email" name="email" placeholder="you@example.com" required />
-				</label>
-				<label class="field-wrap">
-					<span>Student ID</span>
-					<input type="text" name="student_id" placeholder="CS20210123" required />
-				</label>
-				<label class="field-wrap">
-					<span>University</span>
-					<div style="position: relative;">
-						<input type="text" placeholder="Search university..." class="university-search" required />
-						<input type="hidden" name="university_id" />
-						<div class="university-dropdown" style="display:none;"></div>
-					</div>
-				</label>
-				<label class="field-wrap">
-					<span>Faculty</span>
-					<div style="position: relative;">
-						<input type="text" placeholder="Search faculty..." class="faculty-search" required />
-						<input type="hidden" name="faculty_id" />
-						<div class="faculty-dropdown" style="display:none;"></div>
-					</div>
-				</label>
-				<label class="field-wrap">
-					<span>Department</span>
-					<div style="position: relative;">
-						<input type="text" placeholder="Search department..." class="department-search" required />
-						<input type="hidden" name="department_id" />
-						<div class="department-dropdown" style="display:none;"></div>
-					</div>
-				</label>
-				<label class="field-wrap">
-					<span>Skills & Interests (Max 5)</span>
-					<div class="skills-input-container">
-						<div class="skills-input-field">
-							<input type="text" class="skills-search" placeholder="Search and add skills..." />
-							<button type="button" class="btn-secondary" style="width: auto;">Add</button>
-						</div>
-						<div class="skills-dropdown" style="display:none;"></div>
-						<div class="skills-tags" id="selectedSkills"></div>
-					</div>
-				</label>
-				<label class="field-wrap">
-					<span>Password</span>
-					<input type="password" name="password" placeholder="Create password" required />
-				</label>
-				<div class="inline-actions" style="justify-content:space-between;">
-					<a href="login.html" class="btn-secondary">Already have an account</a>
-					<button type="submit" class="btn-primary">Create Account</button>
-				</div>
-			</form>
 
-			<!-- Expert Registration Form -->
-			<form class="auth-form role-specific-form" id="expertForm" data-role="expert">
-				<div class="selected-role-display">
-					Role: <strong>Expert</strong>
+				<div class="step-tracker" id="registerStepTracker">
+					<div class="step-chip active" data-step-chip="1">Step 1: Account</div>
+					<div class="step-chip" data-step-chip="2">Step 2: University</div>
+					<div class="step-chip" data-step-chip="3">Step 3: Skills</div>
 				</div>
-				<label class="field-wrap">
-					<span>Full Name</span>
-					<input type="text" name="full_name" placeholder="Dr. Sarah Smith" required />
-				</label>
-				<label class="field-wrap">
-					<span>Email</span>
-					<input type="email" name="email" placeholder="you@example.com" required />
-				</label>
-				<label class="field-wrap">
-					<span>Password</span>
-					<input type="password" name="password" placeholder="Create password" required />
-				</label>
-				<div class="inline-actions" style="justify-content:space-between;">
-					<a href="login.html" class="btn-secondary">Already have an account</a>
-					<button type="submit" class="btn-primary">Create Account</button>
+
+				<section class="register-step active" data-register-step="1">
+					<label class="field-wrap">
+						<span>Full Name</span>
+						<input type="text" id="registerName" name="full_name" placeholder="Alex Johnson" required />
+					</label>
+					<label class="field-wrap">
+						<span>Email</span>
+						<input type="email" id="registerEmail" name="email" placeholder="you@example.com" required />
+					</label>
+					<div class="register-grid-2">
+						<label class="field-wrap">
+							<span>Password</span>
+							<input type="password" id="registerPassword" name="password" placeholder="Create password" minlength="6" required />
+						</label>
+						<label class="field-wrap">
+							<span>Confirm Password</span>
+							<input type="password" id="registerConfirmPassword" placeholder="Re-enter password" minlength="6" required />
+						</label>
+					</div>
+				</section>
+
+				<section class="register-step" data-register-step="2">
+					<div data-student-only="true">
+						<label class="field-wrap">
+							<span>Student ID</span>
+							<input type="text" id="registerStudentId" name="student_id" placeholder="CS20210123" />
+						</label>
+						<div class="register-grid-2">
+							<label class="field-wrap">
+								<span>University</span>
+								<div style="position:relative;">
+									<input type="text" id="registerUniversitySearch" class="university-search" placeholder="Search university..." autocomplete="off" />
+									<input type="hidden" id="registerUniversityId" name="university_id" />
+									<div class="university-dropdown" id="registerUniversityDropdown" style="display:none;"></div>
+								</div>
+							</label>
+							<label class="field-wrap">
+								<span>Faculty</span>
+								<div style="position:relative;">
+									<input type="text" id="registerFacultySearch" class="faculty-search" placeholder="Search faculty..." autocomplete="off" />
+									<input type="hidden" id="registerFacultyId" name="faculty_id" />
+									<div class="faculty-dropdown" id="registerFacultyDropdown" style="display:none;"></div>
+								</div>
+							</label>
+						</div>
+						<label class="field-wrap">
+							<span>Department</span>
+							<div style="position:relative;">
+								<input type="text" id="registerDepartmentSearch" class="department-search" placeholder="Search department..." autocomplete="off" />
+								<input type="hidden" id="registerDepartmentId" name="department_id" />
+								<div class="department-dropdown" id="registerDepartmentDropdown" style="display:none;"></div>
+							</div>
+						</label>
+					</div>
+					<div data-expert-only="true" style="display:none;">
+						<label class="field-wrap">
+							<span>Title (e.g., Software Engineer, Designer)</span>
+							<input type="text" id="registerTitle" name="title" placeholder="Your professional title" />
+						</label>
+						<label class="field-wrap">
+							<span>Organization</span>
+							<input type="text" id="registerOrganization" name="organization" placeholder="Your organization or company" />
+						</label>
+					</div>
+				</section>
+
+				<section class="register-step" data-register-step="3">
+					<div data-student-only="true">
+						<label class="field-wrap">
+							<span>Skills & Interests (max 5)</span>
+							<div class="skills-input-container">
+								<div class="skills-input-field">
+									<input type="text" id="registerSkillsSearch" class="skills-search" placeholder="Search skill and press Add" autocomplete="off" />
+									<button type="button" class="btn-secondary" id="registerSkillAddBtn" style="width:auto;">Add</button>
+								</div>
+								<div class="skills-dropdown" id="registerSkillsDropdown" style="display:none;"></div>
+								<div class="skills-tags" id="registerSelectedSkills"></div>
+								<div class="suggested-skill-wrap">
+									<div class="suggested-skill-title">Suggested skills:</div>
+									<div class="suggested-skill-list" id="registerSuggestedSkills"></div>
+								</div>
+							</div>
+						</label>
+					</div>
+					<div data-expert-only="true" style="display:none;">
+						<div class="selected-role-display" style="border-radius: 8px; background: rgba(78, 115, 223, 0.08); border: 1px solid rgba(78, 115, 223, 0.15); padding: 12px 14px; margin-bottom: 0;">
+							Your expert profile is ready to be created. Click below to complete registration.
+						</div>
+					</div>
+				</section>
+
+				<div class="register-actions">
+					<div class="inline-actions" style="margin:0;">
+						<a href="login.html" class="btn-secondary">Already have an account</a>
+					</div>
+					<div class="inline-actions" style="margin:0; gap:8px;">
+						<button type="button" class="btn-secondary" id="registerBackBtn" style="display:none;">Back</button>
+						<button type="button" class="btn-primary" id="registerNextBtn">Create Account</button>
+					</div>
 				</div>
 			</form>
 		</section>
 	</main>
 
 	<script src="assets/js/app.js"></script>
-	<script>
-		// Role selection for register
-		const roleButtons = document.querySelectorAll('.role-btn[data-role]');
-		const forms = document.querySelectorAll('.role-specific-form');
-
-		function showRoleForm(role) {
-			forms.forEach(form => form.classList.remove('active'));
-			const target = document.getElementById(role + 'Form');
-			if (target) {
-				target.classList.add('active');
-			}
-		}
-
-		roleButtons.forEach(btn => {
-			btn.addEventListener('click', (e) => {
-				e.preventDefault();
-				const role = btn.dataset.role;
-				console.log('[REGISTER:UI_ROLE_CLICK]', { role });
-				
-				// Update button states
-				document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-				btn.classList.add('active');
-				
-				// Show relevant form
-				showRoleForm(role);
-			});
-		});
-
-		// Default state: show student form so submit button is immediately testable.
-		if (roleButtons.length > 0) {
-			const defaultBtn = document.querySelector('.role-btn[data-role="student"]') || roleButtons[0];
-			defaultBtn.classList.add('active');
-			showRoleForm(defaultBtn.dataset.role);
-		}
-
-		// Load universities data
-		async function loadUniversities() {
-			try {
-				const response = await fetch('data/universities.json');
-				return await response.json();
-			} catch (error) {
-				console.error('Error loading universities:', error);
-				return [];
-			}
-		}
-
-		// Load skills data
-		async function loadSkills() {
-			try {
-				const response = await fetch('data/skills.json');
-				return await response.json();
-			} catch (error) {
-				console.error('Error loading skills:', error);
-				return [];
-			}
-		}
-
-		// Load faculties data
-		async function loadFaculties() {
-			try {
-				const response = await fetch('data/faculties.json');
-				return await response.json();
-			} catch (error) {
-				console.error('Error loading faculties:', error);
-				return [];
-			}
-		}
-
-		// Load departments data
-		async function loadDepartments() {
-			try {
-				const response = await fetch('data/departments.json');
-				return await response.json();
-			} catch (error) {
-				console.error('Error loading departments:', error);
-				return [];
-			}
-		}
-
-		// University autocomplete
-		const universitySearch = document.querySelector('.university-search');
-		const universityDropdown = document.querySelector('.university-dropdown');
-		const universityIdInput = document.querySelector("input[name='university_id']");
-		const facultySearch = document.querySelector('.faculty-search');
-		const facultyDropdown = document.querySelector('.faculty-dropdown');
-		const facultyIdInput = document.querySelector("input[name='faculty_id']");
-		const departmentSearch = document.querySelector('.department-search');
-		const departmentDropdown = document.querySelector('.department-dropdown');
-		const departmentIdInput = document.querySelector("input[name='department_id']");
-		let universities = [];
-		let faculties = [];
-		let departments = [];
-		let selectedFacultyId = null;
-
-		loadUniversities().then(data => {
-			universities = data;
-		});
-
-		loadFaculties().then(data => {
-			faculties = data;
-		});
-
-		loadDepartments().then(data => {
-			departments = data;
-		});
-
-		universitySearch?.addEventListener('input', (e) => {
-			const query = e.target.value.toLowerCase();
-			if (universityIdInput) {
-				universityIdInput.value = '';
-			}
-			if (query.length < 1) {
-				universityDropdown.style.display = 'none';
-				return;
-			}
-			const filtered = universities.filter(u => u.name.toLowerCase().includes(query));
-			universityDropdown.innerHTML = filtered.map(u => `
-				<div class="university-dropdown-item" data-id="${u.id}">${u.name}</div>
-			`).join('');
-			universityDropdown.style.display = 'block';
-
-			universityDropdown.querySelectorAll('.university-dropdown-item').forEach(item => {
-				item.addEventListener('click', () => {
-					universitySearch.value = item.textContent;
-					if (universityIdInput) {
-						universityIdInput.value = item.dataset.id;
-					}
-					universityDropdown.style.display = 'none';
-				});
-			});
-		});
-
-		facultySearch?.addEventListener('input', (e) => {
-			const query = e.target.value.toLowerCase();
-			selectedFacultyId = null;
-			if (facultyIdInput) {
-				facultyIdInput.value = '';
-			}
-			if (departmentIdInput) {
-				departmentIdInput.value = '';
-			}
-			if (departmentSearch) {
-				departmentSearch.value = '';
-			}
-			if (query.length < 1) {
-				facultyDropdown.style.display = 'none';
-				return;
-			}
-
-			const filtered = faculties.filter(f => f.name.toLowerCase().includes(query));
-			facultyDropdown.innerHTML = filtered.map(f => `
-				<div class="faculty-dropdown-item" data-id="${f.id}">${f.name}</div>
-			`).join('');
-			facultyDropdown.style.display = 'block';
-
-			facultyDropdown.querySelectorAll('.faculty-dropdown-item').forEach(item => {
-				item.addEventListener('click', () => {
-					facultySearch.value = item.textContent;
-					selectedFacultyId = Number(item.dataset.id);
-					if (facultyIdInput) {
-						facultyIdInput.value = item.dataset.id;
-					}
-					facultyDropdown.style.display = 'none';
-					if (departmentSearch) {
-						departmentSearch.value = '';
-					}
-					if (departmentIdInput) {
-						departmentIdInput.value = '';
-					}
-				});
-			});
-		});
-
-		departmentSearch?.addEventListener('input', (e) => {
-			const query = e.target.value.toLowerCase();
-			if (query.length < 1) {
-				departmentDropdown.style.display = 'none';
-				return;
-			}
-
-			let source = departments;
-			if (selectedFacultyId) {
-				source = departments.filter(d => Number(d.facultyId) === selectedFacultyId);
-			}
-
-			const filtered = source.filter(d => d.name.toLowerCase().includes(query));
-			departmentDropdown.innerHTML = filtered.map(d => `
-				<div class="department-dropdown-item" data-id="${d.id}">${d.name}</div>
-			`).join('');
-			departmentDropdown.style.display = 'block';
-
-			departmentDropdown.querySelectorAll('.department-dropdown-item').forEach(item => {
-				item.addEventListener('click', () => {
-					departmentSearch.value = item.textContent;
-					if (departmentIdInput) {
-						departmentIdInput.value = item.dataset.id;
-					}
-					departmentDropdown.style.display = 'none';
-				});
-			});
-		});
-
-		// Skills autocomplete
-		const skillsSearch = document.querySelector('.skills-search');
-		const skillsDropdown = document.querySelector('.skills-dropdown');
-		const skillsTags = document.getElementById('selectedSkills');
-		const addSkillButton = document.querySelector('.skills-input-field .btn-secondary');
-		let selectedSkills = new Set();
-		let allSkills = [];
-
-		loadSkills().then(data => {
-			allSkills = data;
-		});
-
-		skillsSearch?.addEventListener('input', (e) => {
-			const query = e.target.value.toLowerCase();
-			if (query.length < 1) {
-				skillsDropdown.style.display = 'none';
-				return;
-			}
-			const filtered = allSkills.filter(s => !selectedSkills.has(s) && s.toLowerCase().includes(query));
-			skillsDropdown.innerHTML = filtered.slice(0, 8).map(s => `
-				<div class="skills-dropdown-item">${s}</div>
-			`).join('');
-			skillsDropdown.style.display = 'block';
-
-			skillsDropdown.querySelectorAll('.skills-dropdown-item').forEach(item => {
-				item.addEventListener('click', () => {
-					addSkill(item.textContent);
-				});
-			});
-		});
-
-		function addSkill(skill) {
-			if (selectedSkills.size >= 5) {
-				alert('Maximum 5 skills allowed');
-				return;
-			}
-			selectedSkills.add(skill);
-			renderSkillTags();
-			skillsSearch.value = '';
-			skillsDropdown.style.display = 'none';
-		}
-
-		function removeSkill(skill) {
-			selectedSkills.delete(skill);
-			renderSkillTags();
-		}
-
-		function renderSkillTags() {
-			skillsTags.innerHTML = Array.from(selectedSkills).map(skill => `
-				<span class="skill-tag">
-					#${skill}
-					<button type="button" onclick="removeSkill('${skill}')">×</button>
-				</span>
-			`).join('');
-			window.selectedRegisterSkills = Array.from(selectedSkills);
-		}
-
-		addSkillButton?.addEventListener('click', () => {
-			const value = (skillsSearch?.value || '').trim();
-			if (!value) {
-				return;
-			}
-			addSkill(value);
-		});
-
-		skillsSearch?.addEventListener('keydown', (event) => {
-			if (event.key !== 'Enter') {
-				return;
-			}
-			event.preventDefault();
-			const value = (skillsSearch.value || '').trim();
-			if (!value) {
-				return;
-			}
-			addSkill(value);
-		});
-
-		// Make removeSkill globally available
-		window.removeSkill = removeSkill;
-		window.selectedRegisterSkills = [];
-	</script>
 </body>
 </html>

@@ -109,18 +109,56 @@ Additional:
 This project now includes real login/register and DB-backed feeds.
 
 1. Import schema:
-	- Run [database/innovax_schema.sql](database/innovax_schema.sql)
+   - Run [database/innovax_schema.sql](database/innovax_schema.sql)
 2. Seed lookup data (universities, faculties, departments, skills):
-	- Run [database/lookup_seed.sql](database/lookup_seed.sql)
+   - Run [database/lookup_seed.sql](database/lookup_seed.sql)
 3. Optional cleanup of temporary seed/test users and posts:
-	- Run [database/cleanup_temp_data.sql](database/cleanup_temp_data.sql)
+   - Run [database/cleanup_temp_data.sql](database/cleanup_temp_data.sql)
 4. Serve project with PHP (XAMPP/WAMP/Laragon or PHP built-in server) so [api/auth/login.php](api/auth/login.php) and [api/auth/register.php](api/auth/register.php) are reachable.
 
 Database connection file:
+
 - [database/connection.php](database/connection.php)
 
 APIs added:
+
 - [api/auth/login.php](api/auth/login.php)
 - [api/auth/register.php](api/auth/register.php)
+- [api/auth/forgot-password.php](api/auth/forgot-password.php)
+- [api/auth/verify-reset-code.php](api/auth/verify-reset-code.php)
+- [api/auth/reset-password.php](api/auth/reset-password.php)
 - [api/posts/list.php](api/posts/list.php)
 - [api/users/students.php](api/users/students.php)
+
+## Forgot Password (Email Code)
+
+The login page now includes a 3-step forgot-password flow:
+
+1. Enter account email
+2. Verify 6-digit code sent to email
+3. Set a new password
+
+Database updates are auto-applied in [api/bootstrap.php](api/bootstrap.php) with these columns on `users`:
+
+- `reset_code_hash`
+- `reset_code_expires_at`
+- `reset_code_sent_at`
+
+### SMTP / PHPMailer setup
+
+Place PHPMailer source files (`Exception.php`, `PHPMailer.php`, `SMTP.php`) in one of these folders:
+
+- `PHPMailer/src`
+- `api/PHPMailer/src`
+- `vendor/phpmailer/phpmailer/src`
+- `api/vendor/phpmailer/phpmailer/src`
+
+Set environment variables for SMTP:
+
+- `SMTP_HOST` (default: `smtp.gmail.com`)
+- `SMTP_PORT` (default: `587`)
+- `SMTP_SECURE` (`tls` or `ssl`)
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `SMTP_FROM_EMAIL` (optional, defaults to username)
+- `SMTP_FROM_NAME` (optional, default: `InnovaX Security`)
