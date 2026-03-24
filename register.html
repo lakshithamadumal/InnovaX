@@ -555,6 +555,68 @@
 				gap: 4px;
 			}
 		}
+
+		@media (max-width: 900px) {
+			.auth-shell {
+				padding: 18px 12px;
+			}
+
+			.auth-card {
+				width: min(100%, 740px);
+				padding: 16px;
+			}
+
+			.step-tracker,
+			#registerStepTracker {
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 6px;
+			}
+
+			.skills-input-field {
+				display: grid;
+				grid-template-columns: 1fr;
+			}
+
+			.register-actions {
+				flex-direction: column-reverse;
+				align-items: stretch;
+			}
+
+			.register-actions .inline-actions {
+				width: 100%;
+			}
+
+			.register-actions .inline-actions .btn-primary,
+			.register-actions .inline-actions .btn-secondary,
+			.register-actions .inline-actions button,
+			.register-actions .inline-actions a {
+				flex: 1;
+				text-align: center;
+				justify-content: center;
+			}
+		}
+
+		@media (max-width: 640px) {
+			.register-role-btn {
+				font-size: 0.9rem;
+				padding: 12px 10px;
+			}
+
+			.register-role-label {
+				font-size: 0.96rem;
+			}
+
+			.role-locked-badge {
+				font-size: 0.82rem;
+				padding: 8px 10px;
+			}
+
+			.step-chip {
+				font-size: 0.76rem;
+				padding: 7px 8px;
+			}
+		}
 	</style>
 </head>
 <body data-page="register" data-active-nav="feed">

@@ -144,6 +144,61 @@
 		.forgot-step .field-wrap {
 			margin-bottom: 12px;
 		}
+
+		@media (max-width: 768px) {
+			.auth-shell {
+				padding: 16px 12px;
+			}
+
+			.auth-modern-card {
+				width: min(100%, 520px);
+				padding: 16px;
+			}
+
+			.forgot-card {
+				width: min(94vw, 520px);
+				max-width: none;
+			}
+
+			.auth-dialog-actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+
+			.auth-dialog-actions .btn-secondary,
+			.auth-dialog-actions .btn-primary {
+				flex: 1;
+				min-width: 120px;
+			}
+
+			.inline-actions {
+				width: 100%;
+			}
+
+			.inline-actions .btn-secondary,
+			.inline-actions .btn-primary {
+				flex: 1;
+				text-align: center;
+				justify-content: center;
+			}
+		}
+
+		@media (max-width: 480px) {
+			.auth-modern-card h1 {
+				font-size: 1.05rem;
+			}
+
+			.auth-modern-card p,
+			.forgot-sub {
+				font-size: 0.8rem;
+			}
+
+			.btn-icon-close {
+				width: 30px;
+				height: 30px;
+			}
+		}
 	</style>
 </body>
 </html>

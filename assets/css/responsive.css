@@ -1,10 +1,35 @@
-@media (max-width: 1100px) {
-	.kpi-row {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 1200px) {
+	.container {
+		padding: 22px 16px;
+		gap: 18px;
 	}
 
+	.navbar {
+		padding: 0 16px;
+	}
+
+	.nav-search {
+		max-width: 280px;
+	}
+
+	.kpi-row,
 	.grid-3 {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 1024px) {
+	.container {
+		grid-template-columns: 220px 1fr;
+	}
+
+	.sidebar-right {
+		display: none;
+	}
+
+	.section-card,
+	.hero-card {
+		padding: 16px;
 	}
 
 	.messages-layout {
@@ -12,28 +37,37 @@
 	}
 }
 
-@media (max-width: 960px) {
-	.landing-illustration {
-		width: 106%;
-		transform: translateY(4px) scale(1.02);
+@media (max-width: 900px) {
+	.nav-search,
+	.nav-links {
+		display: none;
+	}
+
+	.hamburger {
+		display: flex;
+	}
+
+	.mobile-menu {
+		padding: 12px 14px;
+	}
+
+	.container {
+		grid-template-columns: 1fr;
+		gap: 14px;
+		padding: 16px 12px;
 	}
 
 	.sidebar-left,
 	.sidebar-right {
+		display: none;
 		position: static;
 		max-height: none;
 	}
 
-	.landing-grid {
-		grid-template-columns: 1fr;
-	}
-
+	.landing-grid,
 	.settings-grid,
 	.grid-2,
-	.create-grid {
-		grid-template-columns: 1fr;
-	}
-
+	.create-grid,
 	.messages-layout {
 		grid-template-columns: 1fr;
 	}
@@ -41,16 +75,46 @@
 	.chat-list {
 		max-height: 220px;
 	}
+
+	.auth-shell {
+		padding: 18px 12px;
+	}
+
+	.auth-card {
+		width: min(100%, 720px);
+		padding: 16px;
+	}
+
+	.profile-meta {
+		min-width: 0;
+	}
+
+	.create-upload-preview {
+		grid-template-columns: 88px 1fr;
+	}
+
+	.create-upload-preview img {
+		width: 88px;
+		height: 78px;
+	}
 }
 
-@media (max-width: 640px) {
-	.landing-illustration-shell {
+@media (max-width: 768px) {
+	:root {
+		--navbar-h: 58px;
+	}
+
+	.navbar {
+		padding: 0 12px;
+	}
+
+	.nav-logo span {
 		display: none;
 	}
 
-	.landing-illustration {
-		width: 100%;
-		transform: none;
+	.nav-avatar {
+		width: 34px;
+		height: 34px;
 	}
 
 	.hero-card,
@@ -71,17 +135,19 @@
 		font-size: 1.1rem;
 	}
 
+	.profile-media-edit-btn {
+		width: 28px;
+		height: 28px;
+	}
+
 	.grid-3,
 	.kpi-row {
 		grid-template-columns: 1fr;
 	}
 
-	.chat-bubble {
-		max-width: 86%;
-	}
-
 	.notification-item,
-	.request-item {
+	.request-item,
+	.expert-rating-item-head {
 		flex-wrap: wrap;
 	}
 
@@ -95,8 +161,137 @@
 		white-space: normal;
 	}
 
-	.expert-rating-item-head {
-		flex-direction: column;
-		align-items: flex-start;
+	.chat-bubble {
+		max-width: 86%;
+	}
+
+	.post-card {
+		padding: 14px;
+	}
+
+	.post-actions {
+		gap: 2px;
+	}
+
+	.action-btn {
+		padding: 7px 8px;
+		font-size: 0.74rem;
+	}
+
+	/* Register + Settings skill controls */
+	.skills-input-field {
+		grid-template-columns: 1fr;
+	}
+
+	#registerStepTracker {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
+
+	.auth-dialog-card,
+	.forgot-card {
+		width: min(94vw, 520px);
+	}
+
+	.auth-dialog-actions {
+		flex-wrap: wrap;
+	}
+
+	.auth-dialog-actions .btn-primary,
+	.auth-dialog-actions .btn-secondary {
+		flex: 1;
+		min-width: 120px;
+	}
+}
+
+@media (max-width: 640px) {
+	.landing-illustration-shell {
+		display: none;
+	}
+
+	.landing-illustration {
+		width: 100%;
+		transform: none;
+	}
+
+	.nav-avatar {
+		display: none;
+	}
+
+	.mobile-menu .nav-link {
+		font-size: 0.86rem;
+		padding: 9px 12px;
+	}
+
+	.profile-follow-stats span {
+		font-size: 0.74rem;
+	}
+
+	.create-upload-preview {
+		grid-template-columns: 1fr;
+	}
+
+	.create-upload-preview img {
+		width: 100%;
+		height: auto;
+		max-height: 220px;
+	}
+
+	.inline-actions {
+		width: 100%;
+	}
+
+	.inline-actions .btn-primary,
+	.inline-actions .btn-secondary,
+	.inline-actions button {
+		width: 100%;
+		justify-content: center;
+	}
+}
+
+@media (max-width: 480px) {
+	.container {
+		padding: 12px 8px;
+	}
+
+	.section-card,
+	.auth-card,
+	.post-card {
+		padding: 12px;
+		border-radius: 12px;
+	}
+
+	.field-wrap input,
+	.field-wrap select,
+	.field-wrap textarea {
+		padding: 9px 10px;
+		font-size: 0.9rem;
+	}
+
+	.btn-primary,
+	.btn-secondary {
+		padding: 8px 12px;
+		font-size: 0.78rem;
+	}
+
+	.post-card .post-header {
+		gap: 8px;
+	}
+
+	.post-card .avatar,
+	.create-post-top .avatar,
+	.comment-input-row .avatar {
+		width: 36px;
+		height: 36px;
+		font-size: 0.72rem;
+	}
+
+	.action-btn i {
+		font-size: 0.85rem;
+	}
+
+	.action-btn span {
+		display: none;
 	}
 }
