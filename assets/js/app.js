@@ -2107,7 +2107,9 @@
       const shareBtn = event.target.closest("[data-share-btn]");
       if (shareBtn) {
         const card = shareBtn.closest("[data-post-id]");
-        const postId = card?.dataset.postId || shareBtn.dataset.postId;
+        const detailCardPostId = document.getElementById("post-detail-card")?.dataset.postId || "";
+        const queryPostId = new URLSearchParams(window.location.search).get("postId") || "";
+        const postId = card?.dataset.postId || shareBtn.dataset.postId || detailCardPostId || queryPostId;
         if (!postId) {
           showToast("Unable to copy link.");
           return;

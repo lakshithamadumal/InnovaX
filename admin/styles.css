@@ -357,6 +357,10 @@ select:focus {
   width: min(460px, 100%);
 }
 
+.rating-search-inline {
+  width: min(760px, 100%);
+}
+
 .table-wrap {
   overflow: auto;
 }
