@@ -1,5 +1,8 @@
 (() => {
   const templateCache = new Map();
+  const jsonResponseCache = new Map();
+  const inFlightJsonRequests = new Map();
+  const API_CACHE_STORAGE_PREFIX = "innovaX.apiCache.v1.";
   const DEFAULT_PROFILE_AVATAR_URL = "assets/images/users/default-avatar.svg";
   const DEFAULT_PROFILE_COVER_URL = "assets/images/users/default-cover.svg";
   const POST_DESC_PREVIEW_LIMIT = 180;
@@ -300,9 +303,155 @@
     return false;
   }
 
-  async function getJson(path) {
+  function getApiCacheStorageKey(path) {
+    return `${API_CACHE_STORAGE_PREFIX}${encodeURIComponent(String(path || ""))}`;
+  }
+
+  function readCachedJson(path) {
+    const key = getApiCacheStorageKey(path);
+
+    if (jsonResponseCache.has(key)) {
+      const value = jsonResponseCache.get(key);
+      if (value && Number(value.expiresAt || 0) > Date.now()) {
+        return value.payload;
+      }
+      jsonResponseCache.delete(key);
+    }
+
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (!raw) {
+        return null;
+      }
+
+      const parsed = JSON.parse(raw);
+      if (!parsed || Number(parsed.expiresAt || 0) <= Date.now()) {
+        sessionStorage.removeItem(key);
+        return null;
+      }
+
+      jsonResponseCache.set(key, parsed);
+      return parsed.payload;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeCachedJson(path, payload, ttlMs) {
+    const safeTtl = Number(ttlMs || 0);
+    if (!Number.isFinite(safeTtl) || safeTtl <= 0) {
+      return;
+    }
+
+    const key = getApiCacheStorageKey(path);
+    const value = {
+      expiresAt: Date.now() + safeTtl,
+      payload
+    };
+
+    jsonResponseCache.set(key, value);
+
+    try {
+      sessionStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      // Skip persistent cache when storage is unavailable.
+    }
+  }
+
+  function invalidateApiCache(predicate) {
+    if (typeof predicate !== "function") {
+      return;
+    }
+
+    const memoryKeys = Array.from(jsonResponseCache.keys());
+    memoryKeys.forEach((key) => {
+      const path = decodeURIComponent(key.replace(API_CACHE_STORAGE_PREFIX, ""));
+      if (predicate(path)) {
+        jsonResponseCache.delete(key);
+      }
+    });
+
+    try {
+      const storageKeys = [];
+      for (let index = 0; index < sessionStorage.length; index += 1) {
+        const key = sessionStorage.key(index);
+        if (key && key.startsWith(API_CACHE_STORAGE_PREFIX)) {
+          storageKeys.push(key);
+        }
+      }
+
+      storageKeys.forEach((key) => {
+        const path = decodeURIComponent(key.replace(API_CACHE_STORAGE_PREFIX, ""));
+        if (predicate(path)) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      // Ignore storage errors and keep in-memory invalidation.
+    }
+  }
+
+  function invalidateApiCacheForMutation(path) {
+    const target = String(path || "");
+
+    if (target.startsWith("api/posts/")) {
+      invalidateApiCache((entryPath) => {
+        return entryPath.startsWith("api/posts/list.php") ||
+          entryPath.startsWith("api/posts/trending.php") ||
+          entryPath.startsWith("api/posts/toggle-") ||
+          entryPath.startsWith("api/notifications/list.php") ||
+          entryPath.startsWith("api/users/public-profile.php") ||
+          entryPath.startsWith("api/users/students.php");
+      });
+      return;
+    }
+
+    if (target.startsWith("api/users/update-")) {
+      invalidateApiCache((entryPath) => {
+        return entryPath.startsWith("api/users/my-profile.php") ||
+          entryPath.startsWith("api/users/public-profile.php") ||
+          entryPath.startsWith("api/users/students.php") ||
+          entryPath.startsWith("api/auth/me.php");
+      });
+      return;
+    }
+
+    if (target.startsWith("api/auth/")) {
+      invalidateApiCache(() => true);
+      return;
+    }
+
+    if (target.startsWith("api/ratings/")) {
+      invalidateApiCache((entryPath) => {
+        return entryPath.startsWith("api/ratings/list.php") ||
+          entryPath.startsWith("api/posts/list.php") ||
+          entryPath.startsWith("api/notifications/list.php");
+      });
+      return;
+    }
+
+    if (target.startsWith("api/notifications/")) {
+      invalidateApiCache((entryPath) => entryPath.startsWith("api/notifications/list.php"));
+    }
+  }
+
+  async function getJson(path, options = {}) {
+    const ttlMs = Number(options.ttlMs || 0);
+    const cacheKey = String(path || "");
+
+    if (ttlMs > 0) {
+      const cachedPayload = readCachedJson(cacheKey);
+      if (cachedPayload) {
+        return cachedPayload;
+      }
+    }
+
+    if (inFlightJsonRequests.has(cacheKey)) {
+      return inFlightJsonRequests.get(cacheKey);
+    }
+
+    const requestPromise = (async () => {
     const response = await fetch(path, {
-      cache: "no-store",
       credentials: "same-origin"
     });
     let payload = null;
@@ -318,7 +467,20 @@
       throw new Error(message);
     }
 
+      if (ttlMs > 0) {
+        writeCachedJson(cacheKey, payload, ttlMs);
+      }
+
     return payload;
+    })();
+
+    inFlightJsonRequests.set(cacheKey, requestPromise);
+
+    try {
+      return await requestPromise;
+    } finally {
+      inFlightJsonRequests.delete(cacheKey);
+    }
   }
 
   async function postJson(path, body) {
@@ -342,6 +504,8 @@
       const message = payload?.message || `Request failed: ${path}`;
       throw new Error(message);
     }
+
+    invalidateApiCacheForMutation(path);
 
     return payload;
   }
@@ -402,7 +566,7 @@
       return templateCache.get(path);
     }
 
-    const response = await fetch(path, { cache: "no-store" });
+    const response = await fetch(path);
     if (!response.ok) {
       throw new Error(`Failed to load ${path}`);
     }
@@ -452,7 +616,7 @@
 
   async function loadPostsData() {
     try {
-      const payload = await getJson("api/posts/list.php");
+      const payload = await getJson("api/posts/list.php", { ttlMs: 20000 });
       const data = Array.isArray(payload.data?.posts) ? payload.data.posts : [];
       const normalized = Array.isArray(data) ? data : [];
 
@@ -484,9 +648,56 @@
     }
   }
 
+  async function loadPostById(postId) {
+    const normalizedPostId = String(postId || "").trim();
+    if (!normalizedPostId) {
+      return null;
+    }
+
+    try {
+      const payload = await getJson(`api/posts/view.php?postId=${encodeURIComponent(normalizedPostId)}`, { ttlMs: 20000 });
+      const post = payload.data?.post;
+      if (!post || !post.id) {
+        return null;
+      }
+
+      const parsedOrder = Date.parse(post.time || "");
+      const normalized = {
+        id: String(post.id || normalizedPostId),
+        authorId: post.authorId || "",
+        avatar: post.avatar || getInitials(post.name || "InnovaX Member"),
+        avatarImageUrl: post.avatarImageUrl || "",
+        avatarColor: post.avatarColor || "linear-gradient(135deg,#4E73DF,#6f8ee8)",
+        name: post.name || "InnovaX Member",
+        university: post.university || "",
+        role: post.role || "Member",
+        time: post.time || "Now",
+        title: post.title || "Untitled post",
+        desc: post.desc || "",
+        tags: Array.isArray(post.tags) ? post.tags : [],
+        media: post.media || null,
+        likes: Number(post.likes || 0),
+        liked: Boolean(post.liked),
+        saved: Boolean(post.saved),
+        createdOrder: Number.isFinite(parsedOrder) ? parsedOrder : Date.now()
+      };
+
+      const existingIndex = state.posts.findIndex((entry) => String(entry.id) === normalized.id);
+      if (existingIndex >= 0) {
+        state.posts[existingIndex] = normalized;
+      } else {
+        state.posts.unshift(normalized);
+      }
+
+      return normalized;
+    } catch (error) {
+      return null;
+    }
+  }
+
   async function loadTrendingInnovationsData() {
     try {
-      const payload = await getJson("api/posts/trending.php?limit=5");
+      const payload = await getJson("api/posts/trending.php?limit=5", { ttlMs: 20000 });
       const rows = Array.isArray(payload.data?.trending) ? payload.data.trending : [];
 
       state.trendingInnovations = rows
@@ -537,7 +748,7 @@
     }
 
     try {
-      const payload = await getJson("api/ratings/list.php");
+      const payload = await getJson("api/ratings/list.php", { ttlMs: 15000 });
       const rows = Array.isArray(payload.data?.ratings) ? payload.data.ratings : [];
 
       state.expertRatings = rows
@@ -566,7 +777,7 @@
     }
 
     try {
-      const payload = await getJson("api/notifications/list.php");
+      const payload = await getJson("api/notifications/list.php", { ttlMs: 5000 });
       const list = Array.isArray(payload.data?.notifications) ? payload.data.notifications : [];
       state.notifications = list.map((entry) => ({
         id: Number(entry.id || 0),
@@ -602,7 +813,7 @@
 
   async function loadStudentProfilesData() {
     try {
-      const payload = await getJson("api/users/students.php");
+      const payload = await getJson("api/users/students.php", { ttlMs: 30000 });
       const list = Array.isArray(payload.data?.students) ? payload.data.students : [];
       state.studentProfiles = list.map((student) => ({
         id: student.id,
@@ -725,7 +936,7 @@
 
   async function syncAuthenticatedUser() {
     try {
-      const payload = await getJson("api/auth/me.php");
+      const payload = await getJson("api/auth/me.php", { ttlMs: 8000 });
       const user = payload.data?.user;
       if (user && user.id && user.role) {
         setLoggedInUser(user, user.role);
@@ -749,7 +960,7 @@
     }
 
     try {
-      const payload = await getJson("api/users/my-profile.php");
+      const payload = await getJson("api/users/my-profile.php", { ttlMs: 15000 });
       const user = payload.data?.user;
       if (user && user.id && user.role) {
         setLoggedInUser(user, user.role);
@@ -775,7 +986,7 @@
     }
 
     try {
-      const payload = await getJson(`api/users/public-profile.php?userId=${encodeURIComponent(userId)}`);
+      const payload = await getJson(`api/users/public-profile.php?userId=${encodeURIComponent(userId)}`, { ttlMs: 30000 });
       const user = payload.data?.user;
       const profile = payload.data?.profile;
       if (!user || !user.id) {
@@ -2181,7 +2392,7 @@
 
       // Load available skills
       try {
-        const skillsResponse = await fetch("data/skills.json", { cache: "no-store" });
+        const skillsResponse = await fetch("data/skills.json");
         const skillsData = await skillsResponse.json();
         availableSkills = Array.isArray(skillsData)
           ? skillsData.map((s) => String(s || "").trim()).filter(Boolean)
@@ -2436,7 +2647,7 @@
       return;
     }
 
-    const post = findPostById(requestedPostId);
+    const post = findPostById(requestedPostId) || await loadPostById(requestedPostId);
     if (!post) {
       window.location.replace(buildEmptyPageUrl("post-not-found"));
       return;
@@ -3024,7 +3235,7 @@
 
       const fetchArray = async (path) => {
         try {
-          const response = await fetch(path, { cache: "no-store" });
+          const response = await fetch(path);
           const data = await response.json();
           return Array.isArray(data) ? data : [];
         } catch (error) {
@@ -3601,11 +3812,22 @@
   }
 
   async function init() {
+    const page = document.body.dataset.page || "";
+
     await syncAuthenticatedUser();
-    await loadMyProfileData();
-    await loadViewedUserProfileData();
-    await loadNotificationsData();
-    await mountComponents();
+
+    const earlyTasks = [mountComponents()];
+    if (state.isLoggedIn) {
+      earlyTasks.push(loadNotificationsData());
+    }
+    if (page === "my-profile") {
+      earlyTasks.push(loadMyProfileData());
+    }
+    if (page === "user-profile") {
+      earlyTasks.push(loadViewedUserProfileData());
+    }
+    await Promise.all(earlyTasks);
+
     initNavbar();
     setActiveNav();
     updateSidebarAndNav();
@@ -3617,10 +3839,31 @@
     initSearchForms();
     await initSettingsPage();
 
-    await loadPostTemplate();
-    await loadPostsData();
-    await loadTrendingInnovationsData();
-    await loadStudentProfilesData();
+    const requiresPostsData = (
+      page === "index" ||
+      page === "feed" ||
+      page === "saved-posts" ||
+      page === "search-results" ||
+      page === "expert-ratings" ||
+      Boolean(document.querySelector("[data-post-stream], [data-most-likely-posts], [data-post-title]"))
+    );
+    const requiresTrendingData = page === "index" || page === "feed" || Boolean(document.querySelector("[data-trending-list]"));
+    const requiresStudentProfiles = page === "search-results";
+
+    const dataTasks = [];
+    if (requiresPostsData) {
+      dataTasks.push(loadPostTemplate(), loadPostsData());
+    }
+    if (requiresTrendingData) {
+      dataTasks.push(loadTrendingInnovationsData());
+    }
+    if (requiresStudentProfiles) {
+      dataTasks.push(loadStudentProfilesData());
+    }
+    if (dataTasks.length > 0) {
+      await Promise.all(dataTasks);
+    }
+
     updateSidebarAndNav();
     applyRoleBasedProfileLayout();
     updateProfileIdentity();
