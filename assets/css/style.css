@@ -510,6 +510,12 @@ img {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.expert-filter-toolbar .post-sort-select {
+  margin-left: auto;
+  min-width: 180px;
 }
 
 .post-sort-select {
