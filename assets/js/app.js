@@ -32,6 +32,7 @@
     notifications: [],
     trendingInnovations: [],
     feedSort: "recent",
+    feedRatingFilter: "all",
     createPostMedia: null,
     expertRatings: []
   };
@@ -118,6 +119,18 @@
 
   function getCurrentExpertRatings() {
     return Array.isArray(state.expertRatings) ? state.expertRatings : [];
+  }
+
+  function getCurrentExpertRatedPostIds() {
+    const ids = new Set();
+    const ratings = getCurrentExpertRatings();
+    ratings.forEach((entry) => {
+      const postId = String(entry?.postId || "").trim();
+      if (postId) {
+        ids.add(postId);
+      }
+    });
+    return ids;
   }
 
   function findPostById(postId) {
@@ -1320,8 +1333,34 @@
     return list.sort((a, b) => b.createdOrder - a.createdOrder);
   }
 
+  function applyExpertFeedRatingFilter(posts) {
+    const normalized = Array.isArray(posts) ? posts : [];
+    const page = String(document.body.dataset.page || "").toLowerCase();
+    const isFeedPage = page === "index" || page === "feed";
+    const isExpertOnIndex = isFeedPage && state.isLoggedIn && state.userRole === "expert";
+    if (!isExpertOnIndex) {
+      return normalized;
+    }
+
+    const mode = String(state.feedRatingFilter || "all").toLowerCase();
+    if (mode === "all") {
+      return normalized;
+    }
+
+    const ratedPostIds = getCurrentExpertRatedPostIds();
+    if (mode === "rated") {
+      return normalized.filter((post) => ratedPostIds.has(String(post.id || "")));
+    }
+    if (mode === "unrated") {
+      return normalized.filter((post) => !ratedPostIds.has(String(post.id || "")));
+    }
+
+    return normalized;
+  }
+
   function getPostsForStream(streamType) {
     const sortedFeed = getFeedSortedPosts();
+    const filteredFeed = applyExpertFeedRatingFilter(sortedFeed);
 
     switch (streamType) {
       case "saved":
@@ -1342,7 +1381,7 @@
         }
         return sortedFeed.filter((post) => String(post.role || "").toLowerCase().includes("student"));
       default:
-        return sortedFeed;
+        return filteredFeed;
     }
   }
 
@@ -2011,6 +2050,43 @@
       state.feedSort = sortSelect.value;
       renderPostStreams();
       renderMostLikelyPosts();
+    });
+  }
+
+  function initExpertFeedRatingFilter() {
+    const filterWrap = document.querySelector("[data-expert-rating-filter-wrap]");
+    const filterSelect = document.querySelector("[data-feed-rating-filter]");
+
+    if (!filterWrap || !filterSelect) {
+      return;
+    }
+
+    const page = String(document.body.dataset.page || "").toLowerCase();
+    const isFeedPage = page === "index" || page === "feed";
+    const isExpertOnIndex = isFeedPage && state.isLoggedIn && state.userRole === "expert";
+    filterWrap.style.display = isExpertOnIndex ? "flex" : "none";
+
+    if (!isExpertOnIndex) {
+      state.feedRatingFilter = "all";
+      filterSelect.value = "all";
+      return;
+    }
+
+    const allowedFilters = new Set(["all", "rated", "unrated"]);
+    if (!allowedFilters.has(state.feedRatingFilter)) {
+      state.feedRatingFilter = "all";
+    }
+    filterSelect.value = state.feedRatingFilter;
+
+    if (filterSelect.dataset.bound === "true") {
+      return;
+    }
+
+    filterSelect.dataset.bound = "true";
+    filterSelect.addEventListener("change", () => {
+      const selected = String(filterSelect.value || "all").toLowerCase();
+      state.feedRatingFilter = allowedFilters.has(selected) ? selected : "all";
+      renderPostStreams();
     });
   }
 
@@ -4198,6 +4274,9 @@
     if (requiresPostsData) {
       dataTasks.push(loadPostTemplate(), loadPostsData());
     }
+    if ((page === "index" || page === "feed") && state.isLoggedIn && state.userRole === "expert") {
+      dataTasks.push(loadMyExpertRatingsData());
+    }
     if (requiresTrendingData) {
       dataTasks.push(loadTrendingInnovationsData());
     }
@@ -4221,6 +4300,7 @@
     await renderPostViewPage();
     await renderExpertRatingsPage();
     initFeedSort();
+    initExpertFeedRatingFilter();
     renderSearchResults();
     initMyProfileMediaEditor();
 

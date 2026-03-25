@@ -45,6 +45,14 @@
     <div data-component="sidebar-left"></div>
     <section class="feed content-column">
       <div data-component="create-post"></div>
+      <div class="card sort-toolbar expert-filter-toolbar" data-expert-rating-filter-wrap style="display:none;">
+        <label class="expert-filter-label" for="feed-rating-filter">Filter posts</label>
+        <select id="feed-rating-filter" class="post-sort-select" data-feed-rating-filter>
+          <option value="all">All Posts</option>
+          <option value="rated">Rated by Me</option>
+          <option value="unrated">Not Rated by Me</option>
+        </select>
+      </div>
       <div data-post-stream="feed"></div>
     </section>
     <div data-component="sidebar-right"></div>
