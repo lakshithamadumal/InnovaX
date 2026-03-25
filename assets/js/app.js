@@ -3674,7 +3674,7 @@
           backBtn.style.display = currentStep > 1 ? "inline-flex" : "none";
         }
         if (nextBtn) {
-          nextBtn.textContent = currentStep === maxSteps ? "Create Account" : "Next";
+          nextBtn.textContent = currentStep === maxSteps ? "Create" : "Next";
         }
       };
 
