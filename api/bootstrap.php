@@ -592,9 +592,27 @@ function initialize_core_schema()
         student_id VARCHAR(50),
         university_id INT,
         faculty_id INT,
+        faculty_name VARCHAR(150),
         department_id INT,
+        department_name VARCHAR(150),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )");
+
+    $studentProfileColumns = [];
+    $studentProfileColsResult = Database::search("SHOW COLUMNS FROM student_profiles");
+    while ($column = $studentProfileColsResult->fetch_assoc()) {
+        $fieldName = strtolower(trim((string)($column["Field"] ?? "")));
+        if ($fieldName !== "") {
+            $studentProfileColumns[$fieldName] = true;
+        }
+    }
+
+    if (!isset($studentProfileColumns["faculty_name"])) {
+        Database::iud("ALTER TABLE student_profiles ADD COLUMN faculty_name VARCHAR(150) NULL AFTER faculty_id");
+    }
+    if (!isset($studentProfileColumns["department_name"])) {
+        Database::iud("ALTER TABLE student_profiles ADD COLUMN department_name VARCHAR(150) NULL AFTER department_id");
+    }
 
     Database::iud("CREATE TABLE IF NOT EXISTS expert_profiles (
         user_id CHAR(36) PRIMARY KEY,

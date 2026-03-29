@@ -7,7 +7,7 @@ initialize_core_schema();
 
 try {
     $result = Database::search(
-        "SELECT u.id, u.full_name, u.profile_image_url, sp.university_id, sp.faculty_id, sp.department_id
+        "SELECT u.id, u.full_name, u.profile_image_url, sp.university_id, sp.faculty_id, sp.faculty_name, sp.department_id, sp.department_name
          FROM users u
          INNER JOIN student_profiles sp ON sp.user_id = u.id
          WHERE u.role = 'student'
@@ -19,6 +19,12 @@ try {
         $universityName = reference_name_by_id("universities", intval($row["university_id"] ?? 0));
         $facultyName = reference_name_by_id("faculties", intval($row["faculty_id"] ?? 0));
         $departmentName = reference_name_by_id("departments", intval($row["department_id"] ?? 0));
+        if ($facultyName === "") {
+            $facultyName = trim((string)($row["faculty_name"] ?? ""));
+        }
+        if ($departmentName === "") {
+            $departmentName = trim((string)($row["department_name"] ?? ""));
+        }
 
         $titleParts = [];
         if ($departmentName !== "") {

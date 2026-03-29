@@ -24,6 +24,8 @@ $studentId = trim($payload["student_id"] ?? "");
 $universityId = intval($payload["university_id"] ?? 0);
 $facultyId = intval($payload["faculty_id"] ?? 0);
 $departmentId = intval($payload["department_id"] ?? 0);
+$facultyName = trim((string)($payload["faculty_name"] ?? ""));
+$departmentName = trim((string)($payload["department_name"] ?? ""));
 $skills = is_array($payload["skills"] ?? null) ? $payload["skills"] : [];
 
 $expertTitle = trim($payload["title"] ?? "");
@@ -42,19 +44,32 @@ foreach ($skills as $skillRaw) {
 }
 
 if ($role === "student") {
-    if ($studentId === "" || $universityId <= 0 || $facultyId <= 0 || $departmentId <= 0) {
-        json_response(400, false, "Student registration requires student ID, university, faculty and department.");
+    if ($studentId === "" || $universityId <= 0) {
+        json_response(400, false, "Student registration requires student ID and university.");
     }
 
     if (!reference_id_exists("universities", $universityId)) {
         json_response(400, false, "Selected university is invalid.");
     }
-    if (!reference_id_exists("faculties", $facultyId)) {
-        json_response(400, false, "Selected faculty is invalid.");
+    $hasValidFacultyId = $facultyId > 0 && reference_id_exists("faculties", $facultyId);
+    $hasValidDepartmentId = $departmentId > 0 && reference_id_exists("departments", $departmentId);
+
+    if (!$hasValidFacultyId && $facultyName === "") {
+        json_response(400, false, "Please select a faculty or type a custom faculty name.");
     }
-    if (!reference_id_exists("departments", $departmentId)) {
-        json_response(400, false, "Selected department is invalid.");
+
+    if (!$hasValidDepartmentId && $departmentName === "") {
+        json_response(400, false, "Please select a department or type a custom department name.");
     }
+
+    if (strlen($facultyName) > 150 || strlen($departmentName) > 150) {
+        json_response(400, false, "Faculty and department names must be 150 characters or less.");
+    }
+
+    $facultyId = $hasValidFacultyId ? $facultyId : 0;
+    $departmentId = $hasValidDepartmentId ? $departmentId : 0;
+    $facultyName = $hasValidFacultyId ? "" : $facultyName;
+    $departmentName = $hasValidDepartmentId ? "" : $departmentName;
 
     if (count($normalizedSkills) > 5) {
         json_response(400, false, "Maximum 5 skills are allowed.");
@@ -87,10 +102,10 @@ try {
 
     if ($role === "student") {
         $insertStudent = Database::prepare(
-            "INSERT INTO student_profiles (user_id, student_id, university_id, faculty_id, department_id)
-             VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO student_profiles (user_id, student_id, university_id, faculty_id, faculty_name, department_id, department_name)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
-        $insertStudent->bind_param("ssiii", $userId, $studentId, $universityId, $facultyId, $departmentId);
+        $insertStudent->bind_param("ssiisis", $userId, $studentId, $universityId, $facultyId, $facultyName, $departmentId, $departmentName);
         if (!$insertStudent->execute()) {
             throw new Exception("Failed to create student profile.");
         }

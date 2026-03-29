@@ -13,7 +13,9 @@ try {
                 sp.student_id,
                                 sp.university_id,
                                 sp.faculty_id,
+                    sp.faculty_name,
                                 sp.department_id,
+                    sp.department_name,
                 ep.title AS expert_title,
                                 ep.organization AS expert_organization,
                                 COALESCE(GROUP_CONCAT(DISTINCT us.skill_id ORDER BY us.skill_id SEPARATOR ','), '') AS skill_id_list
@@ -23,7 +25,7 @@ try {
          LEFT JOIN user_skills us ON us.user_id = u.id
          WHERE u.id = ?
          GROUP BY u.id, u.role, u.full_name, u.email, u.profile_image_url, u.cover_image_url, u.bio,
-                                    sp.student_id, sp.university_id, sp.faculty_id, sp.department_id,
+                                    sp.student_id, sp.university_id, sp.faculty_id, sp.faculty_name, sp.department_id, sp.department_name,
                                     ep.title, ep.organization
          LIMIT 1"
     );
@@ -56,6 +58,12 @@ try {
     $row["university_name"] = reference_name_by_id("universities", intval($row["university_id"] ?? 0));
     $facultyName = reference_name_by_id("faculties", intval($row["faculty_id"] ?? 0));
     $departmentName = reference_name_by_id("departments", intval($row["department_id"] ?? 0));
+    if ($facultyName === "") {
+        $facultyName = trim((string)($row["faculty_name"] ?? ""));
+    }
+    if ($departmentName === "") {
+        $departmentName = trim((string)($row["department_name"] ?? ""));
+    }
 
     json_response(200, true, "Profile loaded.", [
         "user" => normalize_user_for_client($row),

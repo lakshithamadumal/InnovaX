@@ -3846,14 +3846,26 @@
         const universityId = Number(universityIdInput?.value || 0);
         const facultyId = Number(facultyIdInput?.value || 0);
         const departmentId = Number(departmentIdInput?.value || 0);
+        const facultyText = String(facultySearch?.value || "").trim();
+        const departmentText = String(departmentSearch?.value || "").trim();
 
         if (!studentId) {
           showToast("Student ID is required.");
           studentIdInput?.focus();
           return false;
         }
-        if (!universityId || !facultyId || !departmentId) {
-          showToast("Please select university, faculty and department.");
+        if (!universityId) {
+          showToast("Please select a university.");
+          return false;
+        }
+        if (!facultyId && !facultyText) {
+          showToast("Please select a faculty or type one.");
+          facultySearch?.focus();
+          return false;
+        }
+        if (!departmentId && !departmentText) {
+          showToast("Please select a department or type one.");
+          departmentSearch?.focus();
           return false;
         }
         return true;
@@ -4154,10 +4166,14 @@
         };
 
         if (selectedRole === "student") {
+          const facultyText = String(facultySearch?.value || "").trim();
+          const departmentText = String(departmentSearch?.value || "").trim();
           payload.student_id = String(studentIdInput?.value || "").trim();
           payload.university_id = Number(universityIdInput?.value || 0);
           payload.faculty_id = Number(facultyIdInput?.value || 0);
           payload.department_id = Number(departmentIdInput?.value || 0);
+          payload.faculty_name = payload.faculty_id > 0 ? "" : facultyText;
+          payload.department_name = payload.department_id > 0 ? "" : departmentText;
           payload.skills = selectedSkills;
         } else if (selectedRole === "expert") {
           payload.title = String(titleInput?.value || "").trim();
@@ -4221,8 +4237,16 @@
           return;
         }
 
-        if (!universityId || !facultyId || !departmentId) {
-          showToast("Please select valid university, faculty, and department.");
+        if (!universityId) {
+          showToast("Please select a valid university.");
+          return;
+        }
+        if (!facultyId && !faculty) {
+          showToast("Please select a faculty or type one.");
+          return;
+        }
+        if (!departmentId && !department) {
+          showToast("Please select a department or type one.");
           return;
         }
 
@@ -4236,7 +4260,9 @@
             student_id: studentId,
             university_id: universityId,
             faculty_id: facultyId,
+            faculty_name: facultyId > 0 ? "" : faculty,
             department_id: departmentId,
+            department_name: departmentId > 0 ? "" : department,
             skills
           });
 

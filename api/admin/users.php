@@ -13,6 +13,7 @@ $sql = "SELECT u.id, u.role, u.full_name, u.email, u.bio, u.profile_image_url, u
             sp.student_id, sp.university_id, sp.faculty_id, sp.department_id,
             ep.title AS expert_title, ep.organization AS expert_organization,
             COALESCE(post_counts.total_posts, 0) AS total_posts
+               , sp.faculty_name, sp.department_name
         FROM users u
         LEFT JOIN student_profiles sp ON sp.user_id = u.id
         LEFT JOIN expert_profiles ep ON ep.user_id = u.id
@@ -66,8 +67,8 @@ try {
             "createdAt" => $row["created_at"],
             "studentId" => $row["student_id"] ?: "",
             "university" => reference_name_by_id("universities", intval($row["university_id"] ?? 0)),
-            "faculty" => reference_name_by_id("faculties", intval($row["faculty_id"] ?? 0)),
-            "department" => reference_name_by_id("departments", intval($row["department_id"] ?? 0)),
+               "faculty" => (reference_name_by_id("faculties", intval($row["faculty_id"] ?? 0)) ?: trim((string)($row["faculty_name"] ?? ""))),
+               "department" => (reference_name_by_id("departments", intval($row["department_id"] ?? 0)) ?: trim((string)($row["department_name"] ?? ""))),
             "expertTitle" => $row["expert_title"] ?: "",
             "expertOrganization" => $row["expert_organization"] ?: "",
             "totalPosts" => intval($row["total_posts"] ?? 0)
