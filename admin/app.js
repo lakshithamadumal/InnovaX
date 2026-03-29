@@ -216,12 +216,17 @@
     }
 
     if (!posts.length) {
-      body.innerHTML = '<tr><td colspan="7" class="muted">No posts found.</td></tr>';
+      body.innerHTML = '<tr><td colspan="8" class="muted">No posts found.</td></tr>';
       return;
     }
 
     body.innerHTML = posts.map((post) => {
       const postViewUrl = `https://innovax.works/post-view.html?postId=${encodeURIComponent(String(post.id || ""))}`;
+      const hasDocument = post.mediaType === "pdf" && post.mediaUrl;
+      const documentLink = hasDocument 
+        ? `<a class="btn-secondary" href="${escapeHtml(post.mediaUrl)}" download style="font-size:0.85rem;"><i class="fas fa-download"></i> Document</a>`
+        : '<span class="muted">—</span>';
+      
       return `
         <tr>
           <td><strong>${escapeHtml(post.title)}</strong><div class="muted">${escapeHtml(post.id)}</div></td>
@@ -230,6 +235,7 @@
           <td>${Number(post.likes || 0)}</td>
           <td>${Number(post.ratingsCount || 0)}</td>
           <td>${Number(post.averageRating || 0)}</td>
+          <td>${documentLink}</td>
           <td><a class="btn-secondary" href="${postViewUrl}" target="_blank" rel="noopener">View Post</a></td>
         </tr>
       `;

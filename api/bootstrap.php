@@ -381,6 +381,76 @@ function upload_image_to_imgbb($imageDataUrl, $namePrefix = "innovax")
     return $url;
 }
 
+function parse_document_data_url($dataUrl)
+{
+    $value = trim((string)$dataUrl);
+    if ($value === "") {
+        return null;
+    }
+
+    if (!preg_match('/^data:([a-zA-Z0-9\/\+\-]+);base64,([A-Za-z0-9+\/=\s]+)$/i', $value, $matches)) {
+        return null;
+    }
+
+    $mimeType = strtolower($matches[1]);
+    $allowed = [
+        'application/pdf' => 'pdf',
+        'application/msword' => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        'application/vnd.ms-excel' => 'xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+        'application/vnd.ms-powerpoint' => 'ppt',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+        'text/plain' => 'txt'
+    ];
+
+    if (!isset($allowed[$mimeType])) {
+        return null;
+    }
+
+    $binary = base64_decode($matches[2], true);
+    if ($binary === false || strlen($binary) === 0) {
+        return null;
+    }
+
+    return [
+        "extension" => $allowed[$mimeType],
+        "mimeType" => $mimeType,
+        "binary" => $binary
+    ];
+}
+
+function upload_document_locally($documentDataUrl, $namePrefix = "document")
+{
+    $parsed = parse_document_data_url($documentDataUrl);
+    if (!$parsed) {
+        throw new Exception("Invalid document format. Supported: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT");
+    }
+
+    $maxSize = 50 * 1024 * 1024;
+    if (strlen($parsed["binary"]) > $maxSize) {
+        throw new Exception("Document is too large. Maximum 50MB allowed.");
+    }
+
+    $uploadDir = __DIR__ . "/../assets/documents";
+    if (!is_dir($uploadDir)) {
+        if (!mkdir($uploadDir, 0755, true)) {
+            throw new Exception("Failed to create upload directory.");
+        }
+    }
+
+    $fileName = preg_replace('/[^a-zA-Z0-9_-]/', '', $namePrefix) . "_" . date("Ymd_His") . "_" . bin2hex(random_bytes(4)) . "." . $parsed["extension"];
+    $filePath = $uploadDir . "/" . $fileName;
+
+    if (!file_put_contents($filePath, $parsed["binary"])) {
+        throw new Exception("Failed to save document.");
+    }
+
+    chmod($filePath, 0644);
+
+    return "assets/documents/" . $fileName;
+}
+
 function initialize_reference_data()
 {
     static $initialized = false;

@@ -1093,15 +1093,28 @@
         <button class="post-desc-toggle" type="button" data-post-desc-toggle data-expanded="false">See more</button>
       `
       : escapeHtml(descText);
-    const hasImageMedia = Boolean(post.media && post.media.url);
+    const hasImageMedia = Boolean(post.media && post.media.url && post.media.type === "image");
+    const hasDocumentMedia = Boolean(post.media && post.media.url && post.media.type === "pdf");
     const mediaHtml = post.media
       ? `
         <div class="post-media">
           <div class="post-media-inner ${hasImageMedia ? "image-ratio" : ""}">
             ${hasImageMedia
               ? `<img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />`
+              : hasDocumentMedia
+              ? `
+                <div class="document-download-container">
+                  <div class="document-icon">
+                    <i class="fas fa-file-pdf"></i>
+                  </div>
+                  <p class="document-label">${escapeHtml(post.media.label || "Post document")}</p>
+                  <a href="${escapeHtml(post.media.url)}" download class="btn-primary" style="margin-top:1rem;">
+                    <i class="fas fa-download"></i> Download
+                  </a>
+                </div>
+              `
               : `<span style="font-size:3.5rem">${escapeHtml(post.media.emoji || "💡")}</span>`}
-            ${hasImageMedia ? "" : `<p>${escapeHtml(post.media.label || "Post asset")}</p>`}
+            ${hasImageMedia || hasDocumentMedia ? "" : `<p>${escapeHtml(post.media.label || "Post asset")}</p>`}
           </div>
         </div>
       `
@@ -2113,17 +2126,34 @@
     };
 
     const renderPreview = () => {
-      if (!previewWrap || !previewImage || !previewLabel) {
+      if (!previewWrap || !previewLabel) {
         return;
       }
 
-      if (!state.createPostMedia?.previewUrl) {
-        clearPreview();
+      if (!state.createPostMedia) {
+        previewWrap.style.display = "none";
         return;
       }
 
-      previewImage.src = state.createPostMedia.previewUrl;
-      previewLabel.textContent = state.createPostMedia.label || "Selected image";
+      previewLabel.textContent = state.createPostMedia.label || "Selected file";
+      
+      if (state.createPostMedia.type === "image" && previewImage) {
+        previewImage.style.display = "block";
+        previewImage.src = state.createPostMedia.previewUrl || "";
+        const docIcon = previewWrap.querySelector("[data-create-preview-document]");
+        if (docIcon) {
+          docIcon.style.display = "none";
+        }
+      } else if (state.createPostMedia.type === "document") {
+        if (previewImage) {
+          previewImage.style.display = "none";
+        }
+        const docIcon = previewWrap.querySelector("[data-create-preview-document]");
+        if (docIcon) {
+          docIcon.style.display = "flex";
+        }
+      }
+      
       previewWrap.style.display = "grid";
     };
 
@@ -2167,30 +2197,62 @@
           return;
         }
 
-        if (type !== "image") {
+        if (type === "image") {
+          if (!file.type.startsWith("image/")) {
+            showToast("Please select an image file.");
+            return;
+          }
+
+          if (file.size > 8 * 1024 * 1024) {
+            showToast("Image must be under 8MB.");
+            return;
+          }
+
+          if (state.createPostMedia?.previewUrl) {
+            URL.revokeObjectURL(state.createPostMedia.previewUrl);
+          }
+
+          state.createPostMedia = {
+            type: "image",
+            file,
+            label: file.name || "Post image",
+            previewUrl: URL.createObjectURL(file)
+          };
+        } else if (type === "document") {
+          const allowedTypes = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "text/plain"
+          ];
+
+          if (!allowedTypes.includes(file.type)) {
+            showToast("Please select a valid document (PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, or TXT).");
+            return;
+          }
+
+          if (file.size > 50 * 1024 * 1024) {
+            showToast("Document must be under 50MB.");
+            return;
+          }
+
+          if (state.createPostMedia?.previewUrl && state.createPostMedia.type === "image") {
+            URL.revokeObjectURL(state.createPostMedia.previewUrl);
+          }
+
+          state.createPostMedia = {
+            type: "document",
+            file,
+            label: file.name || "Post document"
+          };
+        } else {
           return;
         }
 
-        if (!file.type.startsWith("image/")) {
-          showToast("Please select an image file.");
-          return;
-        }
-
-        if (file.size > 8 * 1024 * 1024) {
-          showToast("Image must be under 8MB.");
-          return;
-        }
-
-        if (state.createPostMedia?.previewUrl) {
-          URL.revokeObjectURL(state.createPostMedia.previewUrl);
-        }
-
-        state.createPostMedia = {
-          type: "image",
-          file,
-          label: file.name || "Post image",
-          previewUrl: URL.createObjectURL(file)
-        };
         updateTriggerLabel();
         renderPreview();
       });
@@ -2250,12 +2312,17 @@
     try {
       let mediaType = "none";
       let mediaDataUrl = "";
+      let documentDataUrl = "";
       let mediaLabel = "";
 
       if (state.createPostMedia?.type === "image" && state.createPostMedia.file) {
         mediaType = "image";
         mediaDataUrl = await fileToOptimizedDataUrl(state.createPostMedia.file, "post");
         mediaLabel = state.createPostMedia.label || "Post image";
+      } else if (state.createPostMedia?.type === "document" && state.createPostMedia.file) {
+        mediaType = "pdf";
+        documentDataUrl = await fileToDataUrl(state.createPostMedia.file);
+        mediaLabel = state.createPostMedia.label || "Post document";
       }
 
       await postJson("api/posts/create.php", {
@@ -2264,6 +2331,7 @@
         tags,
         media_type: mediaType,
         media_data_url: mediaDataUrl,
+        document_data_url: documentDataUrl,
         media_label: mediaLabel
       });
 
@@ -3100,10 +3168,31 @@
       if (post.media) {
         mediaWrap.style.display = "block";
         if (post.media.url) {
-          mediaInnerNode.classList.add("image-ratio");
-          mediaInnerNode.innerHTML = `
-            <img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />
-          `;
+          if (post.media.type === "image") {
+            mediaInnerNode.classList.add("image-ratio");
+            mediaInnerNode.innerHTML = `
+              <img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />
+            `;
+          } else if (post.media.type === "pdf") {
+            mediaInnerNode.classList.remove("image-ratio");
+            mediaInnerNode.innerHTML = `
+              <div class="document-download-container">
+                <div class="document-icon">
+                  <i class="fas fa-file-pdf"></i>
+                </div>
+                <p class="document-label">${escapeHtml(post.media.label || "Post document")}</p>
+                <a href="${escapeHtml(post.media.url)}" download class="btn-primary" style="margin-top:1rem;">
+                  <i class="fas fa-download"></i> Download
+                </a>
+              </div>
+            `;
+          } else {
+            mediaInnerNode.classList.remove("image-ratio");
+            mediaInnerNode.innerHTML = `
+              <span style="font-size:3.5rem;" data-post-media-emoji>${escapeHtml(post.media.emoji || "💡")}</span>
+              <p data-post-media-label>${escapeHtml(post.media.label || "Post media")}</p>
+            `;
+          }
         } else {
           mediaInnerNode.classList.remove("image-ratio");
           mediaInnerNode.innerHTML = `

@@ -17,6 +17,7 @@ try {
     $mediaType = strtolower(trim((string)($payload["media_type"] ?? "none")));
     $mediaLabel = trim((string)($payload["media_label"] ?? ""));
     $mediaDataUrl = trim((string)($payload["media_data_url"] ?? ""));
+    $documentDataUrl = trim((string)($payload["document_data_url"] ?? ""));
     $tags = is_array($payload["tags"] ?? null) ? $payload["tags"] : [];
 
     if ($title === "") {
@@ -32,9 +33,9 @@ try {
         json_response(400, false, "Title should be between 2 and 20 words.");
     }
 
-    $allowedMediaTypes = ["none", "image"];
+    $allowedMediaTypes = ["none", "image", "pdf"];
     if (!in_array($mediaType, $allowedMediaTypes, true)) {
-        json_response(400, false, "Only image media is supported right now.");
+        json_response(400, false, "Only image and PDF media are supported.");
     }
 
     $mediaUrl = null;
@@ -45,6 +46,14 @@ try {
         $mediaUrl = upload_image_to_imgbb($mediaDataUrl, "post_" . $authUser["id"]);
         if ($mediaLabel === "") {
             $mediaLabel = "Post Image";
+        }
+    } elseif ($mediaType === "pdf") {
+        if ($documentDataUrl === "") {
+            json_response(400, false, "Document data is required for document posts.");
+        }
+        $mediaUrl = upload_document_locally($documentDataUrl, "post_" . $authUser["id"]);
+        if ($mediaLabel === "") {
+            $mediaLabel = "Post Document";
         }
     } else {
         $mediaType = "none";
@@ -118,8 +127,8 @@ try {
             "authorId" => $authorId,
             "title" => $title,
             "desc" => $description,
-            "media" => $mediaType === "image" ? [
-                "type" => "image",
+            "media" => ($mediaType === "image" || $mediaType === "pdf") ? [
+                "type" => $mediaType,
                 "url" => $mediaUrl,
                 "label" => $mediaLabel
             ] : null,
