@@ -129,17 +129,20 @@
 	background: linear-gradient(135deg, var(--primary), #6f8ee8 62%, var(--accent));
 	border: 1px solid var(--border);
 	position: relative;
+	z-index: 0;
 	background-size: cover;
 	background-position: center;
 }
 
 .profile-hero {
-	margin-top: -34px;
+	margin-top: 0;
 	padding: 0 18px 18px;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 14px;
 	align-items: flex-end;
+	position: relative;
+	z-index: 1;
 }
 
 .profile-avatar-lg {
