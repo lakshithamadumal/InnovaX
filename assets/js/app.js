@@ -102,7 +102,7 @@
         month: "short",
         day: "numeric"
       });
-      return `${dayPart} • ${timePart}`;
+      return `${dayPart} | ${timePart}`;
     }
 
     return parsed.toLocaleDateString(undefined, {
@@ -1253,7 +1253,7 @@
           chunks.push(`ID: ${studentId}`);
         }
 
-        roleMetaNode.textContent = chunks.length ? chunks.join(" • ") : "Student profile";
+        roleMetaNode.textContent = chunks.length ? chunks.join(" | ") : "Student profile";
       } else if (state.userRole === "expert") {
         const title = String(state.currentUser?.title || "").trim();
         const organization = String(state.currentUser?.organization || "").trim();
@@ -1266,7 +1266,7 @@
           chunks.push(organization);
         }
 
-        roleMetaNode.textContent = chunks.length ? chunks.join(" • ") : "Expert profile";
+        roleMetaNode.textContent = chunks.length ? chunks.join(" | ") : "Expert profile";
       } else {
         roleMetaNode.textContent = "";
       }
@@ -1307,7 +1307,7 @@
           chunks.push(department);
         }
 
-        roleMetaNode.textContent = chunks.length ? chunks.join(" • ") : "Student profile";
+        roleMetaNode.textContent = chunks.length ? chunks.join(" | ") : "Student profile";
       } else {
         const title = String(state.viewedUserProfile?.user?.title || "").trim();
         const organization = String(state.viewedUserProfile?.user?.organization || "").trim();
@@ -1320,7 +1320,7 @@
           chunks.push(organization);
         }
 
-        roleMetaNode.textContent = chunks.length ? chunks.join(" • ") : "Expert profile";
+        roleMetaNode.textContent = chunks.length ? chunks.join(" | ") : "Expert profile";
       }
     }
 
