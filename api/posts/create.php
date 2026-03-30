@@ -18,6 +18,7 @@ try {
     $mediaLabel = trim((string)($payload["media_label"] ?? ""));
     $mediaDataUrl = trim((string)($payload["media_data_url"] ?? ""));
     $documentDataUrl = trim((string)($payload["document_data_url"] ?? ""));
+    $documentLabel = trim((string)($payload["document_label"] ?? ""));
     $tags = is_array($payload["tags"] ?? null) ? $payload["tags"] : [];
 
     if ($title === "") {
@@ -38,26 +39,40 @@ try {
         json_response(400, false, "Only image and PDF media are supported.");
     }
 
+    $hasImageUpload = $mediaDataUrl !== "";
+    $hasDocumentUpload = $documentDataUrl !== "";
+
+    if ($hasDocumentUpload && !$hasImageUpload) {
+        json_response(400, false, "Image is required when attaching a document.");
+    }
+
+    if ($mediaType === "image" && !$hasImageUpload) {
+        json_response(400, false, "Image data is required for image posts.");
+    }
+
+    if ($mediaType === "pdf" && !$hasDocumentUpload) {
+        json_response(400, false, "Document data is required for document posts.");
+    }
+
     $mediaUrl = null;
-    if ($mediaType === "image") {
-        if ($mediaDataUrl === "") {
-            json_response(400, false, "Image data is required for image posts.");
-        }
+    $documentUrl = null;
+
+    if ($hasImageUpload) {
         $mediaUrl = upload_image_to_imgbb($mediaDataUrl, "post_" . $authUser["id"]);
         if ($mediaLabel === "") {
             $mediaLabel = "Post Image";
         }
-    } elseif ($mediaType === "pdf") {
-        if ($documentDataUrl === "") {
-            json_response(400, false, "Document data is required for document posts.");
-        }
-        $mediaUrl = upload_document_locally($documentDataUrl, "post_" . $authUser["id"]);
-        if ($mediaLabel === "") {
-            $mediaLabel = "Post Document";
-        }
+        $mediaType = "image";
     } else {
         $mediaType = "none";
         $mediaLabel = "";
+    }
+
+    if ($hasDocumentUpload) {
+        $documentUrl = upload_document_locally($documentDataUrl, "post_" . $authUser["id"]);
+        if ($documentLabel === "") {
+            $documentLabel = "Post Document";
+        }
     }
 
     $postId = generate_uuid_v4();
@@ -72,10 +87,10 @@ try {
     $connection->begin_transaction();
 
     $insertPost = Database::prepare(
-        "INSERT INTO posts (id, author_id, title, description, media_type, media_url, media_label, is_company_owned)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 0)"
+           "INSERT INTO posts (id, author_id, title, description, media_type, media_url, media_label, document_url, document_label, is_company_owned)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"
     );
-    $insertPost->bind_param("sssssss", $postId, $authorId, $title, $description, $mediaType, $mediaUrl, $mediaLabel);
+        $insertPost->bind_param("sssssssss", $postId, $authorId, $title, $description, $mediaType, $mediaUrl, $mediaLabel, $documentUrl, $documentLabel);
     if (!$insertPost->execute()) {
         throw new Exception("Unable to create post.");
     }
@@ -127,10 +142,15 @@ try {
             "authorId" => $authorId,
             "title" => $title,
             "desc" => $description,
-            "media" => ($mediaType === "image" || $mediaType === "pdf") ? [
+            "media" => ($mediaType === "image") ? [
                 "type" => $mediaType,
                 "url" => $mediaUrl,
                 "label" => $mediaLabel
+            ] : null,
+            "document" => $documentUrl ? [
+                "type" => "pdf",
+                "url" => $documentUrl,
+                "label" => $documentLabel
             ] : null,
             "tags" => array_values(array_filter(array_map(function ($tag) {
                 $cleanTag = trim((string)$tag);

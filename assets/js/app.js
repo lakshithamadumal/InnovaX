@@ -33,7 +33,10 @@
     trendingInnovations: [],
     feedSort: "recent",
     feedRatingFilter: "all",
-    createPostMedia: null,
+    createPostMedia: {
+      image: null,
+      document: null
+    },
     expertRatings: []
   };
 
@@ -829,6 +832,7 @@
           desc: post.desc || "",
           tags: Array.isArray(post.tags) ? post.tags : [],
           media: post.media || null,
+          document: post.document || null,
           likes: Number(post.likes || 0),
           liked: Boolean(post.liked),
           saved: Boolean(post.saved),
@@ -871,6 +875,7 @@
         desc: post.desc || "",
         tags: Array.isArray(post.tags) ? post.tags : [],
         media: post.media || null,
+        document: post.document || null,
         likes: Number(post.likes || 0),
         liked: Boolean(post.liked),
         saved: Boolean(post.saved),
@@ -1094,31 +1099,32 @@
       `
       : escapeHtml(descText);
     const hasImageMedia = Boolean(post.media && post.media.url && post.media.type === "image");
-    const hasDocumentMedia = Boolean(post.media && post.media.url && post.media.type === "pdf");
-    const mediaHtml = post.media
+    const hasDocument = Boolean(post.document && post.document.url);
+    const imageHtml = hasImageMedia
       ? `
         <div class="post-media">
-          <div class="post-media-inner ${hasImageMedia ? "image-ratio" : ""}">
-            ${hasImageMedia
-              ? `<img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />`
-              : hasDocumentMedia
-              ? `
-                <div class="document-download-container">
-                  <div class="document-icon">
-                    <i class="fas fa-file-pdf"></i>
-                  </div>
-                  <p class="document-label">${escapeHtml(post.media.label || "Post document")}</p>
-                  <a href="${escapeHtml(post.media.url)}" download class="btn-primary" style="margin-top:1rem;">
-                    <i class="fas fa-download"></i> Download
-                  </a>
-                </div>
-              `
-              : `<span style="font-size:3.5rem">${escapeHtml(post.media.emoji || "💡")}</span>`}
-            ${hasImageMedia || hasDocumentMedia ? "" : `<p>${escapeHtml(post.media.label || "Post asset")}</p>`}
+          <div class="post-media-inner image-ratio">
+            <img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />
           </div>
         </div>
       `
       : "";
+    const documentHtml = hasDocument
+      ? `
+        <div class="post-document">
+          <div class="document-download-container">
+            <div class="document-icon">
+              <i class="fas fa-file-pdf"></i>
+            </div>
+            <p class="document-label">${escapeHtml(post.document.label || "Post document")}</p>
+            <a href="${escapeHtml(post.document.url)}" download class="btn-primary" style="margin-top:1rem;">
+              <i class="fas fa-download"></i> Download
+            </a>
+          </div>
+        </div>
+      `
+      : "";
+    const mediaHtml = `${imageHtml}${documentHtml}`;
 
     return applyTemplate(state.postTemplate, {
       id: escapeHtml(post.id),
@@ -2118,11 +2124,29 @@
         previewWrap.style.display = "none";
       }
       if (previewImage) {
+        previewImage.style.display = "none";
         previewImage.src = "";
+      }
+      const docIcon = previewWrap?.querySelector("[data-create-preview-document]");
+      if (docIcon) {
+        docIcon.style.display = "none";
       }
       if (previewLabel) {
         previewLabel.textContent = "";
       }
+    };
+
+    const getComposerMedia = () => {
+      if (!state.createPostMedia || typeof state.createPostMedia !== "object") {
+        state.createPostMedia = { image: null, document: null };
+      }
+      if (!Object.prototype.hasOwnProperty.call(state.createPostMedia, "image")) {
+        state.createPostMedia.image = null;
+      }
+      if (!Object.prototype.hasOwnProperty.call(state.createPostMedia, "document")) {
+        state.createPostMedia.document = null;
+      }
+      return state.createPostMedia;
     };
 
     const renderPreview = () => {
@@ -2130,30 +2154,36 @@
         return;
       }
 
-      if (!state.createPostMedia) {
+      const composerMedia = getComposerMedia();
+      const imageMedia = composerMedia.image;
+      const documentMedia = composerMedia.document;
+      const hasImage = Boolean(imageMedia && imageMedia.previewUrl);
+      const hasDocument = Boolean(documentMedia && documentMedia.file);
+
+      if (!hasImage && !hasDocument) {
         previewWrap.style.display = "none";
         return;
       }
 
-      previewLabel.textContent = state.createPostMedia.label || "Selected file";
-      
-      if (state.createPostMedia.type === "image" && previewImage) {
-        previewImage.style.display = "block";
-        previewImage.src = state.createPostMedia.previewUrl || "";
-        const docIcon = previewWrap.querySelector("[data-create-preview-document]");
-        if (docIcon) {
-          docIcon.style.display = "none";
-        }
-      } else if (state.createPostMedia.type === "document") {
-        if (previewImage) {
-          previewImage.style.display = "none";
-        }
-        const docIcon = previewWrap.querySelector("[data-create-preview-document]");
-        if (docIcon) {
-          docIcon.style.display = "flex";
-        }
+      const previewLabels = [];
+      if (imageMedia?.label) {
+        previewLabels.push(`Image: ${imageMedia.label}`);
       }
-      
+      if (documentMedia?.label) {
+        previewLabels.push(`Document: ${documentMedia.label}`);
+      }
+      previewLabel.textContent = previewLabels.join(" | ") || "Selected files";
+
+      if (previewImage) {
+        previewImage.style.display = hasImage ? "block" : "none";
+        previewImage.src = hasImage ? imageMedia.previewUrl : "";
+      }
+
+      const docIcon = previewWrap.querySelector("[data-create-preview-document]");
+      if (docIcon) {
+        docIcon.style.display = hasDocument ? "flex" : "none";
+      }
+
       previewWrap.style.display = "grid";
     };
 
@@ -2161,8 +2191,17 @@
       if (!triggerInput) {
         return;
       }
-      if (state.createPostMedia?.label) {
-        triggerInput.value = `Selected: ${state.createPostMedia.label}`;
+      const composerMedia = getComposerMedia();
+      const parts = [];
+      if (composerMedia.image?.label) {
+        parts.push("Image");
+      }
+      if (composerMedia.document?.label) {
+        parts.push("Document");
+      }
+
+      if (parts.length) {
+        triggerInput.value = `Selected: ${parts.join(" + ")}`;
       } else {
         triggerInput.value = "";
       }
@@ -2208,12 +2247,12 @@
             return;
           }
 
-          if (state.createPostMedia?.previewUrl) {
-            URL.revokeObjectURL(state.createPostMedia.previewUrl);
+          const composerMedia = getComposerMedia();
+          if (composerMedia.image?.previewUrl) {
+            URL.revokeObjectURL(composerMedia.image.previewUrl);
           }
 
-          state.createPostMedia = {
-            type: "image",
+          composerMedia.image = {
             file,
             label: file.name || "Post image",
             previewUrl: URL.createObjectURL(file)
@@ -2240,12 +2279,8 @@
             return;
           }
 
-          if (state.createPostMedia?.previewUrl && state.createPostMedia.type === "image") {
-            URL.revokeObjectURL(state.createPostMedia.previewUrl);
-          }
-
-          state.createPostMedia = {
-            type: "document",
+          const composerMedia = getComposerMedia();
+          composerMedia.document = {
             file,
             label: file.name || "Post document"
           };
@@ -2260,14 +2295,21 @@
 
     if (removeBtn) {
       removeBtn.addEventListener("click", () => {
-        if (state.createPostMedia?.previewUrl) {
-          URL.revokeObjectURL(state.createPostMedia.previewUrl);
+        const composerMedia = getComposerMedia();
+        if (composerMedia.image?.previewUrl) {
+          URL.revokeObjectURL(composerMedia.image.previewUrl);
         }
-        state.createPostMedia = null;
+        state.createPostMedia = {
+          image: null,
+          document: null
+        };
         updateTriggerLabel();
         clearPreview();
       });
     }
+
+    renderPreview();
+    updateTriggerLabel();
   }
 
   async function publishFromComposer(card) {
@@ -2310,19 +2352,34 @@
     setSubmitBusy(publishBtn, true, "Publishing...");
 
     try {
+      const composerMedia = state.createPostMedia && typeof state.createPostMedia === "object"
+        ? state.createPostMedia
+        : { image: null, document: null };
+      const imageMedia = composerMedia.image;
+      const documentMedia = composerMedia.document;
+      const hasImage = Boolean(imageMedia?.file);
+      const hasDocument = Boolean(documentMedia?.file);
+
+      if (hasDocument && !hasImage) {
+        showToast("Add an image when uploading a document.");
+        return;
+      }
+
       let mediaType = "none";
       let mediaDataUrl = "";
       let documentDataUrl = "";
       let mediaLabel = "";
+      let documentLabel = "";
 
-      if (state.createPostMedia?.type === "image" && state.createPostMedia.file) {
+      if (hasImage) {
         mediaType = "image";
-        mediaDataUrl = await fileToOptimizedDataUrl(state.createPostMedia.file, "post");
-        mediaLabel = state.createPostMedia.label || "Post image";
-      } else if (state.createPostMedia?.type === "document" && state.createPostMedia.file) {
-        mediaType = "pdf";
-        documentDataUrl = await fileToDataUrl(state.createPostMedia.file);
-        mediaLabel = state.createPostMedia.label || "Post document";
+        mediaDataUrl = await fileToOptimizedDataUrl(imageMedia.file, "post");
+        mediaLabel = imageMedia.label || "Post image";
+      }
+
+      if (hasDocument) {
+        documentDataUrl = await fileToDataUrl(documentMedia.file);
+        documentLabel = documentMedia.label || "Post document";
       }
 
       await postJson("api/posts/create.php", {
@@ -2332,7 +2389,8 @@
         media_type: mediaType,
         media_data_url: mediaDataUrl,
         document_data_url: documentDataUrl,
-        media_label: mediaLabel
+        media_label: mediaLabel,
+        document_label: documentLabel
       });
 
       await loadPostsData();
@@ -2345,19 +2403,29 @@
       if (titleEl) titleEl.value = "";
       if (descEl) descEl.value = "";
       if (tagsEl) tagsEl.value = "";
-      if (state.createPostMedia?.previewUrl) {
-        URL.revokeObjectURL(state.createPostMedia.previewUrl);
+      if (state.createPostMedia?.image?.previewUrl) {
+        URL.revokeObjectURL(state.createPostMedia.image.previewUrl);
       }
-      state.createPostMedia = null;
+      state.createPostMedia = {
+        image: null,
+        document: null
+      };
       const triggerInput = card.querySelector("[data-open-editor]");
       if (triggerInput) {
         triggerInput.value = "";
       }
       const previewWrap = card.querySelector("[data-create-upload-preview]");
       const previewImage = card.querySelector("[data-create-preview-image]");
+      const previewDoc = card.querySelector("[data-create-preview-document]");
       const previewLabel = card.querySelector("[data-create-preview-label]");
       if (previewWrap) previewWrap.style.display = "none";
-      if (previewImage) previewImage.src = "";
+      if (previewImage) {
+        previewImage.src = "";
+        previewImage.style.display = "none";
+      }
+      if (previewDoc) {
+        previewDoc.style.display = "none";
+      }
       if (previewLabel) previewLabel.textContent = "";
 
       showToast("Post published.");
@@ -2409,7 +2477,7 @@
     } else {
       composer.classList.remove("create-post-disabled");
       if (roleNote) {
-        roleNote.textContent = "Student posts are published immediately.";
+        roleNote.textContent = "Student posts are published immediately. If you attach a document, you must also attach an image.";
       }
     }
 
@@ -3146,6 +3214,7 @@
     const tagsNode = document.querySelector("[data-post-tags]");
     const mediaWrap = document.querySelector("[data-post-media]");
     const mediaInnerNode = document.querySelector("[data-post-media-inner]");
+    const documentWrap = document.querySelector("[data-post-document]");
     const detailCard = document.getElementById("post-detail-card");
     const likeBtn = document.querySelector("[data-like-btn]");
     const saveBtn = document.querySelector("[data-save-btn]");
@@ -3165,44 +3234,50 @@
     }
 
     if (mediaWrap && mediaInnerNode) {
-      if (post.media) {
+      const hasImage = Boolean(post.media && post.media.type === "image" && post.media.url);
+      const hasDocument = Boolean(post.document && post.document.url);
+
+      if (hasImage || hasDocument) {
         mediaWrap.style.display = "block";
-        if (post.media.url) {
-          if (post.media.type === "image") {
-            mediaInnerNode.classList.add("image-ratio");
-            mediaInnerNode.innerHTML = `
-              <img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />
-            `;
-          } else if (post.media.type === "pdf") {
-            mediaInnerNode.classList.remove("image-ratio");
-            mediaInnerNode.innerHTML = `
+        if (hasImage) {
+          mediaInnerNode.classList.add("image-ratio");
+          mediaInnerNode.innerHTML = `
+            <img src="${escapeHtml(post.media.url)}" alt="${escapeHtml(post.media.label || "Post image")}" />
+          `;
+        } else {
+          mediaInnerNode.classList.remove("image-ratio");
+          mediaInnerNode.innerHTML = "";
+        }
+
+        const documentHtml = hasDocument
+          ? `
+            <div class="post-document">
               <div class="document-download-container">
                 <div class="document-icon">
                   <i class="fas fa-file-pdf"></i>
                 </div>
-                <p class="document-label">${escapeHtml(post.media.label || "Post document")}</p>
-                <a href="${escapeHtml(post.media.url)}" download class="btn-primary" style="margin-top:1rem;">
+                <p class="document-label">${escapeHtml(post.document.label || "Post document")}</p>
+                <a href="${escapeHtml(post.document.url)}" download class="btn-primary" style="margin-top:1rem;">
                   <i class="fas fa-download"></i> Download
                 </a>
               </div>
-            `;
-          } else {
-            mediaInnerNode.classList.remove("image-ratio");
-            mediaInnerNode.innerHTML = `
-              <span style="font-size:3.5rem;" data-post-media-emoji>${escapeHtml(post.media.emoji || "💡")}</span>
-              <p data-post-media-label>${escapeHtml(post.media.label || "Post media")}</p>
-            `;
-          }
-        } else {
-          mediaInnerNode.classList.remove("image-ratio");
-          mediaInnerNode.innerHTML = `
-            <span style="font-size:3.5rem;" data-post-media-emoji>${escapeHtml(post.media.emoji || "💡")}</span>
-            <p data-post-media-label>${escapeHtml(post.media.label || "Post media")}</p>
-          `;
+            </div>
+          `
+          : "";
+
+        if (documentWrap) {
+          documentWrap.innerHTML = documentHtml;
+          documentWrap.style.display = hasDocument ? "block" : "none";
+        } else if (hasDocument) {
+          mediaWrap.insertAdjacentHTML("afterend", `<div data-post-document>${documentHtml}</div>`);
         }
       } else {
         mediaWrap.style.display = "none";
         mediaInnerNode.classList.remove("image-ratio");
+        if (documentWrap) {
+          documentWrap.style.display = "none";
+          documentWrap.innerHTML = "";
+        }
       }
     }
 

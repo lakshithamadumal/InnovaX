@@ -10,7 +10,7 @@ $query = trim((string)($_GET["q"] ?? ""));
 $userId = trim((string)($_GET["userId"] ?? ""));
 $role = normalize_role_filter($_GET["role"] ?? "");
 
-$sql = "SELECT p.id, p.author_id, p.title, p.description, p.created_at, p.media_type, p.media_url,
+$sql = "SELECT p.id, p.author_id, p.title, p.description, p.created_at, p.media_type, p.media_url, p.document_url,
             u.full_name, u.role,
             COALESCE(lc.likes_count, 0) AS likes_count,
             COALESCE(rc.ratings_count, 0) AS ratings_count,
@@ -76,7 +76,8 @@ try {
             "ratingsCount" => intval($row["ratings_count"] ?? 0),
             "averageRating" => round(floatval($row["avg_score"] ?? 0), 1),
             "mediaType" => $row["media_type"] ?: "none",
-            "mediaUrl" => $row["media_url"] ?: ""
+            "mediaUrl" => $row["media_url"] ?: "",
+            "documentUrl" => ($row["document_url"] ?: (($row["media_type"] ?? "") === "pdf" ? ($row["media_url"] ?: "") : ""))
         ];
     }
 

@@ -97,6 +97,11 @@
 		width: 88px;
 		height: 78px;
 	}
+
+	.create-upload-preview [data-create-preview-document] {
+		width: 88px;
+		height: 78px;
+	}
 }
 
 @media (max-width: 768px) {
@@ -240,6 +245,11 @@
 		width: 100%;
 		height: auto;
 		max-height: 220px;
+	}
+
+	.create-upload-preview [data-create-preview-document] {
+		width: 100%;
+		height: 90px;
 	}
 
 	body[data-page="login"] .inline-actions,

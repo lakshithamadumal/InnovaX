@@ -222,9 +222,9 @@
 
     body.innerHTML = posts.map((post) => {
       const postViewUrl = `https://innovax.works/post-view.html?postId=${encodeURIComponent(String(post.id || ""))}`;
-      const hasDocument = post.mediaType === "pdf" && post.mediaUrl;
+      const hasDocument = Boolean(post.documentUrl);
       const documentLink = hasDocument 
-        ? `<a class="btn-secondary" href="${escapeHtml(post.mediaUrl)}" download style="font-size:0.85rem;"><i class="fas fa-download"></i> Document</a>`
+        ? `<a class="btn-secondary" href="${escapeHtml(post.documentUrl)}" download style="font-size:0.85rem;"><i class="fas fa-download"></i> Document</a>`
         : '<span class="muted">—</span>';
       
       return `

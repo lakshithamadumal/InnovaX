@@ -743,6 +743,8 @@ img {
 
 .upload-preview-content {
   width: 110px;
+  display: grid;
+  gap: 8px;
 }
 
 .create-upload-preview img {
@@ -1018,6 +1020,14 @@ img {
   font-weight: 500;
   margin: 0.5rem 0 1rem 0;
   word-break: break-word;
+}
+
+.post-document {
+  margin-bottom: 14px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #fff;
 }
 
 /* Post stats bar */

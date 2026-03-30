@@ -644,6 +644,22 @@ function initialize_core_schema()
         FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
     )");
 
+    $postColumns = [];
+    $postColumnsQuery = Database::search("SHOW COLUMNS FROM posts");
+    while ($postColumnRow = $postColumnsQuery->fetch_assoc()) {
+        $postFieldName = strtolower(trim((string)($postColumnRow["Field"] ?? "")));
+        if ($postFieldName !== "") {
+            $postColumns[$postFieldName] = true;
+        }
+    }
+
+    if (!isset($postColumns["document_url"])) {
+        Database::iud("ALTER TABLE posts ADD COLUMN document_url VARCHAR(255) NULL AFTER media_label");
+    }
+    if (!isset($postColumns["document_label"])) {
+        Database::iud("ALTER TABLE posts ADD COLUMN document_label VARCHAR(100) NULL AFTER document_url");
+    }
+
     Database::iud("CREATE TABLE IF NOT EXISTS post_tags (
         post_id CHAR(36),
         tag VARCHAR(50),

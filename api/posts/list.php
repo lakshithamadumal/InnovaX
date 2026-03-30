@@ -32,6 +32,7 @@ function initials_from_name($name)
 try {
     $statement = Database::prepare(
         "SELECT p.id, p.author_id, p.title, p.description, p.media_type, p.media_url, p.media_label,
+            p.document_url, p.document_label,
             p.is_company_owned, p.created_at, u.full_name, u.role, u.profile_image_url, sp_author.university_id,
                 COALESCE(GROUP_CONCAT(DISTINCT pt.tag ORDER BY pt.tag SEPARATOR ','), '') AS tag_list,
                 COUNT(DISTINCT pl.user_id) AS likes_count,
@@ -44,7 +45,8 @@ try {
          LEFT JOIN post_likes pl ON pl.post_id = p.id
          LEFT JOIN saved_posts sp ON sp.post_id = p.id
          WHERE p.deleted_at IS NULL
-         GROUP BY p.id, p.author_id, p.title, p.description, p.media_type, p.media_url, p.media_label,
+            GROUP BY p.id, p.author_id, p.title, p.description, p.media_type, p.media_url, p.media_label,
+                   p.document_url, p.document_label,
                   p.is_company_owned, p.created_at, u.full_name, u.role, u.profile_image_url, sp_author.university_id
          ORDER BY p.created_at DESC"
     );
@@ -66,12 +68,27 @@ try {
         }
 
         $media = null;
-        if (!empty($row["media_type"]) && $row["media_type"] !== "none") {
+        if (!empty($row["media_type"]) && $row["media_type"] === "image" && !empty($row["media_url"])) {
             $media = [
-                "type" => $row["media_type"],
+                "type" => "image",
                 "url" => $row["media_url"] ?: "",
                 "emoji" => "💡",
-                "label" => $row["media_label"] ?: ucfirst($row["media_type"])
+                "label" => $row["media_label"] ?: "Post image"
+            ];
+        }
+
+        $document = null;
+        if (!empty($row["document_url"])) {
+            $document = [
+                "type" => "pdf",
+                "url" => $row["document_url"],
+                "label" => $row["document_label"] ?: "Post document"
+            ];
+        } elseif (($row["media_type"] ?? "") === "pdf" && !empty($row["media_url"])) {
+            $document = [
+                "type" => "pdf",
+                "url" => $row["media_url"],
+                "label" => $row["media_label"] ?: "Post document"
             ];
         }
 
@@ -89,6 +106,7 @@ try {
             "desc" => $row["description"] ?: "",
             "tags" => $tags,
             "media" => $media,
+            "document" => $document,
             "likes" => intval($row["likes_count"]),
             "liked" => intval($row["liked_by_me"]) === 1,
             "saved" => intval($row["saved_by_me"]) === 1,
